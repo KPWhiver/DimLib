@@ -70,11 +70,6 @@ namespace dim
     state.mesh().draw();
   }
 
-  Drawable *Drawable::add() const
-  {
-    return v_add();
-  }
-
   std::vector<DrawState> const &Drawable::drawStates() const
   {
     return v_drawStates();

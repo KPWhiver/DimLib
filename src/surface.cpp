@@ -46,8 +46,6 @@ namespace dim
   {
     Component attachment = processFormat(format);
 
-    cerr << *d_frames[0].d_id << ' ' << d_frames[0].d_texDepth.id() << '\n';
-
     glGenFramebuffers(1, d_frames[0].d_id.get());
     addBuffer(attachment, 0, format);
 

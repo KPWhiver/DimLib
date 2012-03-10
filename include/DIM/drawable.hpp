@@ -51,8 +51,6 @@ namespace dim
       Drawable() = default;
       Drawable(glm::vec3 const &coor, float xRot, float yRot, float radius);
 
-      Drawable *add() const;
-
       Id id() const;
 
       glm::vec3 coor() const;
@@ -72,7 +70,6 @@ namespace dim
 
       virtual void v_draw(DrawState const &state);
       virtual std::vector<DrawState> const &v_drawStates() const = 0;
-      virtual Drawable *v_add() const = 0;
       virtual void v_insert(std::ostream &out) const;
       virtual void v_extract(std::istream &out);
 
