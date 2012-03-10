@@ -89,7 +89,7 @@ namespace dim
       typename DrawableWrapper__<RefType>::iterator add(bool saved, RefType const &object);
 
       template<typename RefType>
-      void load(std::string filename);
+      void load(std::string const &filename);
 
       void save();
       void reset();
@@ -102,7 +102,7 @@ namespace dim
 
       void draw(DrawMode mode);
 
-      void mark(DrawMap::iterator object);
+      void mark(DrawMap::iterator const &object);
 
       //void change(Drawable const &object);
 
@@ -113,7 +113,7 @@ namespace dim
   };
 
   template<typename RefType>
-  void DrawMap::load(std::string filename)
+  void DrawMap::load(std::string const &filename)
   {
     if(DrawableWrapper__<RefType>::instance().gridSize() == 0)
       d_drawableWrappers.push_back(new DrawableWrapper__<RefType>(d_gridSize));

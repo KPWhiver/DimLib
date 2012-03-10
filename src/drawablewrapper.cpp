@@ -22,6 +22,13 @@
 namespace dim
 {
   /* Base */
+  DrawableWrapper__<Drawable>::DrawableWrapper__(size_t gridSize)
+      :
+          d_changed(new bool(false)),
+          d_gridSize(gridSize)
+  {
+  }
+
   void DrawableWrapper__<Drawable>::save()
   {
     v_save();
@@ -84,5 +91,30 @@ namespace dim
   DrawableWrapper__<Drawable>::const_iterator DrawableWrapper__<Drawable>::end() const
   {
     return v_end();
+  }
+
+  size_t DrawableWrapper__<Drawable>::gridSize() const
+  {
+    return d_gridSize;
+  }
+
+  std::string const &DrawableWrapper__<Drawable>::filename() const
+  {
+    return d_filename;
+  }
+
+  void DrawableWrapper__<Drawable>::setFilename(std::string const &filename)
+  {
+    d_filename = filename;
+  }
+
+  bool DrawableWrapper__<Drawable>::changed() const
+  {
+    return *d_changed;
+  }
+
+  void DrawableWrapper__<Drawable>::setChanged(bool changed)
+  {
+    *d_changed = changed;
   }
 }

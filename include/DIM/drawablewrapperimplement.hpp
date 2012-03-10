@@ -21,18 +21,10 @@ namespace dim
 {
 
   template<typename RefType>
-  DrawableWrapper__<RefType> DrawableWrapper__<RefType>::s_instance(0);
-
-  template<typename RefType>
   DrawableWrapper__<RefType> &DrawableWrapper__<RefType>::instance()
   {
-    return s_instance;
-  }
-
-  template <typename RefType>
-  size_t DrawableWrapper__<RefType>::gridSize() const
-  {
-    return d_gridSize;
+    static DrawableWrapper__<RefType> lastInstance(0);
+    return lastInstance;
   }
 
   template <typename RefType>
@@ -110,22 +102,23 @@ namespace dim
 
   template<typename RefType>
   DrawableWrapper__<RefType>::DrawableWrapper__(size_t gridSize)
-      : d_changed(new bool(false)), 
-        d_gridSize(gridSize),
+      :
+        DrawableWrapper__<Drawable>(gridSize),
         d_map(new std::unordered_map<Drawable::Key, std::vector<RefType>, std::hash<long>, std::equal_to<long>>())
   {
-    s_instance = *this;
+    if(gridSize != 0)
+      instance() = *this;
   }
 
   template<typename RefType>
   typename DrawableWrapper__<RefType>::iterator DrawableWrapper__<RefType>::add(bool changing, RefType const &object)
   {
     int xloc, zloc;
-    xloc = object.coor().x / d_gridSize;
-    zloc = object.coor().z / d_gridSize;
+    xloc = object.coor().x / gridSize();
+    zloc = object.coor().z / gridSize();
   
     if(changing)
-      *d_changed = true;
+      setChanged(true);
 
     std::vector<RefType> &list = d_map->operator[](Drawable::Key(xloc, zloc));
 
@@ -140,13 +133,13 @@ namespace dim
   }
 
   template<typename RefType>
-  void DrawableWrapper__<RefType>::load(std::string const &filename)
+  void DrawableWrapper__<RefType>::load(std::string const &strFilename)
   {
-    //d_filename = filename;
+    setFilename(strFilename);
     /* open the file */
-    std::ifstream file(filename.c_str());
+    std::ifstream file(filename().c_str());
     if(file.is_open() == false)
-      throw std::runtime_error("Error opening " + filename);
+      throw std::runtime_error("Error opening " + filename());
     else
     {
       size_t numItems;
@@ -164,14 +157,14 @@ namespace dim
   template<typename RefType>
   void DrawableWrapper__<RefType>::v_save()
   {
-    if(*d_changed == false)
+    if(changed() == false)
       return;
 
-    std::ofstream file("test", std::fstream::trunc);//d_filename
+    std::ofstream file(filename().c_str(), std::fstream::trunc);
     if(file.is_open() == false)
     {
       file.close();
-      throw std::runtime_error("Error opening ");//d_filename);
+      throw std::runtime_error("Error opening " + filename());
     }
 
     file << count() << '\n';
@@ -187,11 +180,11 @@ namespace dim
   template<typename RefType>
   void DrawableWrapper__<RefType>::v_reset()
   {
-    if(*d_changed == false)
+    if(changed() == false)
       return;
 
     d_map->clear();
-    load("test");//d_filename);
+    load(filename());
   }
 
   template<typename RefType>
@@ -231,7 +224,7 @@ namespace dim
   template<typename RefType>
   void DrawableWrapper__<RefType>::v_del(DrawableWrapper__<Drawable>::iterator &object)
   {
-    *d_changed = true;
+    setChanged(true);
     object->d_id = end().id();
   }
 
@@ -291,8 +284,8 @@ namespace dim
 
 
     int xloc, zloc;
-    xloc = x / d_gridSize;
-    zloc = z / d_gridSize;
+    xloc = x / gridSize();
+    zloc = z / gridSize();
 
     auto mapPart = d_map->find(Drawable::Key(xloc, zloc));
     if(mapPart == d_map->end())

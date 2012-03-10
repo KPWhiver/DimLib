@@ -90,7 +90,7 @@ namespace dim
                , 0);
   }
 
-  void DrawMap::mark(DrawMap::iterator object)
+  void DrawMap::mark(DrawMap::iterator const &object)
   {
     d_objSelect = object;
   }

@@ -26,6 +26,7 @@
 #include <memory>
 #include <stdexcept>
 #include <fstream>
+#include <iostream>
 
 #include "DIM/drawable.hpp"
 #include "DIM/base_iterator__.hpp"
@@ -41,9 +42,13 @@ namespace dim
   template <>
   class DrawableWrapper__<Drawable>
   {
-
+      std::shared_ptr<bool> d_changed;
+      std::string d_filename;
+      size_t d_gridSize;
     public:
       virtual ~DrawableWrapper__();
+
+      DrawableWrapper__(size_t d_gridSize);
 
       // typedefs
       typedef std::pair<size_t, Drawable::Key> IdType;
@@ -68,6 +73,7 @@ namespace dim
       Drawable &getFromId(std::pair<size_t, Drawable::Key> const &id);
       Drawable const &getFromId(std::pair<size_t, Drawable::Key> const &id) const;
 
+      size_t gridSize() const;
     private:
       virtual void v_save() = 0;
       virtual void v_reset() = 0;
@@ -84,19 +90,24 @@ namespace dim
       virtual iterator v_end() = 0;
       virtual const_iterator v_begin() const = 0;
       virtual const_iterator v_end() const = 0;
+
+    protected:
+      std::string const &filename() const;
+      void setFilename(std::string const &filename);
+
+      bool changed() const;
+      void setChanged(bool changed);
   };
 
   template<typename RefType>
   class DrawableWrapper__<RefType> : public DrawableWrapper__<Drawable>
   {
-      static DrawableWrapper__<RefType> s_instance;
-      std::shared_ptr<bool> d_changed;
-      //std::string d_filename;
-      size_t d_gridSize;
-      
+      //static DrawableWrapper__<RefType> s_instance;
       std::shared_ptr<std::unordered_map<Drawable::Key, std::vector<RefType>, std::hash<long>, std::equal_to<long>>> d_map;
 
     public:
+      static DrawableWrapper__<RefType> &instance();
+
       // typedefs
       typedef std::pair<size_t, Drawable::Key> IdType;
 
@@ -110,13 +121,12 @@ namespace dim
       // typedefs
 
       DrawableWrapper__(size_t gridSize);
-      static DrawableWrapper__<RefType> &instance();
+
       iterator add(bool changing, RefType const &object);
-      void load(std::string const &filename);
+      void load(std::string const &strFilename);
       iterator find(float x, float z);
       RefType &getFromId(IdType const &id);
       RefType const &getFromId(IdType const &id) const;
-      size_t gridSize() const;
 
     private:
       size_t count() const;
