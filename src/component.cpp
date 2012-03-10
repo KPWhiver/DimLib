@@ -1,0 +1,64 @@
+// component.cpp
+//
+// Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+// MA 02110-1301, USA.
+
+#include "DIM/component.hpp"
+
+namespace dim {
+
+Component::Component()
+:
+		d_context(0),
+		d_priority(0)
+{
+}
+
+Component::~Component()
+{
+}
+
+void Component::draw()
+{
+}
+
+void Component::setContext(Context *context)
+{
+	d_context = context;
+}
+
+bool Component::listen()
+{
+	return false;
+}
+
+void Component::setPriority(size_t priority)
+{
+	d_priority = priority;
+}
+
+size_t Component::priority()
+{
+	return d_priority;
+}
+
+bool Component::operator<(Component const &component)
+{
+	return d_priority < component.d_priority;
+}
+
+} /* namespace dim */
