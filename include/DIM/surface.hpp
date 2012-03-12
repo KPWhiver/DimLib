@@ -26,8 +26,6 @@
 
 #include "DIM/texture.hpp"
 
-#include "GL/glm.hpp"
-
 namespace dim
 {
 
@@ -75,6 +73,8 @@ namespace dim
 
 		void renderTo();
 		void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);
+
+		GLuint id() const;
 
 	private:
 	  Surface::Component processFormat(Texture::Format format);

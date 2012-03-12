@@ -26,8 +26,6 @@
 #include "DIM/drawmap.hpp"
 #include "DIM/surface.hpp"
 
-#include "GL/glm.hpp"
-
 namespace dim
 {
 

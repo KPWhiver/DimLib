@@ -18,8 +18,8 @@
 // MA 02110-1301, USA.
 
 
-#include "GL/gtx/rotate_vector.hpp"
-#include "GL/gtx/intersect.hpp"
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/intersect.hpp>
 
 #include "DIM/camera.hpp"
 #include "DIM/shader.hpp"

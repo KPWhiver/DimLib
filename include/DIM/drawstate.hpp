@@ -22,7 +22,6 @@
 
 #include <vector>
 
-#include "GL/glm.hpp"
 #include "DIM/mesh.hpp"
 #include "DIM/shader.hpp"
 #include "DIM/texture.hpp"

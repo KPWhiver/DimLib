@@ -23,8 +23,6 @@
 
 #include <IL/il.h>
 
-#include "GL/glm.hpp"
-//#include "main_objects.hpp"
 #include "DIM/texture.hpp"
 #include "DIM/window.hpp"
 #include "DIM/shader.hpp"

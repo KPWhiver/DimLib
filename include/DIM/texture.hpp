@@ -24,8 +24,7 @@
 #include <string>
 #include <memory>
 
-#include <GL/glew.h>
-#include "GL/glfw.h"
+#include "DIM/dim.hpp"
 
 namespace dim
 {

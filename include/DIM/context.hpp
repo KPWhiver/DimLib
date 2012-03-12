@@ -22,7 +22,6 @@
 
 #include <vector>
 
-#include "DIM/texture.hpp"
 #include "DIM/mesh.hpp"
 #include "DIM/component.hpp"
 #include "DIM/font.hpp"

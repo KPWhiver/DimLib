@@ -20,7 +20,6 @@
 #ifndef LIGHTS_HPP
 #define	LIGHTS_HPP
 
-#include "GL/glm.hpp"
 #include "DIM/texture.hpp"
 
 namespace dim

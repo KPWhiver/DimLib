@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include "DIM/shader.hpp"
-#include "GL/gtc/matrix_inverse.hpp"
+#include <glm/gtc/matrix_inverse.hpp>
 
 using namespace std;
 using namespace glm;

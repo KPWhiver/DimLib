@@ -20,10 +20,6 @@
 #ifndef DRAWMAP_HPP
 #define DRAWMAP_HPP
 
-#include <GL/glew.h>
-#include "GL/glfw.h"
-#include "GL/glm.hpp"
-
 #include "DIM/drawablewrapper.hpp"
 #include "DIM/drawstate.hpp"
 

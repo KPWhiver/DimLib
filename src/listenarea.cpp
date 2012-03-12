@@ -20,9 +20,7 @@
 #include "DIM/window.hpp"
 #include "DIM/listenarea.hpp"
 
-#include "GL/glfw.h"
-#include "GL/glm.hpp"
-#include "GL/gtc/matrix_transform.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 

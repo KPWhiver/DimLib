@@ -20,7 +20,6 @@
 #ifndef DRAWABLE_HPP
 #define DRAWABLE_HPP
 
-#include "GL/glm.hpp"
 #include <iosfwd>
 #include <string>
 #include <vector>

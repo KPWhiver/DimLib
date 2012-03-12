@@ -21,7 +21,7 @@
 #define DIM_HPP
 
 #include <GL/glew.h>
-#include "GL/glfw.h"
-#include "GL/glm.hpp"
+#include <GL/glfw.h>
+#include <glm/glm.hpp>
 
 #endif /* DIM_HPP_ */

@@ -23,9 +23,6 @@
 //#include <vector>
 #include <string>
 
-#include <GL/glew.h>
-#include "GL/glfw.h"
-
 #include "DIM/buffer.hpp"
 
 namespace dim

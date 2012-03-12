@@ -17,12 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include <GL/glew.h>
-#include "GL/glfw.h"
 
 #include "DIM/mouse.hpp"
-
-#include "GL/glm.hpp"
 
 namespace dim
 {

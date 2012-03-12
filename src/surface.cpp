@@ -17,16 +17,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include <GL/glew.h> 
-#include "GL/glfw.h"
-#include "GL/glm.hpp"
-
 #include <string>
 #include <stdexcept>
 #include <iostream>
 
 #include "DIM/surface.hpp"
-#include "DIM/texture.hpp"
 #include "DIM/font.hpp"
 
 using namespace std;
@@ -113,7 +108,8 @@ namespace dim
     if(attachment == depth)
       glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, d_frames[buffer].d_texDepth.id(), 0);
     else
-      glFramebufferTexture2D(GL_FRAMEBUFFER, attachment + d_colorBuffers, GL_TEXTURE_2D, d_frames[buffer].d_texList[d_colorBuffers].id(), 0);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, d_frames[buffer].d_texList[0].id(), 0);
+      //glFramebufferTexture2D(GL_FRAMEBUFFER, attachment + d_colorBuffers, GL_TEXTURE_2D, d_frames[buffer].d_texList[d_colorBuffers].id(), 0);
 
     GLenum fbo_status;
     fbo_status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
@@ -255,8 +251,13 @@ namespace dim
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    glColorMask(d_colorComponent[0], d_colorComponent[1], d_colorComponent[2], d_colorComponent[3]);
+    //glColorMask(d_colorComponent[0], d_colorComponent[1], d_colorComponent[2], d_colorComponent[3]);
 
+  }
+
+  GLuint Surface::id() const
+  {
+    return *d_frames[0].d_id;
   }
 
 }

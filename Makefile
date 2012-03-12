@@ -36,7 +36,8 @@ $(STATICPROGRAM): $(CXXOBJECTS)
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $(input) -o $(output)
 
-
+install:
+  
 
 clean:
 	rm -f *~

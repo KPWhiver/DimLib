@@ -23,8 +23,6 @@
 #include "DIM/mesh.hpp"
 #include "DIM/shader.hpp"
 
-#include "GL/glm.hpp"
-
 #include "Assimp/assimp.hpp"
 #include "Assimp/aiScene.h"
 #include "Assimp/aiPostProcess.h"

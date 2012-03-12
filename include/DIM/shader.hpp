@@ -20,12 +20,6 @@
 #ifndef SHADERS_HPP
 #define SHADERS_HPP
 
-#include <GL/glew.h> 
-#include "GL/glfw.h"
-
-//gl math
-#include "GL/glm.hpp"
-
 #include "DIM/camera.hpp"
 #include "DIM/light.hpp"
 #include "DIM/shaderbuffer.hpp"

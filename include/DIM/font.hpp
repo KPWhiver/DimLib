@@ -20,9 +20,6 @@
 #ifndef FONT_HPP
 #define FONT_HPP
 
-#include <GL/glew.h>
-#include "GL/glfw.h"
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H

@@ -20,7 +20,7 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "GL/glm.hpp"
+#include "DIM/dim.hpp"
 
 namespace dim
 {

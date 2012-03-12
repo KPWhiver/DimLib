@@ -20,8 +20,7 @@
 #ifndef BUFFER_HPP_
 #define BUFFER_HPP_
 
-#include "GL/glew.h"
-#include "GL/glfw.h"
+#include "DIM/dim.hpp"
 
 #include <memory>
 
