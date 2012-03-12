@@ -83,7 +83,6 @@ public:
   GLuint id() const;
 
 private:
-  void init();
   size_t readFormatString(std::string const &format);
 };
 

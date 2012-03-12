@@ -39,17 +39,6 @@ namespace dim
 	GLuint Mesh::s_bound = 0;
 	GLuint Mesh::s_boundElem = 0;
 
-	void Mesh::init()
-	{
-		d_numVertices = 0;
-		d_numTriangles = 0;
-		for (size_t idx = 0; idx != 3; ++idx)
-		{
-			d_attribSize[idx] = 0;
-		}
-		d_instancingArray = 0;
-	}
-
 	void Mesh::initialize()
 	{
 		s_bound = false;
@@ -71,13 +60,16 @@ namespace dim
 
 	Mesh::Mesh(string filename)
 	:
+	    d_attribSize{0},
       d_interleavedVBO(Buffer<GLfloat>::data, 0, 0),
       d_attribVBO({Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0)}),
       d_indexVBO(Buffer<GLushort>::element, 0, 0),
-      d_instancingVBO(Buffer<GLfloat>::element, 0, 0)
+      d_numVertices(0),
+      d_numTriangles(0),
+      d_instancingVBO(Buffer<GLfloat>::element, 0, 0),
+      d_instancingArray(0),
+      d_maxLocations(0)
 	{
-		init();
-
 		Assimp::Importer importer;
 		const aiScene *scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
@@ -103,6 +95,7 @@ namespace dim
 		}
 
 		GLfloat *array = new GLfloat[scene->mMeshes[mesh]->mNumVertices * elements];
+		d_numVertices = scene->mMeshes[mesh]->mNumVertices;
 
 		//size_t numVert = scene->mMeshes[mesh]->mNumFaces * 3;
 		size_t normals = 0;
@@ -195,12 +188,16 @@ namespace dim
 
 	Mesh::Mesh(GLfloat* buffer, string const &format, size_t vertices)
   :
+      d_attribSize{0},
       d_interleavedVBO(Buffer<GLfloat>::data, 0, 0),
       d_attribVBO({Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0)}),
       d_indexVBO(Buffer<GLushort>::element, 0, 0),
-      d_instancingVBO(Buffer<GLfloat>::element, 0, 0)
+      d_numVertices(vertices),
+      d_numTriangles(0),
+      d_instancingVBO(Buffer<GLfloat>::element, 0, 0),
+      d_instancingArray(0),
+      d_maxLocations(0)
 	{
-		init();
 		add(buffer, format, vertices);
 	}
 
@@ -298,56 +295,40 @@ namespace dim
 
 		/* Enabling and disabling the correct arrays */
 		if (d_attribSize[1] == 0)
-		{
 			glDisableVertexAttribArray(1);
-		}
-		if (d_attribSize[2] == 0)
-		{
-			glDisableVertexAttribArray(2);
-		}
 
-		size_t total_elements = d_attribSize[0] + d_attribSize[1] + d_attribSize[2];
+		if (d_attribSize[2] == 0)
+			glDisableVertexAttribArray(2);
+
+		size_t totalElements = d_attribSize[0] + d_attribSize[1] + d_attribSize[2];
 
 		/* Set pointers when we're dealing with an interleaved */
-		size_t v = d_attribSize[0], n = d_attribSize[1], t = d_attribSize[2];
+		size_t offset = 0;
 		if (d_interleavedVBO.id() != 0)
 		{
-			n = 0;
-			//glBindBuffer(GL_ARRAY_BUFFER, d_interleavedVBO);
 			d_interleavedVBO.bind();
-			glVertexAttribPointer((GLuint) 0, v, GL_FLOAT, GL_FALSE, total_elements * sizeof(GLfloat),
-					NULL);
-			if (d_attribSize[1] != 0)
-			{
-				n = d_attribSize[1];
-				glVertexAttribPointer((GLuint) 1, n, GL_FLOAT, GL_FALSE, total_elements * sizeof(GLfloat),
-						((char*) NULL) + v * sizeof(GLfloat));
 
-			}
-			if (d_attribSize[2] != 0)
+			for(size_t idx = 0; idx != 3; ++idx)
 			{
-				glVertexAttribPointer((GLuint) 2, t, GL_FLOAT, GL_FALSE, total_elements * sizeof(GLfloat),
-						((char*) NULL) + (v + n) * sizeof(GLfloat));
+			  if(d_attribSize[idx] != 0)
+			  {
+			    glVertexAttribPointer(idx, d_attribSize[idx], GL_FLOAT, GL_FALSE, totalElements * sizeof(GLfloat),
+			                          reinterpret_cast<void*>(offset * sizeof(GLfloat)));
+			    offset += d_attribSize[idx];
+			  }
 			}
 		}
 		else
 		{
-
-			//glBindBuffer(GL_ARRAY_BUFFER, d_attribVBO[0]);
-		  d_attribVBO[0].bind();
-			glVertexAttribPointer((GLuint) 0, v, GL_FLOAT, GL_FALSE, 0, NULL);
-			if (d_attribVBO[1].id() != 0)
-			{
-				//glBindBuffer(GL_ARRAY_BUFFER, d_attribVBO[1]);
-			  d_attribVBO[1].bind();
-				glVertexAttribPointer((GLuint) 1, n, GL_FLOAT, GL_FALSE, 0, NULL);
-			}
-			if (d_attribVBO[2].id() != 0)
-			{
-				//glBindBuffer(GL_ARRAY_BUFFER, d_attribVBO[2]);
-			  d_attribVBO[2].bind();
-				glVertexAttribPointer((GLuint) 2, t, GL_FLOAT, GL_FALSE, 0, NULL);
-			}
+		  for(size_t idx = 0; idx != 3; ++idx)
+		  {
+		    if(d_attribSize[idx] != 0)
+		    {
+		      d_attribVBO[idx].bind();
+		      //cout << d_attribVBO[idx].id() << ' ' << d_numVertices << '\n';
+		      glVertexAttribPointer(idx, d_attribSize[idx], GL_FLOAT, GL_FALSE, 0, 0);
+		    }
+		  }
 		}
 		bindElem();
 	}
@@ -356,13 +337,11 @@ namespace dim
 	{
 		s_bound = 0;
 		if (d_attribSize[1] == 0)
-		{
 			glEnableVertexAttribArray(1);
-		}
+
 		if (d_attribSize[2] == 0)
-		{
 			glEnableVertexAttribArray(2);
-		}
+
 		unbindElem();
 	}
 
@@ -373,9 +352,7 @@ namespace dim
 
 		s_boundElem = d_indexVBO.id();
 
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d_indexVBO);
 		d_indexVBO.bind();
-
 	}
 
 	void Mesh::unbindElem() const
@@ -413,19 +390,17 @@ namespace dim
 		}
 		else
 		{
+		  //cout << d_attribVBO[0].id() << ' ' << d_numVertices << '\n';
 			glDrawArrays(GL_TRIANGLES, 0, d_numVertices);
 		}
 
 		if (s_bound == 0)
 		{
 			if (d_attribSize[1] == 0)
-			{
 				glEnableVertexAttribArray(1);
-			}
+
 			if (d_attribSize[2] == 0)
-			{
 				glEnableVertexAttribArray(2);
-			}
 		}
 
 	}
@@ -449,7 +424,7 @@ namespace dim
 			Shader::active().send(vec3(0.0f, -10000.0f, 0.0f), "in_placement");
 
 			glEnableVertexAttribArray(3);
-			//glBindBuffer(GL_ARRAY_BUFFER, d_instancingVBO);
+
 			d_instancingVBO.bind();
 			glVertexAttribPointer((GLuint) 3, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 			glVertexAttribDivisorARB((GLuint) 3, 1);
@@ -467,6 +442,7 @@ namespace dim
 			{
 				glDrawArraysInstancedARB(GL_TRIANGLES, 0, d_numVertices, amount);
 			}
+
 			glDisableVertexAttribArray(3);
 		}
 		else
@@ -495,13 +471,10 @@ namespace dim
 		if (s_bound == 0)
 		{
 			if (d_attribSize[1] == false)
-			{
 				glEnableVertexAttribArray(1);
-			}
+
 			if (d_attribSize[2] == false)
-			{
 				glEnableVertexAttribArray(2);
-			}
 		}
 	}
 

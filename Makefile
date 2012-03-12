@@ -26,6 +26,9 @@ all: $(STATICPROGRAM)
 debug: CXXFLAGS += -g
 debug: $(STATICPROGRAM)
 
+profile: CXXFLAGS += -g
+profile: debug
+
 $(STATICPROGRAM): $(CXXOBJECTS)
 	ar -rsv $(STATICPROGRAM) $(CXXOBJECTS)
 	ranlib $(STATICPROGRAM)
