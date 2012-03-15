@@ -28,7 +28,7 @@ using namespace std;
 namespace dim
 {
 
-	Mesh *Context::s_mesh;
+	//Mesh *Context::s_mesh;
 	bool Context::s_initialized = false;
 
 	Context::Context(Mouse const &mouse, Texture const &but, Texture const &butHover, Texture const &butDisable,
@@ -44,16 +44,7 @@ namespace dim
 				d_mouse(&mouse),
 				d_font(font)
 	{
-		if (s_initialized == false)
-		{
-			GLfloat vertices[12]{0, 0, 0, 10, 10, 0, 10, 10, 10, 0, 0, 10};
-			GLfloat texcoords[12]{0, 0, 0, 1, 1, 0,  1, 1, 1, 0, 0, 1};
 
-			s_mesh = new Mesh(vertices, "V2", 6);
-			s_mesh->add(texcoords, "T2", 6);
-
-			s_initialized = true;
-		}
 	}
 	
 	void Context::add(Component *component)
@@ -83,17 +74,21 @@ namespace dim
 
 	Mesh const &Context::mesh() const
 	{
-		return *s_mesh;
+		static GLfloat interleaved[24]{0, 0,  0, 0,  0, 10,  0, 1,  10, 0,  1, 0,  10, 10,  1, 1,  10, 0,  1, 0,  0, 10,  0, 1};
+		
+		static Mesh mesh(interleaved, "V2T2", 6);
+		
+		return mesh;
 	}
 
 	void Context::draw() const
 	{
-	  s_mesh->bind();
+	  mesh().bind();
 		for (size_t idx = 0; idx != d_components.size(); ++idx)
 		{
 			d_components[idx]->draw();
 		}
-		s_mesh->unbind();
+		mesh().unbind();
 
 		for (size_t idx = d_components.size(); idx--;)
 		{
