@@ -129,7 +129,7 @@ namespace dim
       d_drawableWrappers.push_back(new DrawableWrapper__<RefType>(d_gridSize));
 
     typename DrawableWrapper__<RefType>::iterator iter =
-        DrawableWrapper__<RefType>::instance().add<RefType>(!saved, object);
+        DrawableWrapper__<RefType>::instance().add(!saved, object);
         
     // Add the drawstates
     for(size_t idx = 0; idx != object.drawStates().size(); ++idx)

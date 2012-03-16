@@ -15,7 +15,7 @@ CXXSOURCES = drawstate.cpp surface.cpp light.cpp drawmap.cpp camera.cpp texture.
 CXXOBJECTS = $(CXXSOURCES:.cpp=.o)
 CXXFLAGS = -Wall --std=c++0x $(INCLUDEDIRS)
 #-fpic
-CXX = g++-4.7
+CXX = g++
 
 MAINHEADER = $(CXXSOURCES:.cpp=.hpp)
 
