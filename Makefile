@@ -26,7 +26,7 @@ all: $(STATICPROGRAM)
 debug: CXXFLAGS += -g
 debug: $(STATICPROGRAM)
 
-profile: CXXFLAGS += -g
+profile: CXXFLAGS += -pg
 profile: debug
 
 $(STATICPROGRAM): $(CXXOBJECTS)

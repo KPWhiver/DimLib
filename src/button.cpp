@@ -133,7 +133,7 @@ namespace dim
 	  Shader::active().send(Shader::in_mat_model(), "in_mat_model");
 	  
     Shader::active().transformBegin();
-	  //mesh.draw();
+
 	  d_context->mesh().draw();
 
 	  d_text->send(0, "in_texture0");
