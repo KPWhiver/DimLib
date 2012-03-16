@@ -39,7 +39,6 @@ namespace dim
 		size_t d_width;
 		size_t d_height;
 
-		static Mesh *s_mesh;
 		static bool s_initialized;
 
 		Texture d_butTexture;
