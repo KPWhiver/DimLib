@@ -33,6 +33,7 @@ namespace dim
 	{
 		int d_x, d_y;
 		size_t d_width, d_height;
+		
 		std::function<void(void)> d_listenerFunctionLeftRelease;
 		std::function<void(void)> d_listenerFunctionLeftPressed;
 		std::function<void(void)> d_listenerFunctionRightRelease;
@@ -41,7 +42,7 @@ namespace dim
   public:
     ListenArea(int x, int y, size_t width, size_t height);
     ListenArea();
-    bool listen();
+    bool listen(int x, int y, dim::Mouse const &mouse);
     void size();
     void setListenerLeftRelease(std::function<void(void)> const &listenerFunction);
     void setListenerLeftPressed(std::function<void(void)> const &listenerFunction);

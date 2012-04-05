@@ -28,31 +28,35 @@ Menu::Menu(size_t width, size_t height)
 :
   d_width(width),
   d_height(height),
-  d_active(false),
   d_x(0),
-  d_y(0)
+  d_y(0),
+  d_active(false)
 {
 	d_priority = 100;
 }
 
 Menu::Menu()
 :
+  //Menu(10, 10)
   d_width(10),
   d_height(10),
-  d_active(false),
   d_x(0),
-  d_y(0)
+  d_y(0),
+  d_active(false)
 {
 	d_priority = 100;
 }
 
-bool Menu::listen()
+bool Menu::listen(int x, int y, dim::Mouse const &mouse)
 {
+	x += d_x;
+	y += d_y;
+
   if(d_active == true)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      if(d_items[idx]->listen(d_x, d_y - idx * d_height - d_height, d_width, d_height))
+      if(d_items[idx]->listen(x, y - idx * d_height - d_height, d_width, d_height, mouse))
       {
         d_active = false;
         return true;
@@ -62,13 +66,16 @@ bool Menu::listen()
   return false;
 }
 
-void Menu::draw()
+void Menu::draw(int x, int y)
 {
+	x += d_x;
+	y += d_y;
+
   if(d_active == true)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      d_items[idx]->draw(d_x, d_y - idx * d_height - d_height, d_width, d_height);
+      d_items[idx]->draw(x, y - idx * d_height - d_height, d_width, d_height);
     }
   }
 }
@@ -76,7 +83,7 @@ void Menu::draw()
 void Menu::add(MenuItem *item)
 {
   d_items.push_back(item);
-  item->setSize(d_width, d_height);
+  //item.setSize(d_width, d_height);
 }
 
 void Menu::setContext(Context *context)

@@ -17,7 +17,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include "DIM/window.hpp"
 #include "DIM/listenarea.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -47,37 +46,37 @@ namespace dim
 	{
 	}
 
-	bool ListenArea::listen()
+	bool ListenArea::listen(int x, int y, dim::Mouse const &mouse)
 	{	  
 
 
 	  if(d_context == 0)
 	    return false;
 	
-	  ivec2 mouse = d_context->mouse().coor();
+	  ivec2 mouseC = mouse.coor();
 	  
-	  int x = d_x + d_context->x();
-	  int y = d_y + d_context->y();
+	  x += d_x;
+	  y += d_y;
 	  
-		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
+		if(mouseC.x > x && mouseC.x < x + static_cast<int>(d_width) && mouseC.y > y && mouseC.y < y + static_cast<int>(d_height))
 		{
 
-		  if(d_context->mouse().lRelease())
+		  if(mouse.lRelease())
 		  {
 		  	if(d_listenerFunctionLeftRelease)
 		  		d_listenerFunctionLeftRelease();
 		  }
-		  else if(d_context->mouse().rRelease())
+		  else if(mouse.rRelease())
 		  {
 		    if(d_listenerFunctionRightRelease)
 		  		d_listenerFunctionRightRelease();
 		  }
-		  else if(d_context->mouse().lPressed())
+		  else if(mouse.lPressed())
 		  {
 		  	if(d_listenerFunctionLeftPressed)
 		  		d_listenerFunctionLeftPressed();
 		  }
-		  else if(d_context->mouse().rPressed())
+		  else if(mouse.rPressed())
 		  {
 		    if(d_listenerFunctionRightPressed)
 		  		d_listenerFunctionRightPressed();

@@ -18,7 +18,6 @@
 // MA 02110-1301, USA.
 
 #include "DIM/button.hpp"
-#include "DIM/window.hpp"
 #include "DIM/shader.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -31,65 +30,72 @@ using namespace std;
 namespace dim
 {
 
+  //Button::Shared::Shared()
+  //:
+  //    d_menu(0)
+  //{
+  //}
+
 	Button::Button(int x, int y, size_t width, size_t height, string const &text)
 	:
+			d_menu(0),
 			d_x(x),
 			d_y(y),
 			d_width(width),
 			d_height(height),
-			d_text(0),
 			d_strText(text),
-			d_menu(0)
+			d_selected(false)
 	{
 		d_priority = 50;
 	}
 	
 	Button::Button()
 	:
+	    //Button(0, 0, 10, 10, "")
+	    d_menu(0),
 			d_x(0),
 			d_y(0),
 			d_width(10),
 			d_height(10),
-			d_text(0),
-			d_menu(0)
+			d_selected(false)
 	{
 		d_priority = 50;
-	}
-	
-	Button::~Button()
-	{
-	  delete d_text;
 	}
 	
 	void Button::setContext(Context *context)
 	{
 		d_context = context;
-	  d_text = new Texture(d_context->font().generateTexture(d_strText, d_width, d_height));
+	  d_text = Texture(d_context->font().generateTexture(d_strText, d_width, d_height));
+	  
 	  if(d_menu != 0)
 	  	d_menu->setContext(context);
 	}
 	
-	void Button::addMenu(Menu *menu)
+	void Button::setMenu(Menu *menu)
 	{
 	  d_menu = menu;
 	}
 	
-	bool Button::listen()
+	bool Button::listen(int x, int y, dim::Mouse const &mouse)
 	{
-	  ivec2 mouse = d_context->mouse().coor();
+	  ivec2 mouseC = mouse.coor();
 	  
-	  int x = d_x + d_context->x();
-	  int y = d_y + d_context->y();
+	  x += d_x;
+	  y += d_y;
 	  
-	  if(d_menu != 0)
-	  {
-	    if(d_menu->listen())
-	      return true;
-	  }
+
+	  if(d_menu != 0 && d_menu->listen(mouseC.x, mouseC.y, mouse))
+	    return true;
+
 	  
-		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
+	  //if(mouseC.x > x && mouseC.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
+		//  d_context->buttonHoverTexture().send(0, "in_texture0");
+		//else
+		//  d_context->buttonTexture().send(0, "in_texture0");
+	  
+		if(mouseC.x > x && mouseC.x < x + static_cast<int>(d_width) && mouseC.y > y && mouseC.y < y + static_cast<int>(d_height))
 		{
-		  if(d_context->mouse().lRelease())
+		  if(mouse.lRelease())
 		  {
 		  	if(d_listenerFunction)
 		  		d_listenerFunction();
@@ -104,26 +110,28 @@ namespace dim
 		  			
 		  	return true;
 		  }
+		  d_selected = true;
 		}
+		else
+		  d_selected = false;
+		  
 		return false;
 	}
 
-	void Button::draw()
+	void Button::draw(int x, int y)
 	{	  
 	  if(d_context == 0)
 	    return;
-	
-	  ivec2 mouse = d_context->mouse().coor();
 	  
-	  int x = d_x + d_context->x();
-	  int y = d_y + d_context->y();
+	  x += d_x;
+	  y += d_y;
 	  
 	  if(d_menu != 0)
 	  {
-	    d_menu->draw();
+	    d_menu->draw(x, y);
 	  }
 	  
-		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
+		if(d_selected == true)
 		  d_context->buttonHoverTexture().send(0, "in_texture0");
 		else
 		  d_context->buttonTexture().send(0, "in_texture0");
@@ -136,7 +144,7 @@ namespace dim
 	  
 	  d_context->mesh().draw();
 
-	  d_text->send(0, "in_texture0");
+	  d_text.send(0, "in_texture0");
 
 	  d_context->mesh().draw();
 

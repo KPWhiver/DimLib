@@ -21,57 +21,23 @@
 
 #include "GL/glfw.h"
 
-#include "DIM/mesh.hpp"
-
 using namespace std;
 
 namespace dim
 {
-
-	//Mesh *Context::s_mesh;
 	bool Context::s_initialized = false;
-
-	Context::Context(Mouse const &mouse, Texture const &but, Texture const &butHover, Texture const &butDisable,
-			size_t width, size_t height, Font const &font)
+	
+	Context::Context(Texture const &but, Texture const &butHover, Texture const &butDisable,
+			Font const &font)
 			:
-				d_x(0),
-				d_y(0),
-				d_width(width),
-				d_height(height),
 				d_butTexture(but),
 				d_butHoverTexture(butHover),
 				d_butDisableTexture(butDisable),
-				d_mouse(&mouse),
 				d_font(font)
 	{
 
 	}
 	
-	void Context::add(Component *component)
-	{
-		vector<Component*>::iterator itToInsert = lower_bound(d_components.begin(), d_components.end(), component);
-		d_components.insert(itToInsert, component);
-
-		//d_components.push_back(component);
-		component->setContext(this);
-		
-	}
-
-	int Context::x() const
-	{
-		return d_x;
-	}
-
-	int Context::y() const
-	{
-		return d_y;
-	}
-
-	Mouse const &Context::mouse() const
-	{
-	  return *d_mouse;
-	}
-
 	Mesh const &Context::mesh() const
 	{
 		static GLfloat interleaved[24]{0, 0,  0, 0,  0, 10,  0, 1,  10, 0,  1, 0,  10, 10,  1, 1,  10, 0,  1, 0,  0, 10,  0, 1};
@@ -79,22 +45,6 @@ namespace dim
 		static Mesh mesh(interleaved, "V2T2", 6);
 		
 		return mesh;
-	}
-
-	void Context::draw() const
-	{
-	  mesh().bind();
-		for (size_t idx = 0; idx != d_components.size(); ++idx)
-		{
-			d_components[idx]->draw();
-		}
-		mesh().unbind();
-
-		for (size_t idx = d_components.size(); idx--;)
-		{
-			if(d_components[idx]->listen())
-			  break;
-		}
 	}
 
 	Texture const &Context::buttonTexture() const

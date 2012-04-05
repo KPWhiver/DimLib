@@ -24,27 +24,29 @@
 #include "DIM/menuitem.hpp"
 #include "DIM/component.hpp"
 
+#include <memory>
+
 namespace dim
 {
 	class Menu : public Component
 	{
 		size_t d_width, d_height;
-		bool d_active;
 		int d_x, d_y;
 		
-    std::vector<MenuItem*> d_items;
-    
+		std::vector<MenuItem*> d_items;
+    bool d_active;
+      
   public:
     Menu(size_t d_width, size_t d_height);
     Menu();
 
-    void draw();
-    bool listen();
+    void draw(int x, int y);
+    bool listen(int x, int y, dim::Mouse const &mouse);
     void add(MenuItem *item);
     void activate(int x, int y);
     void deactivate();
     bool active() const;
-    void setContext(Context *context);
+    virtual void setContext(Context *context);
 
 	};
 

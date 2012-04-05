@@ -23,8 +23,6 @@
 #include <string>
 
 #include "DIM/mouse.hpp"
-#include "DIM/drawmap.hpp"
-#include "DIM/surface.hpp"
 
 namespace dim
 {

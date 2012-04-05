@@ -23,7 +23,6 @@
 
 #include "DIM/camera.hpp"
 #include "DIM/shader.hpp"
-#include "DIM/window.hpp"
 
 using namespace glm;
 

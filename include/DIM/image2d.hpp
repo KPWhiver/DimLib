@@ -24,18 +24,22 @@
 #include "DIM/component.hpp"
 
 #include <functional>
+#include <memory>
 
 namespace dim
 {
 	class Image2D : public Component
 	{
-		int d_x, d_y;
-		size_t d_width, d_height;
+	  int d_x;
+	  int d_y;
+	  		
+		size_t d_width;
+		size_t d_height;
 		Texture d_image;
 
   public:
     Image2D(int x, int y, size_t width, size_t height, Texture const &image);
-    void draw();
+    virtual void draw(int x, int y);
     void setCoor(int x, int y);
 
 	};

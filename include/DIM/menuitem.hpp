@@ -30,23 +30,26 @@ namespace dim
 {
 	class MenuItem : public Component
 	{
+		Texture d_text;
+		std::string d_strText;
+		
+		bool d_selected;
+		
+		std::function<void(void)> d_listenerFunction;
 		size_t d_width;
 		size_t d_height;
-		std::function<void(void)> d_listenerFunction;
-		Texture *d_text;
-		std::string d_strText;
-
+		  
   public:
     MenuItem(std::string const &text);
     MenuItem();
-    ~MenuItem();
+    //~MenuItem();
 
 
     void draw(int x, int y, size_t width, size_t height);
-    bool listen(int x, int y, size_t width, size_t height);
+    bool listen(int x, int y, size_t width, size_t height, dim::Mouse const &mouse);
     void setListener(std::function<void(void)> const &listenerFunction);
     void setSize(size_t width, size_t height);
-    void setContext(Context *context);
+    virtual void setContext(Context *context);
 	};
 
 }
