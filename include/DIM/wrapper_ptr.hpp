@@ -75,17 +75,17 @@ namespace dim
   }
 
   template <typename Type>
-  wrapper_ptr &wrapper_ptr<Type>::operator=(wrapper_ptr const &other)
+  wrapper_ptr<Type> &wrapper_ptr<Type>::operator=(wrapper_ptr const &other)
   {
     wrapper_ptr<Type> tmp(other);
-    std::swap(tmp, *this);
+    std::swap(tmp.d_ptr, d_ptr);
     return *this;
   }
 
   template <typename Type>
-  wrapper_ptr &wrapper_ptr<Type>::operator=(wrapper_ptr &&tmp)
+  wrapper_ptr<Type> &wrapper_ptr<Type>::operator=(wrapper_ptr &&tmp)
   {
-    std::swap(tmp, *this);
+    std::swap(tmp.d_ptr, d_ptr);
     return *this;
   }
 
