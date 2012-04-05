@@ -19,7 +19,6 @@
 
 #include <iostream>
 
-#include "DIM/window.hpp"
 #include "DIM/light.hpp"
 #include "DIM/shader.hpp"
 #include "DIM/camera.hpp"

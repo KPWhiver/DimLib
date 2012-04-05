@@ -24,7 +24,6 @@
 #include <IL/il.h>
 
 #include "DIM/texture.hpp"
-#include "DIM/window.hpp"
 #include "DIM/shader.hpp"
 
 using namespace glm;

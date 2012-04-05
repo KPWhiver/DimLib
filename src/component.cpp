@@ -24,7 +24,8 @@ namespace dim {
 Component::Component()
 :
 		d_context(0),
-		d_priority(0)
+		d_priority(0)//,
+		//d_id(0)
 {
 }
 
@@ -32,7 +33,7 @@ Component::~Component()
 {
 }
 
-void Component::draw()
+void Component::draw(int x, int y)
 {
 }
 
@@ -41,7 +42,7 @@ void Component::setContext(Context *context)
 	d_context = context;
 }
 
-bool Component::listen()
+bool Component::listen(int x, int y, Mouse const &mouse)
 {
 	return false;
 }
@@ -51,10 +52,20 @@ void Component::setPriority(size_t priority)
 	d_priority = priority;
 }
 
-size_t Component::priority()
+size_t Component::priority() const
 {
 	return d_priority;
 }
+
+//void Component::setId(size_t id)
+//{
+//  d_id = id;
+//}
+
+//size_t Component::id() const
+//{
+//  return d_id;
+//}
 
 bool Component::operator<(Component const &component)
 {

@@ -23,46 +23,22 @@
 #include <vector>
 
 #include "DIM/mesh.hpp"
-#include "DIM/component.hpp"
 #include "DIM/font.hpp"
-#include "DIM/mouse.hpp"
 
 namespace dim
 {
-	class Component;
-
 	class Context
-	{
-		std::vector<Component*> d_components;
-
-		int d_x, d_y;
-		size_t d_width;
-		size_t d_height;
-
-		static bool s_initialized;
-
+	{	
 		Texture d_butTexture;
 		Texture d_butHoverTexture;
 		Texture d_butDisableTexture;
 		
-		Mouse const *d_mouse;
-
 		Font d_font;
+			 
+		static bool s_initialized;
 
 	public:
-		Context(Mouse const &mouse, Texture const &but, Texture const &butHover, Texture const &butDisable, size_t width, size_t height, Font const &font);
-
-		void add(Component *component);
-
-		void draw() const;
-
-		void setCoords(int x, int y);
-		void setSize(size_t width, size_t height);
-
-		int x() const;
-		int y() const;
-
-		Mouse const &mouse() const;
+		Context(Texture const &but, Texture const &butHover, Texture const &butDisable, Font const &font);
 
 		Texture const &buttonTexture() const;
 		Texture const &buttonHoverTexture() const;

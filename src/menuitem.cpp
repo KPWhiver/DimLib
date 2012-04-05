@@ -18,7 +18,6 @@
 // MA 02110-1301, USA.
 
 #include "DIM/menuitem.hpp"
-#include "DIM/window.hpp"
 #include "DIM/shader.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -30,35 +29,31 @@ using namespace glm;
 
 namespace dim
 {
+
 	MenuItem::MenuItem(string const &text)
 	:
-			d_width(0),
-			d_height(0),
-			d_text(0),
-			d_strText(text)
-
+			d_strText(text),
+			d_selected(false),
+      d_width(0),
+      d_height(0)
 	{
 		d_priority = 101;
 	}
 	
 	MenuItem::MenuItem()
 	:
-			d_width(0),
-			d_height(0),
-			d_text(0)
+	    //MenuItem("")
+			d_selected(false),
+      d_width(0),
+      d_height(0)
 	{
 		d_priority = 101;
-	}
-	
-	MenuItem::~MenuItem()
-	{
-	  delete d_text;
 	}
 
 	void MenuItem::setContext(Context *context)
 	{
 		d_context = context;
-		d_text = new Texture(d_context->font().generateTexture(d_strText, d_width, d_height));
+		d_text = Texture(d_context->font().generateTexture(d_strText, d_width, d_height));
 	}
 
 	void MenuItem::setSize(size_t width, size_t height)
@@ -67,20 +62,24 @@ namespace dim
 		d_height = height;
 	}
 
-	bool MenuItem::listen(int x, int y, size_t width, size_t height)
+	bool MenuItem::listen(int x, int y, size_t width, size_t height, dim::Mouse const &mouse)
   {
-    ivec2 mouse = d_context->mouse().coor();
+    ivec2 mouseC = mouse.coor();
   
-    if(mouse.x > x && mouse.x < x + static_cast<int>(width) && mouse.y > y && mouse.y < y + static_cast<int>(height))
+    if(mouseC.x > x && mouseC.x < x + static_cast<int>(width) && mouseC.y > y && mouseC.y < y + static_cast<int>(height))
 		{
-		  if(d_context->mouse().lRelease())
+		  if(mouse.lRelease())
 		  {
 		  	if(d_listenerFunction)
 		  		d_listenerFunction();
 		  		
 		  	return true;
 		  }
+		  d_selected = true;
 		}
+		else
+		  d_selected = false;
+		
 		return false;
   }
 
@@ -89,9 +88,7 @@ namespace dim
 	  if(d_context == 0)
 	    return;
 
-	  ivec2 mouse = d_context->mouse().coor();
-
-		if(mouse.x > x && mouse.x < x + static_cast<int>(width) && mouse.y > y && mouse.y < y + static_cast<int>(height))
+		if(d_selected == true)
 		  d_context->buttonHoverTexture().send(0, "in_texture0");
 		else
 		  d_context->buttonTexture().send(0, "in_texture0");
@@ -104,7 +101,7 @@ namespace dim
 	  //mesh.draw();
 	  d_context->mesh().draw();
 
-	  d_text->send(0, "in_texture0");
+	  d_text.send(0, "in_texture0");
 
 	  d_context->mesh().draw();
 

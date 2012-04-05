@@ -21,32 +21,38 @@
 #define COMPONENT_HPP
 
 #include "DIM/context.hpp"
+#include "DIM/mouse.hpp"
 
-namespace dim {
-	class Context;
-
+namespace dim 
+{
 	class Component
 	{
 		protected:
-		Context* d_context;
+		  Context *d_context;
 
-		size_t d_priority;
+		  size_t d_priority;
+		  
+		  //size_t d_id;
 
 		public:
-		Component();
+		  Component();
 
-		virtual bool listen();
-		virtual void draw();
+		  virtual bool listen(int x, int y, dim::Mouse const &mouse);
+		  virtual void draw(int x, int y);
 
 
-		void setPriority(size_t priority);
-		size_t priority();
-		bool operator<(Component const &component);
+		  void setPriority(size_t priority);
+		  size_t priority() const;
+		  bool operator<(Component const &component);
+		  
+		  //void setId(size_t id);
+		  //size_t id() const;
 
-		virtual ~Component();
+		  virtual ~Component();
 
-		virtual void setContext(Context *context);
-
+		  virtual void setContext(Context *context);
+		  
+		  
 	};
 
 } /* namespace dim */

@@ -26,29 +26,32 @@
 
 #include <functional>
 #include <string>
+#include <memory>
 
 namespace dim
 {
 	class Button : public Component
 	{
+	  std::function<void(void)> d_listenerFunction;
+	  Menu *d_menu;
+	    	  
 		int d_x, d_y;
 		size_t d_width, d_height;
-		std::function<void(void)> d_listenerFunction;
-		Texture *d_text;
+		Texture d_text;
 		std::string d_strText;
 		
-		Menu *d_menu;
+		bool d_selected;
 
   public:
     Button(int x, int y, size_t width, size_t height, std::string const &text);
     Button();
-    ~Button();
-    void draw();
-    bool listen();
+    //~Button();
+    virtual void draw(int x, int y);
+    virtual bool listen(int x, int y, dim::Mouse const &mouse);
     void size();
     void setListener(std::function<void(void)> const &listenerFunction);
-    void addMenu(Menu *menu);
-    void setContext(Context *context);
+    void setMenu(Menu *menu);
+    virtual void setContext(Context *context);
 
 	};
 
