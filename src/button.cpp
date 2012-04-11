@@ -38,7 +38,6 @@ namespace dim
 
 	Button::Button(int x, int y, size_t width, size_t height, string const &text)
 	:
-			d_menu(0),
 			d_x(x),
 			d_y(y),
 			d_width(width),
@@ -52,7 +51,6 @@ namespace dim
 	Button::Button()
 	:
 	    //Button(0, 0, 10, 10, "")
-	    d_menu(0),
 			d_x(0),
 			d_y(0),
 			d_width(10),
@@ -73,7 +71,7 @@ namespace dim
 	
 	void Button::setMenu(Menu *menu)
 	{
-	  d_menu = menu;
+	  d_menu.reset(menu);
 	}
 	
 	bool Button::listen(int x, int y, dim::Mouse const &mouse)

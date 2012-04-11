@@ -33,7 +33,7 @@ namespace dim
 	class Button : public Component
 	{
 	  std::function<void(void)> d_listenerFunction;
-	  Menu *d_menu;
+	  std::shared_ptr<Menu> d_menu;
 	    	  
 		int d_x, d_y;
 		size_t d_width, d_height;

@@ -120,7 +120,7 @@ namespace dim
     if(changing)
       setChanged(true);
 
-    std::vector<RefType> &list = d_map->operator[](Drawable::Key(xloc, zloc));
+    std::vector<RefType> &list = (*d_map)[Drawable::Key(xloc, zloc)];
 
     std::pair<size_t, Drawable::Key> id(list.size(), Drawable::Key(xloc, zloc));
 
@@ -148,6 +148,7 @@ namespace dim
       {
         RefType ref;
         file >> ref;
+        file.ignore();
         add(false, ref);
       }
       file.close();
@@ -206,6 +207,7 @@ namespace dim
 
     for(auto mapPart : *d_map)
     {
+
       for(RefType &drawable : mapPart.second)
       {
         /* The drawing */

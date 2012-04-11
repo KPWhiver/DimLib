@@ -77,20 +77,27 @@ namespace dim
 
   void Drawable::v_insert(ostream &out) const
   {
-    out.write(reinterpret_cast<const char*>(&d_coor.x), 4);
-    out.write(reinterpret_cast<const char*>(&d_coor.y), 4);
-    out.write(reinterpret_cast<const char*>(&d_coor.z), 4);
-    out.write(reinterpret_cast<const char*>(&d_xRot), 4);
-    out.write(reinterpret_cast<const char*>(&d_yRot), 4);
+	  out << d_coor.x << d_coor.y << d_coor.z << d_xRot << d_yRot << '\n';
+    //out.write(reinterpret_cast<const char*>(&d_coor.x), 4);
+    //out.write(reinterpret_cast<const char*>(&d_coor.y), 4);
+    //out.write(reinterpret_cast<const char*>(&d_coor.z), 4);
+    //out.write(reinterpret_cast<const char*>(&d_xRot), 4);
+    //out.write(reinterpret_cast<const char*>(&d_yRot), 4);
   }
 
   void Drawable::v_extract(istream &in)
   {
-    in.read(reinterpret_cast<char*>(&d_coor.x), 4);
-    in.read(reinterpret_cast<char*>(&d_coor.y), 4);
-    in.read(reinterpret_cast<char*>(&d_coor.z), 4);
-    in.read(reinterpret_cast<char*>(&d_xRot), 4);
-    in.read(reinterpret_cast<char*>(&d_yRot), 4);
+	in >> d_coor.x >> d_coor.y >> d_coor.z >> d_xRot >> d_yRot;
+
+	d_coor/=100.0f;
+	d_xRot/=100;
+	d_yRot/=100;
+
+    //in.read(reinterpret_cast<char*>(&d_coor.x), 4);
+    //in.read(reinterpret_cast<char*>(&d_coor.y), 4);
+    //in.read(reinterpret_cast<char*>(&d_coor.z), 4);
+    //in.read(reinterpret_cast<char*>(&d_xRot), 4);
+    //in.read(reinterpret_cast<char*>(&d_yRot), 4);
   }
 
   ostream &operator<<(ostream &out, Drawable const &object)

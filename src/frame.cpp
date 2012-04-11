@@ -17,6 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
+#include <algorithm>
+
 #include "DIM/frame.hpp"
 
 #include "GL/glfw.h"
@@ -54,8 +56,12 @@ namespace dim
 	  component->setContext(d_context.get());
 	  //component.setId(d_components.size());
 	  
-	  auto itToInsert = lower_bound(d_components.begin(), d_components.end(), component);
-		d_components.insert(itToInsert, component);
+	  auto itToInsert = lower_bound(d_components.begin(), d_components.end(), component, [](shared_ptr<Component> &left, Component *right)
+	  {
+	    return *left < *right;
+	  });
+	  
+		d_components.insert(itToInsert, shared_ptr<Component>(component));
 	}
 
 	void Frame::draw()

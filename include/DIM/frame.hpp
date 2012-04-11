@@ -25,7 +25,7 @@
 
 #include "DIM/component.hpp"
 #include "DIM/mouse.hpp"
-#include "DIM/wrapper_ptr.hpp"
+#include <memory>
 
 namespace dim
 {
@@ -35,7 +35,7 @@ namespace dim
 		size_t d_width;
 		size_t d_height;
 		
-		std::vector<dim::wrapper_ptr<Component>> d_components;
+		std::vector<std::shared_ptr<Component>> d_components;
 
     std::shared_ptr<Context> d_context;
     
