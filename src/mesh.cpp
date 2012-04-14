@@ -23,9 +23,9 @@
 #include "DIM/mesh.hpp"
 #include "DIM/shader.hpp"
 
-#include "Assimp/assimp.hpp"
-#include "Assimp/aiScene.h"
-#include "Assimp/aiPostProcess.h"
+#include "assimp/assimp.hpp"
+#include "assimp/aiScene.h"
+#include "assimp/aiPostProcess.h"
 
 using namespace glm;
 using namespace std;

@@ -164,12 +164,11 @@ namespace dim
 
   void Shader::begin() const
   {
-    if(s_activeShader != 0 && id() == active().id())
-      return;
-
-    glUseProgram(d_id->program());
-
-    s_activeShader = const_cast<Shader*>(this);
+    if(s_activeShader == 0 || id() != active().id())
+    {
+      glUseProgram(d_id->program());
+      s_activeShader = const_cast<Shader*>(this);
+    }
 
     for(size_t idx = 0; idx != d_mat4List.size(); ++idx)
       send(*d_mat4List[idx], d_mat4Names[idx]);
