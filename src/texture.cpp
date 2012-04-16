@@ -66,19 +66,19 @@ namespace dim
   {
     processFormat(r8);
     GLubyte data(0);
-    init(&data, Texture::nearest);
+    init(&data, Texture::nearest, Texture::repeat);
   }
 
-  Texture::Texture(void * data, Filtering filter, Format format, size_t width, size_t height)
+  Texture::Texture(void * data, Filtering filter, Format format, size_t width, size_t height, Wrap wrap)
       : d_id(new GLuint, [](GLuint *ptr)
       { glDeleteTextures(1, ptr); delete ptr;}), d_depth(8), d_height(height), d_width(width), d_externalFormat(
           GL_RED), d_internalFormat(GL_R8), d_dataType(GL_UNSIGNED_BYTE)
   {
     processFormat(format);
-    init(data, filter);
+    init(data, filter, wrap);
   }
 
-  void Texture::init(void * data, Filtering filter)
+  void Texture::init(void * data, Filtering filter, Wrap wrap)
   {
     glGenTextures(1, d_id.get());
     glBindTexture(GL_TEXTURE_2D, *d_id);
@@ -112,11 +112,8 @@ namespace dim
         break;
     }
 
-    if(d_depth != 8 && d_externalFormat != GL_DEPTH_COMPONENT)
-    {
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 
     GLint GenMipMap;
 
@@ -142,7 +139,7 @@ namespace dim
     }
   }
 
-  Texture::Texture(string const &filename, Filtering filter, bool edit)
+  Texture::Texture(string const &filename, Filtering filter, bool edit, Wrap wrap)
       : d_id(new GLuint, [](GLuint *ptr)
       { delete ptr;}), d_depth(8), d_externalFormat(GL_ALPHA), d_internalFormat(GL_ALPHA), d_dataType(
           GL_UNSIGNED_BYTE)
@@ -186,7 +183,7 @@ namespace dim
         throw runtime_error("Unsupported Texture format passed");
     }
 
-    init(static_cast<void*>(ilGetData()), filter);
+    init(static_cast<void*>(ilGetData()), filter, wrap);
 
     d_filename = filename;
 
@@ -195,6 +192,12 @@ namespace dim
       ilDeleteImages(1, &d_source);
       d_source = 0;
     }
+  }
+
+  void Texture::setBorderColor(vec4 const &color)
+  {
+    glBindTexture(GL_TEXTURE_2D, *d_id);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
   }
 
   GLubyte Texture::value(size_t x, size_t y, size_t channel) const

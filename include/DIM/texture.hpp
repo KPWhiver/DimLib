@@ -58,7 +58,15 @@ public:
     anisotropic4x = 4,
     anisotropic8x = 8,
     anisotropic16x = 16,
-    anisotropicMax = 0
+    anisotropicMax = 0,
+  };
+
+  enum Wrap
+  {
+    edgeClamp = GL_CLAMP_TO_EDGE,
+    borderClamp = GL_CLAMP_TO_BORDER,
+    repeat = GL_REPEAT,
+    mirroredRepeat = GL_MIRRORED_REPEAT,
   };
 
   enum Format
@@ -81,8 +89,10 @@ public:
   };
 
   Texture();
-  Texture(std::string const &filename, Filtering filter, bool edit);
-  Texture(void * data, Filtering filter, Format format, size_t width, size_t height);
+  Texture(std::string const &filename, Filtering filter, bool edit, Wrap wrap = repeat);
+  Texture(void * data, Filtering filter, Format format, size_t width, size_t height, Wrap wrap = repeat);
+
+  void setBorderColor(glm::vec4 const &color);
 
   void update(void* data);
   void reset();
@@ -104,7 +114,7 @@ private:
 
   void processFormat(Format format);
 
-  void init(void * data, Filtering filter);
+  void init(void * data, Filtering filter, Wrap wrap);
 
 };
 

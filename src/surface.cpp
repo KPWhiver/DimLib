@@ -35,26 +35,26 @@ namespace dim
   {
   }
 
-  Surface::Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer)
+  Surface::Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer, Texture::Filtering filter)
       : d_width(width), d_height(height), d_bufferToRenderTo(0), d_frames(1 + pingPongBuffer),
         d_colorBuffers(0), d_depthComponent(false), d_colorComponent{false}
   {
     Component attachment = processFormat(format);
 
     glGenFramebuffers(1, d_frames[0].d_id.get());
-    addBuffer(attachment, 0, format);
+    addBuffer(attachment, 0, format, filter);
 
     if(pingPongBuffer)
     {
       glGenFramebuffers(1, d_frames[1].d_id.get());
-      addBuffer(attachment, 1, format);
+      addBuffer(attachment, 1, format, filter);
     }
 
     if(attachment != depth)
       ++d_colorBuffers;
   }
 
-  void Surface::addTarget(Texture::Format format)
+  void Surface::addTarget(Texture::Format format, Texture::Filtering filter)
   {
     size_t oldDepth = d_depth;
     Component attachment = processFormat(format);
@@ -66,36 +66,32 @@ namespace dim
           "Addition of a extra render target to a framebuffer failed because the depth doesn't match");
     }
 
-    addBuffer(attachment, 0, format);
+    addBuffer(attachment, 0, format, filter);
 
     if(d_frames.size() == 2)
     {
-      addBuffer(attachment, 1, format);
+      addBuffer(attachment, 1, format, filter);
     }
 
     if(attachment != depth)
       ++d_colorBuffers;
   }
 
-  void Surface::addBuffer(Component attachment, size_t buffer, Texture::Format format)
+  void Surface::addBuffer(Component attachment, size_t buffer, Texture::Format format, Texture::Filtering filter)
   {
     if(attachment == depth)
     {
-      d_frames[buffer].d_texDepth = Texture(0, Texture::linear, format, d_width, d_height);
+      d_frames[buffer].d_texDepth = Texture(0, filter, format, d_width, d_height, Texture::borderClamp);
       glBindTexture(GL_TEXTURE_2D, d_frames[buffer].d_texDepth.id());
+      d_frames[buffer].d_texDepth.setBorderColor(vec4(1.0f));
     }
     else
     {
-      d_frames[buffer].d_texList[d_colorBuffers] = Texture(0, Texture::linear, format, d_width, d_height);
+      d_frames[buffer].d_texList[d_colorBuffers] = Texture(0, filter, format, d_width, d_height, Texture::borderClamp);
       glBindTexture(GL_TEXTURE_2D, d_frames[buffer].d_texList[d_colorBuffers].id());
     }
 
-    if(attachment == depth)
-      glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &vec4(1.0f)[0]);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
     glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[buffer].d_id);
 

@@ -18,8 +18,8 @@ vpath %.h include/DIM
 vpath %.hpp include/DIM
 vpath %.o obj
 
-CXXSOURCES = drawstate.cpp surface.cpp light.cpp drawmap.cpp camera.cpp texture.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp shaderbuffer.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp
-CXXHEADERS = base_iterator__.hpp component.hpp drawablewrapper.hpp drawstate.hpp light.hpp mesh.hpp scanner.hpp surface.hpp buffer.hpp context.hpp font.hpp listenarea.hpp mouse.hpp shaderbuffer.hpp texture.hpp button.hpp dim.hpp drawablewrapperimplement.hpp frame.hpp menu.hpp onepair.hpp shader.hpp window.hpp camera.hpp drawable.hpp drawmap.hpp image2d.hpp menuitem.hpp wrapper_ptr.hpp
+CXXSOURCES = drawstate.cpp surface.cpp light.cpp drawmap.cpp camera.cpp texture.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp shaderbuffer.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp
+CXXHEADERS = base_iterator__.hpp component.hpp drawablewrapper.hpp drawstate.hpp light.hpp mesh.hpp scanner.hpp surface.hpp buffer.hpp context.hpp font.hpp listenarea.hpp mouse.hpp shaderbuffer.hpp texture.hpp button.hpp dim.hpp drawablewrapperimplement.hpp frame.hpp menu.hpp onepair.hpp shader.hpp window.hpp camera.hpp drawable.hpp drawmap.hpp image2d.hpp menuitem.hpp wrapper_ptr.hpp tools.hpp
 
 CXXOBJECTS = $(CXXSOURCES:.cpp=.o)
 CXXFLAGS = -Wall --std=c++0x $(INCLUDEDIRS)
@@ -161,6 +161,9 @@ surface.o: surface.cpp surface.hpp font.hpp
 
 surface.hpp: texture.hpp
 
+tools.o: tools.cpp tools.hpp mesh.hpp
+	$(call build,tools)
+
 define \n
 
 
@@ -168,6 +171,7 @@ endef
 
 install: all
 	$(INSTALL) $(DYNAMICPROGRAM) $(libdir)/$(DYNAMICPROGRAM)
+	/sbin/ldconfig -l $(libdir)
 	$(INSTALL) -d include/DIM $(includedir)/DIM
 	$(addprefix $(INSTALL) -t $(includedir)/DIM/ include/DIM/,$(addsuffix ;$(\n),$(CXXHEADERS)))
   

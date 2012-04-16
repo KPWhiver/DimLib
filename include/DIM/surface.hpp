@@ -63,8 +63,8 @@ namespace dim
 		  color3 = GL_COLOR_ATTACHMENT3,
 		};
 
-		Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer);
-		void addTarget(Texture::Format format);
+		Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer, Texture::Filtering filter = Texture::linear);
+		void addTarget(Texture::Format format, Texture::Filtering filter = Texture::linear);
 
 		size_t height() const;
 		size_t width() const;
@@ -78,7 +78,7 @@ namespace dim
 
 	private:
 	  Surface::Component processFormat(Texture::Format format);
-	  void addBuffer(Component attachment, size_t buffer, Texture::Format format);
+	  void addBuffer(Component attachment, size_t buffer, Texture::Format format, Texture::Filtering filter);
 	};
 
 }
