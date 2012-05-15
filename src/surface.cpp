@@ -100,6 +100,11 @@ namespace dim
       glDrawBuffer(GL_NONE);
       glReadBuffer(GL_NONE);
     }
+    else
+    {
+    	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    	glReadBuffer(GL_COLOR_ATTACHMENT0);
+    }
 
     if(attachment == depth)
       glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, d_frames[buffer].d_texDepth.id(), 0);
@@ -234,6 +239,9 @@ namespace dim
 
     if(d_frames.size() == 2)
       d_bufferToRenderTo = ((d_bufferToRenderTo == 0) ? 1 : 0);
+      
+        	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    	glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     glViewport(x, y, width, height);
 

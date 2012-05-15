@@ -51,6 +51,8 @@ namespace dim
 
     bool d_depthComponent;
     bool d_colorComponent[4];
+    
+    static Surface* lastRenderedTo;
 
 	public:
 

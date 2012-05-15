@@ -45,7 +45,7 @@ build = $(CXX) $(CXXFLAGS) -c $(SRCDIR)/$(1).cpp -o $(OBJDIR)/$(1).o
 	
 $(DYNAMICPROGRAM): CXXFLAGS += -fPIC
 $(DYNAMICPROGRAM): $(CXXOBJECTS)
-	g++ -shared -Wl,-soname,$(DYNAMICPROGRAM) -o $(DYNAMICPROGRAM) $(addprefix $(OBJDIR)/, $(CXXOBJECTS)) -lc
+	g++ -shared -Wl,-soname,$(DYNAMICPROGRAM) -o $(DYNAMICPROGRAM) $(addprefix $(OBJDIR)/, $(CXXOBJECTS)) -lc -lGLEW
 	
 drawstate.o: drawstate.cpp drawstate.hpp
 	$(call build,drawstate)
