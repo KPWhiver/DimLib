@@ -64,12 +64,15 @@ namespace dim
 		};
 
 		Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer, Texture::Filtering filter = Texture::linear);
+
+		template<typename Type>
+		Surface(Texture<Type> const &texture);
 		void addTarget(Texture::Format format, Texture::Filtering filter = Texture::linear);
 
 		size_t height() const;
 		size_t width() const;
 
-		Texture &texture(Component component);
+		Texture const &texture(Component component) const;
 
 		void renderTo();
 		void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);

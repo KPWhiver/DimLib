@@ -40,6 +40,8 @@ namespace dim
 		  element = GL_ELEMENT_ARRAY_BUFFER,
 		  data = GL_ARRAY_BUFFER,
 		  uniform = GL_UNIFORM_BUFFER,
+		  //pixelRead
+		  //pixelWrite
 		};
 		Buffer(Buffer::Mode mode, size_t size, Type* data);
 		

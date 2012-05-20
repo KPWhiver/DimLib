@@ -116,87 +116,82 @@ namespace dim
 
   Surface::Component Surface::processFormat(Texture::Format format)
   {
-      switch(format)
-      {
-        case Texture::rgba8:
-          d_depth = 32;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          d_colorComponent[2] = true;
-          d_colorComponent[3] = true;
-          return color0;
-        case Texture::rgb8:
-          d_depth = 24;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          d_colorComponent[2] = true;
-          return color0;
-        case Texture::rg8:
-          d_depth = 16;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          return color0;
-        case Texture::r8:
-          d_depth = 8;
-          d_colorComponent[0] = true;
-          return color0;
+    // First pass only for depth
+    switch(format)
+    {
+      case Format::R8:
+        d_depth = 8;
+        break;
+      case Format::RG8:
+      case Format::R16:
+      case Format::D16:
+        d_depth = 16;
+        break;
+      case Format::RGB8:
+      case Format::sRGB8:
+        d_depth = 24;
+        break;
+      case Format::RGBA8:
+      case Format::sRGB8A8:
+      case Format::RG16:
+      case Format::R32:
+      case Format::D32:
+      case Format::R11G11B10:
+        d_depth = 32;
+        break;
+      case Format::RGB16:
+        d_depth = 48;
+        break;
+      case Format::RGBA16:
+      case Format::RG32:
+        d_depth = 64;
+        break;
+      case Format::RGB32:
+        d_depth = 96;
+        break;
+      case Format::RGBA32:
+        d_depth = 128;
+        break;
+    }
 
-        case Texture::rgba16:
-          d_depth = 64;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          d_colorComponent[2] = true;
-          d_colorComponent[3] = true;
-          return color0;
-        case Texture::rgb16:
-          d_depth = 48;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          d_colorComponent[2] = true;
-          return color0;
-        case Texture::rg16:
-          d_depth = 32;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          return color0;
-        case Texture::r16:
-          d_depth = 16;
-          d_colorComponent[0] = true;
-          return color0;
-        case Texture::depth16:
-          d_depth = 16;
-          d_depthComponent = true;
-          return depth;
-
-        case Texture::rgba32:
-          d_depth = 128;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          d_colorComponent[2] = true;
-          d_colorComponent[3] = true;
-          return color0;
-        case Texture::rgb32:
-          d_depth = 96;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          d_colorComponent[2] = true;
-          return color0;
-        case Texture::rg32:
-          d_depth = 64;
-          d_colorComponent[0] = true;
-          d_colorComponent[1] = true;
-          return color0;
-        case Texture::r32:
-          d_depth = 32;
-          d_colorComponent[0] = true;
-          return color0;
-        case Texture::depth32:
-          d_depth = 32;
-          d_depthComponent = true;
-          return depth;
-
-      }
-      return color0;
+    // Second pass only for components
+    switch(format)
+    {
+      case Format::RGBA8:
+      case Format::sRGB8A8:
+      case Format::RGBA16:
+      case Format::RGBA32:
+        d_colorComponent[0] = true;
+        d_colorComponent[1] = true;
+        d_colorComponent[2] = true;
+        d_colorComponent[3] = true;
+        return color0;
+      case Format::RGB8:
+      case Format::sRGB8:
+      case Format::RGB16:
+      case Format::RGB32:
+      case Format::R11G11B10:
+        d_colorComponent[0] = true;
+        d_colorComponent[1] = true;
+        d_colorComponent[2] = true;
+        return color0;
+      case Format::RG8:
+      case Format::RG16:
+      case Format::RG32:
+        d_colorComponent[0] = true;
+        d_colorComponent[1] = true;
+        return color0;
+      case Format::R8:
+      case Format::R16:
+      case Format::R32:
+        d_colorComponent[0] = true;
+        return color0;
+      case Format::D16:
+      case Format::D32:
+        d_depthComponent = true;
+        return depth;
+    }
+    return color0;
   }
 
   size_t Surface::height() const
@@ -209,7 +204,7 @@ namespace dim
     return d_width;
   }
 
-  Texture &Surface::texture(Component component)
+  Texture const &Surface::texture(Component component) const
   {
     size_t idx = 0;
     if(d_frames.size() == 2 && d_bufferToRenderTo == 1)
