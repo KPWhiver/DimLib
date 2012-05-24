@@ -23,29 +23,32 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <tuple>
 
 #include "DIM/texture.hpp"
 
 namespace dim
 {
+  template<typename ...Types>
+  class Surface
+  {
+    //size_t d_width, d_height;
+    size_t d_depth;
 
-	class Surface
-	{
-		size_t d_width, d_height;
-		size_t d_depth;
+   	size_t d_bufferToRenderTo;
 
-		size_t d_bufferToRenderTo;
+    struct FrameBuffer
+    {
+      std::tuple<Texture<Types>...> d_textures;
+    
+      //Texture d_texDepth;
+      //Texture d_texList[4];
+      std::shared_ptr<GLuint> d_id;
 
-		struct FrameBuffer
-		{
-		  Texture d_texDepth;
-		  Texture d_texList[4];
-		  std::shared_ptr<GLuint> d_id;
+      FrameBuffer();
+	};
 
-		  FrameBuffer();
-		};
-
-		std::vector<FrameBuffer> d_frames;
+    std::vector<FrameBuffer> d_frames;
 
     size_t d_colorBuffers;
 
@@ -53,35 +56,41 @@ namespace dim
     bool d_colorComponent[4];
     
     static Surface* lastRenderedTo;
+    
+    enum ComponentType
+    {
+      depth, 
+      color, 
+      stencil,
+    };
+    
+  public:
+    Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer, Texture::Filtering filter = Texture::linear);
+    
+    template<int Index>
+    void addTarget(Texture::Format format, Texture::Filtering filter = Texture::linear);
 
-	public:
+    size_t height() const;
+    size_t width() const;
 
-		enum Component
-		{
-		  depth = GL_DEPTH_ATTACHMENT, 
-		  color0 = GL_COLOR_ATTACHMENT0, 
-		  color1 = GL_COLOR_ATTACHMENT1, 
-		  color2 = GL_COLOR_ATTACHMENT2, 
-		  color3 = GL_COLOR_ATTACHMENT3,
-		};
+    template<int Index>
+    std::tuple_element<Index, Texture<Types>...>::type &texture(Component component);
 
-		Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer, Texture::Filtering filter = Texture::linear);
-		void addTarget(Texture::Format format, Texture::Filtering filter = Texture::linear);
+    void renderTo();
+    void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);
 
-		size_t height() const;
-		size_t width() const;
+    GLuint id() const;
 
-		Texture &texture(Component component);
+  private:
+	Surface::ComponentType processFormat(Texture::Format format);
+	void addBuffer(ComponentType attachment, size_t width, size_t height, size_t buffer, Texture::Format format, Texture::Filtering filter);
+  };
 
-		void renderTo();
-		void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);
-
-		GLuint id() const;
-
-	private:
-	  Surface::Component processFormat(Texture::Format format);
-	  void addBuffer(Component attachment, size_t buffer, Texture::Format format, Texture::Filtering filter);
-	};
+  template<>
+  class Surface
+  {
+    static_assert(true, "Error: Surface needs at least one template argument");
+  };
 
 }
 
