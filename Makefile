@@ -19,14 +19,12 @@ vpath %.hpp include/DIM
 vpath %.o obj
 
 CXXSOURCES = drawstate.cpp surface.cpp light.cpp drawmap.cpp camera.cpp texture.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp shaderbuffer.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp
-CXXHEADERS = base_iterator__.hpp component.hpp drawablewrapper.hpp drawstate.hpp light.hpp mesh.hpp surface.hpp buffer.hpp context.hpp font.hpp listenarea.hpp mouse.hpp shaderbuffer.hpp texture.hpp button.hpp dim.hpp drawablewrapperimplement.hpp frame.hpp menu.hpp onepair.hpp shader.hpp window.hpp camera.hpp drawable.hpp drawmap.hpp image2d.hpp menuitem.hpp wrapper_ptr.hpp tools.hpp
+CXXHEADERS = base_iterator__.hpp component.hpp drawablewrapper.hpp drawstate.hpp light.hpp mesh.hpp surface.hpp buffer.hpp context.hpp font.hpp listenarea.hpp mouse.hpp shaderbuffer.hpp texture.hpp button.hpp dim.hpp drawablewrapper.inl frame.hpp menu.hpp onepair.hpp shader.hpp window.hpp camera.hpp drawable.hpp drawmap.hpp image2d.hpp menuitem.hpp wrapper_ptr.hpp tools.hpp texture.inl
 
 CXXOBJECTS = $(CXXSOURCES:.cpp=.o)
 CXXFLAGS = -Wall --std=c++0x $(INCLUDEDIRS)
 
 CXX = g++
-
-MAINHEADER = $(CXXSOURCES:.cpp=.hpp)
 
 all: $(DYNAMICPROGRAM)
 
@@ -47,121 +45,121 @@ $(DYNAMICPROGRAM): CXXFLAGS += -fPIC
 $(DYNAMICPROGRAM): $(CXXOBJECTS)
 	g++ -shared -Wl,-soname,$(DYNAMICPROGRAM) -o $(DYNAMICPROGRAM) $(addprefix $(OBJDIR)/, $(CXXOBJECTS)) -lc -lGLEW
 	
-drawstate.o: drawstate.cpp drawstate.hpp
+drawstate.o: drawstate.cpp $(DRAWSTATE)
 	$(call build,drawstate)
 	
-drawstate.hpp: mesh.hpp shader.hpp texture.hpp
+DRAWSTATE: $(MESH) $(SHADER) $(TEXTURE) drawstate.hpp
 
-mesh.hpp: buffer.hpp
+MESH: $(BUFFER) mesh.hpp
 
-buffer.hpp: dim.hpp
+BUFFER: dim.hpp buffer.hpp
 
-shader.hpp: camera.hpp light.hpp shaderbuffer.hpp
+SHADER: $(CAMERA) $(LIGHT) $(SHADERBUFFER) shader.hpp
 
-camera.hpp: dim.hpp
+CAMERA: dim.hpp camera.hpp
 
-light.hpp: texture.hpp
+LIGHT: $(TEXTURE) light.hpp
 
-texture.hpp: dim.hpp
+TEXTURE: dim.hpp texture.hpp texture.inl
 
-context.o: context.cpp context.hpp
+context.o: context.cpp $(CONTEXT)
 	$(call build,context)
 
-context.hpp: mesh.hpp font.hpp
+CONTEXT: $(MESH) $(FONT) context.hpp
 
-font.hpp: texture.hpp
+FONT: $(TEXTURE) font.hpp
 
-light.o: light.cpp light.hpp shader.hpp camera.hpp
+light.o: light.cpp $(LIGHT) $(SHADER) $(CAMERA)
 	$(call build,light)
 	
-drawmap.o: drawmap.cpp drawmap.hpp shader.hpp
+drawmap.o: drawmap.cpp $(DRAWMAP) $(SHADER)
 	$(call build,drawmap)
 	
-drawmap.hpp: drawablewrapper.hpp drawstate.hpp
+DRAWMAP: $(DRAWABLEWRAPPER) $(DRAWSTATE) drawmap.hpp
 
-drawablewrapper.hpp: drawable.hpp base_iterator__.hpp onepair.hpp drawablewrapperimplement.hpp
+DRAWABLEWRAPPER: $(DRAWABLE) $(BASE_ITERATOR__) onepair.hpp drawablewrapper.inl drawablewrapper.hpp
 
-drawable.hpp: drawstate.hpp onepair.hpp
+DRAWABLE: $(DRAWSTATE) onepair.hpp drawable.hpp
 
-base_iterator__.hpp: drawable.hpp
+BASE_ITERATOR__: $(DRAWABLE) base_iterator__.hpp
 
-camera.o: camera.cpp camera.hpp shader.hpp
+camera.o: camera.cpp $(CAMERA) $(SHADER)
 	$(call build,camera)
 	
-texture.o: texture.cpp texture.hpp shader.hpp
+texture.o: texture.cpp $(TEXTURE) $(SHADER)
 	$(call build,texture)
 
-shader.o: shader.cpp shader.hpp
+shader.o: shader.cpp $(SHADER)
 	$(call build,shader)
 	
-mesh.o: mesh.cpp mesh.hpp shader.hpp
+mesh.o: mesh.cpp $(MESH) $(SHADER)
 	$(call build,mesh)
 	
-window.o: window.cpp window.hpp
+window.o: window.cpp $(WINDOW)
 	$(call build,window)
 	
-window.hpp: mouse.hpp
+WINDOW: $(MOUSE) window.hpp
 
-drawable.o: drawable.cpp drawable.hpp
+drawable.o: drawable.cpp $(DRAWABLE)
 	$(call build,drawable)
 
-mouse.o: mouse.cpp mouse.hpp
+mouse.o: mouse.cpp $(MOUSE)
 	$(call build,mouse)
 	
-mouse.hpp: dim.hpp
+MOUSE: dim.hpp mouse.hpp
 
-shaderbuffer.o: shaderbuffer.cpp shaderbuffer.hpp
+shaderbuffer.o: shaderbuffer.cpp $(SHADERBUFFER)
 	$(call build,shaderbuffer)
 
-shaderbuffer.hpp: dim.hpp
+SHADERBUFFER: dim.hpp shaderbuffer.hpp
 
-button.o: button.cpp button.hpp shader.hpp
+button.o: button.cpp $(BUTTON) $(SHADER)
 	$(call build,button)
 
-button.hpp: texture.hpp menu.hpp component.hpp
+BUTTON: $(TEXTURE) $(MENU) $(COMPONENT) button.hpp
 
-menu.hpp: texture.hpp menuitem.hpp component.hpp
+MENU: $(TEXTURE) $(MENUITEM) $(COMPONENT) menu.hpp
 
-menuitem.hpp: texture.hpp component.hpp
+MENUITEM: $(TEXTURE) $(COMPONENT) menuitem.hpp
 
-component.hpp: mouse.hpp context.hpp
+COMPONENT: $(MOUSE) $(CONTEXT)
 
-menu.o: menu.cpp menu.hpp
+menu.o: menu.cpp $(MENU)
 	$(call build,menu)
 	
-menuitem.o: menuitem.cpp menuitem.hpp shader.hpp
+menuitem.o: menuitem.cpp $(MENUITEM) $(SHADER)
 	$(call build,menuitem)
 	
-listenarea.o: listenarea.cpp listenarea.hpp
+listenarea.o: listenarea.cpp $(LISTENAREA)
 	$(call build,listenarea)
 	
-listenarea.hpp: texture.hpp component.hpp
+LISTENAREA: $(TEXTURE) $(COMPONENT) listenarea.hpp
 
-component.o: component.cpp component.hpp
+component.o: component.cpp $(COMPONENT)
 	$(call build,component)
 
-font.o: font.cpp font.hpp
+font.o: font.cpp $(FONT)
 	$(call build,font)
 	
-image2d.o: image2d.cpp image2d.hpp shader.hpp
+image2d.o: image2d.cpp $(IMAGE2D) $(SHADER)
 	$(call build,image2d)
 
-image2d.hpp: texture.hpp component.hpp
+IMAGE2D: $(TEXTURE) $(COMPONENT) image2d.hpp
 
-drawablewrapper.o: drawablewrapper.cpp drawablewrapper.hpp
+drawablewrapper.o: drawablewrapper.cpp $(DRAWABLEWRAPPER)
 	$(call build,drawablewrapper)
 
-frame.o: frame.cpp frame.hpp mesh.hpp
+frame.o: frame.cpp $(FRAME) $(MESH)
 	$(call build,frame)
 
-frame.hpp: component.hpp mouse.hpp wrapper_ptr.hpp
+FRAME: $(COMPONENT) $(MOUSE) wrapper_ptr.hpp frame.hpp
 
-surface.o: surface.cpp surface.hpp font.hpp
+surface.o: surface.cpp $(SURFACE) $(FONT)
 	$(call build,surface)
 
-surface.hpp: texture.hpp
+SURFACE: $(TEXTURE)
 
-tools.o: tools.cpp tools.hpp mesh.hpp
+tools.o: tools.cpp tools.hpp $(MESH)
 	$(call build,tools)
 
 define \n

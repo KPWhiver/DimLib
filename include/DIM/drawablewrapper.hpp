@@ -150,6 +150,6 @@ namespace dim
   
 
 }
-#include "drawablewrapperimplement.hpp"
+#include "drawablewrapper.inl"
   
 #endif

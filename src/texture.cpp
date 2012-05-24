@@ -17,10 +17,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include <iostream>
-#include <cctype>
-#include <stdexcept>
-
 #include <IL/il.h>
 
 #include "DIM/texture.hpp"
@@ -35,123 +31,31 @@ using namespace std;
 //}
 namespace dim
 {
-  bool Texture::s_anisotropic(false);
-  float Texture::s_maxAnisotropy(0);
-
-  void Texture::initialize()
+  Texture<GLubyte>::Texture()
+      :
+          d_source(0)
   {
-    if(GLEW_EXT_texture_filter_anisotropic)
-    {
-      /* It is safe to use anisotropic filtering. */
-      s_anisotropic = true;
-      glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &s_maxAnisotropy);
-    }
-  }
-
-  GLubyte *Texture::source()
-  {
-    ilBindImage(d_source);
-    return ilGetData();
-  }
-
-  GLuint Texture::id() const
-  {
-    return *d_id;
-  }
-
-  Texture::Texture()
-      : d_id(new GLuint(0), [](GLuint *ptr)
-      { glDeleteTextures(1, ptr); delete ptr;}), d_depth(8), d_height(1), d_width(1), d_externalFormat(
-          GL_RED), d_internalFormat(GL_R8), d_dataType(GL_UNSIGNED_BYTE)
-  {
-    processFormat(r8);
     GLubyte data(0);
-    init(&data, Texture::nearest, Texture::repeat);
+    init(&data, Texture::nearest, Format::R8, 1, 1, Wrapping::repeat);
   }
 
-  Texture::Texture(void * data, Filtering filter, Format format, size_t width, size_t height, Wrap wrap)
-      : d_id(new GLuint, [](GLuint *ptr)
-      { glDeleteTextures(1, ptr); delete ptr;}), d_depth(8), d_height(height), d_width(width), d_externalFormat(
-          GL_RED), d_internalFormat(GL_R8), d_dataType(GL_UNSIGNED_BYTE)
+  Texture<GLubyte>::Texture(GLubyte * data, Filtering filter, Format format, size_t width, size_t height, Wrap wrap)
+      :
+          d_source(0)
   {
-    processFormat(format);
-    init(data, filter, wrap);
+    init(data, filter, format, width, height, wrap);
   }
 
-  void Texture::init(void * data, Filtering filter, Wrap wrap)
-  {
-    glGenTextures(1, d_id.get());
-    glBindTexture(GL_TEXTURE_2D, *d_id);
-
-    switch(filter)
-    {
-      case anisotropicMax:
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, s_maxAnisotropy);
-        break;
-      case anisotropic1x:
-      case anisotropic2x:
-      case anisotropic4x:
-      case anisotropic8x:
-      case anisotropic16x:
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, filter);
-      case trilinear:
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        break;
-      case bilinear:
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        break;
-      case linear:
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        break;
-      case nearest:
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        break;
-    }
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
-
-    GLint GenMipMap;
-
-    if(filter != linear && filter != nearest)
-    {
-      glGetTexParameteriv(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, &GenMipMap);
-      glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-    }
-
-    glTexImage2D(GL_TEXTURE_2D, 0, d_internalFormat, d_width, d_height, 0, d_externalFormat,
-        d_dataType, data);
-    /*
-     * The following is the openGL 3 compliant code:
-     *  if(mipmap)
-     *  {
-     *    glGenerateMipmap(GL_TEXTURE_2D);
-     *  }
-     */
-
-    if(filter != linear && filter != nearest)
-    {
-      glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GenMipMap);
-    }
-  }
-
-  Texture::Texture(string const &filename, Filtering filter, bool edit, Wrap wrap)
-      : d_id(new GLuint, [](GLuint *ptr)
-      { delete ptr;}), d_depth(8), d_externalFormat(GL_ALPHA), d_internalFormat(GL_ALPHA), d_dataType(
-          GL_UNSIGNED_BYTE)
+  Texture<GLubyte>::Texture(string const &filename, Filtering filter, bool edit, Wrap wrap)
   {
     ilGenImages(1, &d_source);
-    ilBindImage(d_source);
+    ilBindImage (d_source);
 
     if(ilLoadImage(filename.c_str()) == false)
     {
-      //TODO throw
+
       ilDeleteImages(1, &d_source);
-      return;
+      throw(runtime_error("Unable to load: " + filename + ", unknown file format"));
     }
 
     int format = ilGetInteger(IL_IMAGE_FORMAT);
@@ -165,25 +69,24 @@ namespace dim
     if(format == IL_BGRA)
       ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
 
+    Format form;
+
     switch(pixelDepth)
     {
       case 1:
-        d_internalFormat = GL_ALPHA;
-        d_externalFormat = GL_ALPHA;
+        form = Format::R8;
         break;
       case 3:
-        d_internalFormat = GL_RGB;
-        d_externalFormat = GL_RGB;
+        form = Format::RGB8;
         break;
       case 4:
-        d_internalFormat = GL_RGBA;
-        d_externalFormat = GL_RGBA;
+        form = Format::RGBA8;
         break;
       default:
-        throw runtime_error("Unsupported Texture format passed");
+        throw runtime_error("Unable to load: " + filename + ", depth is not loadable");
     }
 
-    init(static_cast<void*>(ilGetData()), filter, wrap);
+    init(static_cast<void*>(ilGetData()), filter, form, d_width, d_height, wrap);
 
     d_filename = filename;
 
@@ -194,163 +97,132 @@ namespace dim
     }
   }
 
-  void Texture::setBorderColor(vec4 const &color)
+  void Texture<GLubyte>::reset()
   {
-    glBindTexture(GL_TEXTURE_2D, *d_id);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
-  }
+    if(d_filename == "")
+      return;
 
-  GLubyte Texture::value(size_t x, size_t y, size_t channel) const
-  {
+    bool edit = true;
+
     if(d_source == 0)
-      return 0;
+    {
+      ilGenImages(1, &d_source);
+      edit = false;
+    }
 
     ilBindImage(d_source);
+    ilLoadImage(d_filename.c_str());
 
-    switch(d_externalFormat)
+    int format = ilGetInteger(IL_IMAGE_FORMAT);
+    if(format == IL_BGR)
+      ilConvertImage(IL_RGB, IL_UNSIGNED_BYTE);
+
+    if(format == IL_BGRA)
+      ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+
+    updateData(ilGetData());
+
+    if(edit == false)
     {
-      case GL_ALPHA:
+      ilDeleteImages(1, &d_source);
+      d_source = 0;
+    }
+  }
+
+  void Texture<GLubyte>::update(GLubyte* data)
+  {
+    updateData(data);
+
+    if(d_source != 0)
+    {
+      size_t pixelDepth = ilGetInteger(IL_IMAGE_BYTES_PER_PIXEL);
+      int format = ilGetInteger(IL_IMAGE_FORMAT);
+
+      ilTexImage(d_width, d_height, 1, pixelDepth, format, IL_UNSIGNED_BYTE, data);
+    }
+  }
+
+  void Texture<GLubyte>::save(string const &filename)
+  {
+    if(filename == "")
+      filename = d_filename;
+
+    if(d_source != 0)
+    {
+      ilBindImage(d_source);
+      ilSaveImage(filename.c_str());
+    }
+    else
+    {
+      size_t bbp = 0;
+      int format = IL_ALPHA;
+      switch(externalFormat())
+      {
+        case GL_R:
+          bbp = 1;
+          break;
+        case GL_RGB:
+          bbp = 3;
+          format = IL_RGB;
+          break;
+        case GL_RGBA:
+          bbp = 4;
+          format = IL_RGBA;
+          break;
+      }
+
+      Type *dataSource = source();
+
+      ilGenImages(1, &d_source);
+      ilBindImage(d_source);
+      ilTexImage(d_width, d_height, 1, bbp, format, IL_UNSIGNED_BYTE, dataSource);
+      ilSaveImage(filename.c_str());
+      ilDeleteImages(1, &d_source);
+      d_source = 0;
+      delete[] dataSource;
+
+    }
+  }
+
+  GLubyte Texture<GLubyte>::value(size_t x, size_t y, size_t channel) const
+  {
+    GLubyte *dataSource;
+
+    if(d_source != 0)
+    {
+      ilBindImage(d_source);
+      dataSource = ilGetData();
+    }
+    else
+    {
+      dataSource = source();
+    }
+
+    switch(externalFormat())
+    {
+      case GL_R:
         if(channel == 0)
-          return ilGetData()[(y * d_width + x)];
+          return dataSource[(y * width() + x)];
         break;
       case GL_RGB:
         if(channel < 3)
-          return ilGetData()[(y * d_width + x) * 3 + channel];
+          return dataSource[(y * width() + x) * 3 + channel];
         break;
       case GL_RGBA:
         if(channel < 4)
-          return ilGetData()[(y * d_width + x) * 4 + channel];
+          return dataSource[(y * width() + x) * 4 + channel];
         break;
     }
+
+    if(d_source == 0)
+      delete[] dataSource;
 
     return 0;
   }
 
-  size_t Texture::height() const
-  {
-    return d_height;
-  }
-
-  size_t Texture::width() const
-  {
-    return d_width;
-  }
-
-  void Texture::reset()
+  GLubyte *Texture<GLubyte>::source()
   {
     ilBindImage(d_source);
-    ilLoadImage(d_filename.c_str());
-    update(ilGetData());
-  }
-
-  void Texture::update(void* data)
-  {
-    if(d_width == 0)
-      return;
-
-    glBindTexture(GL_TEXTURE_2D, *d_id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, d_width, d_height, d_externalFormat, d_dataType, data);
-  }
-
-  void Texture::save()
-  {
-    ilBindImage(d_source);
-    ilSaveImage(d_filename.c_str());
-  }
-
-  void Texture::processFormat(Format format)
-  {
-    switch(format)
-    {
-      case rgba8:
-        d_internalFormat = GL_RGBA8;
-        d_externalFormat = GL_RGBA;
-        break;
-      case rgb8:
-        d_internalFormat = GL_RGB8;
-        d_externalFormat = GL_RGB;
-        break;
-      case rg8:
-        d_internalFormat = GL_RGBA8;
-        d_externalFormat = GL_RG;
-        break;
-      case r8:
-        d_internalFormat = GL_R8;
-        d_externalFormat = GL_RED;
-        break;
-
-      case rgba16:
-        d_internalFormat = GL_RGBA16F;
-        d_externalFormat = GL_RGBA;
-        d_dataType = GL_HALF_FLOAT;
-        d_depth = 16;
-        break;
-      case rgb16:
-        d_internalFormat = GL_RGB16F;
-        d_externalFormat = GL_RGB;
-        d_dataType = GL_HALF_FLOAT;
-        d_depth = 16;
-        break;
-      case rg16:
-        d_internalFormat = GL_RG16F;
-        d_externalFormat = GL_RG;
-        d_dataType = GL_HALF_FLOAT;
-        d_depth = 16;
-        break;
-      case r16:
-        d_internalFormat = GL_R16F;
-        d_externalFormat = GL_RED;
-        d_dataType = GL_HALF_FLOAT;
-        d_depth = 16;
-        break;
-      case depth16:
-        d_internalFormat = GL_DEPTH_COMPONENT16;
-        d_externalFormat = GL_DEPTH_COMPONENT;
-        d_depth = 16;
-        break;
-
-      case rgba32:
-        d_internalFormat = GL_RGBA32F;
-        d_externalFormat = GL_RGBA;
-        d_dataType = GL_FLOAT;
-        d_depth = 32;
-        break;
-      case rgb32:
-        d_internalFormat = GL_RGB32F;
-        d_externalFormat = GL_RGB;
-        d_dataType = GL_FLOAT;
-        d_depth = 32;
-        break;
-      case rg32:
-        d_internalFormat = GL_RG32F;
-        d_externalFormat = GL_RG;
-        d_dataType = GL_HALF_FLOAT;
-        d_depth = 32;
-        break;
-      case r32:
-        d_internalFormat = GL_R32F;
-        d_externalFormat = GL_RED;
-        d_dataType = GL_FLOAT;
-        d_depth = 32;
-        break;
-      case depth32:
-        d_internalFormat = GL_DEPTH_COMPONENT32;
-        d_externalFormat = GL_DEPTH_COMPONENT;
-        d_depth = 32;
-        break;
-    }
-  }
-
-  void Texture::send(int unit, string const &variable) const
-  {
-    if(d_width == 0)
-      return;
-
-    int textureUnit;
-    textureUnit = GL_TEXTURE0 + unit;
-
-    glActiveTexture(textureUnit);
-    Shader::active().send(unit, variable);
-    glBindTexture(GL_TEXTURE_2D, *d_id);
+    return ilGetData();
   }
 }
