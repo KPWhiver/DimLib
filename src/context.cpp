@@ -27,7 +27,7 @@ namespace dim
 {
 	bool Context::s_initialized = false;
 	
-	Context::Context(Texture const &but, Texture const &butHover, Texture const &butDisable,
+	Context::Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable,
 			Font const &font)
 			:
 				d_butTexture(but),
@@ -47,17 +47,17 @@ namespace dim
 		return mesh;
 	}
 
-	Texture const &Context::buttonTexture() const
+	Texture<GLubyte> const &Context::buttonTexture() const
 	{
 		return d_butTexture;
 	}
 
-	Texture const &Context::buttonHoverTexture() const
+	Texture<GLubyte> const &Context::buttonHoverTexture() const
 	{
 		return d_butHoverTexture;
 	}
 
-	Texture const &Context::buttonDisableTexture() const
+	Texture<GLubyte> const &Context::buttonDisableTexture() const
 	{
 		return d_butDisableTexture;
 	}

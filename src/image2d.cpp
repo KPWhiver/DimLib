@@ -26,7 +26,7 @@ using namespace glm;
 
 namespace dim
 {
-	Image2D::Image2D(int x, int y, size_t width, size_t height, Texture const &image)
+	Image2D::Image2D(int x, int y, size_t width, size_t height, Texture<GLubyte> const &image)
 	:
 	    d_x(x),
 		  d_y(y),

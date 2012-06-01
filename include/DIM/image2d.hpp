@@ -35,10 +35,10 @@ namespace dim
 	  		
 		size_t d_width;
 		size_t d_height;
-		Texture d_image;
+		Texture<GLubyte> d_image;
 
   public:
-    Image2D(int x, int y, size_t width, size_t height, Texture const &image);
+    Image2D(int x, int y, size_t width, size_t height, Texture<GLubyte> const &image);
     virtual void draw(int x, int y);
     void setCoor(int x, int y);
 

@@ -20,7 +20,7 @@
 #ifndef LIGHTS_HPP
 #define	LIGHTS_HPP
 
-#include "DIM/texture.hpp"
+#include "DIM/dim.hpp"
 
 namespace dim
 {
@@ -31,7 +31,7 @@ class Light
   glm::vec4 d_lightIntensity;
   glm::vec4 d_highlightColor;
   glm::vec4 d_lightColor;
-	glm::vec4 d_position;
+  glm::vec4 d_position;
   glm::vec4 d_transformedPosition;
 
   glm::mat4 d_in_mat_light;

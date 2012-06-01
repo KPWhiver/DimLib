@@ -23,7 +23,7 @@ using namespace std;
 
 namespace dim
 {
-	DrawState::DrawState(Mesh const &mesh, Shader const &shader, std::vector<pair<Texture, string>> const &textures)
+	DrawState::DrawState(Mesh const &mesh, Shader const &shader, std::vector<pair<Texture<GLubyte>, string>> const &textures)
 	:
 			d_mesh(mesh),
 			d_shader(shader),
@@ -52,7 +52,7 @@ namespace dim
 		return d_shader;
 	}
 
-	vector<pair<Texture, string>> const &DrawState::textures() const
+	vector<pair<Texture<GLubyte>, string>> const &DrawState::textures() const
 	{
 		return d_textures;
 	}

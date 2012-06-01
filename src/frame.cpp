@@ -29,7 +29,7 @@ using namespace std;
 
 namespace dim
 {	
-	Frame::Frame(Texture const &but, Texture const &butHover, Texture const &butDisable,
+	Frame::Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable,
 			size_t width, size_t height, Font const &font)
 			:
 			  d_x(0),

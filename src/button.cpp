@@ -63,7 +63,7 @@ namespace dim
 	void Button::setContext(Context *context)
 	{
 		d_context = context;
-	  d_text = Texture(d_context->font().generateTexture(d_strText, d_width, d_height));
+	  d_text = Texture<GLubyte>(d_context->font().generateTexture(d_strText, d_width, d_height));
 	  
 	  if(d_menu != 0)
 	  	d_menu->setContext(context);

@@ -32,27 +32,26 @@
 namespace dim
 {
 
-	class Font
-	{
-		FT_Face d_face;
+  class Font
+  {
+    FT_Face d_face;
 
     FT_Glyph d_glyphs[128];
-		static FT_Library s_library;
+    static FT_Library s_library;
 
-	public:
-		Font(std::string filename);
+  public:
+    Font(std::string filename);
 
-		static void initialize();
+    static void initialize();
 
-    Texture generateTexture(std::string const &text, size_t width, size_t height) const;
-		//GLuint letter(size_t ch);
+    Texture<GLubyte> generateTexture(std::string const &text, size_t width, size_t height) const;
+    //GLuint letter(size_t ch);
 
-	private:
-		size_t nextPowerOf2(size_t number);
-		void generateCharMap(size_t ch);
+  private:
+    size_t nextPowerOf2(size_t number);
+    void generateCharMap(size_t ch);
 
-	};
-
+  };;
 
 
 }

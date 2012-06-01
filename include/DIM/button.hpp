@@ -30,17 +30,17 @@
 
 namespace dim
 {
-	class Button : public Component
-	{
-	  std::function<void(void)> d_listenerFunction;
-	  std::shared_ptr<Menu> d_menu;
-	    	  
-		int d_x, d_y;
-		size_t d_width, d_height;
-		Texture d_text;
-		std::string d_strText;
-		
-		bool d_selected;
+  class Button : public Component
+  {
+    std::function<void(void)> d_listenerFunction;
+    std::shared_ptr<Menu> d_menu;
+
+    int d_x, d_y;
+    size_t d_width, d_height;
+    Texture<GLubyte> d_text;
+    std::string d_strText;
+
+    bool d_selected;
 
   public:
     Button(int x, int y, size_t width, size_t height, std::string const &text);
@@ -52,8 +52,7 @@ namespace dim
     void setListener(std::function<void(void)> const &listenerFunction);
     void setMenu(Menu *menu);
     virtual void setContext(Context *context);
-
-	};
+  };
 
 }
 

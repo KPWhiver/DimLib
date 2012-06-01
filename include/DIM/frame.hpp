@@ -40,7 +40,7 @@ namespace dim
     std::shared_ptr<Context> d_context;
     
 	public:
-		Frame(Texture const &but, Texture const &butHover, Texture const &butDisable, size_t width, size_t height, Font const &font);
+		Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, size_t width, size_t height, Font const &font);
 
     //template <typename RefType>
 		void add(Component *component);

@@ -27,26 +27,26 @@
 
 namespace dim
 {
-	class Context
-	{	
-		Texture d_butTexture;
-		Texture d_butHoverTexture;
-		Texture d_butDisableTexture;
-		
-		Font d_font;
-			 
-		static bool s_initialized;
+  class Context
+  {
+    Texture<GLubyte> d_butTexture;
+    Texture<GLubyte> d_butHoverTexture;
+    Texture<GLubyte> d_butDisableTexture;
 
-	public:
-		Context(Texture const &but, Texture const &butHover, Texture const &butDisable, Font const &font);
+    Font d_font;
 
-		Texture const &buttonTexture() const;
-		Texture const &buttonHoverTexture() const;
-		Texture const &buttonDisableTexture() const;
-		Font &font();
+    static bool s_initialized;
 
-		Mesh const &mesh() const;
-	};
+  public:
+    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font);
+
+    Texture<GLubyte> const &buttonTexture() const;
+    Texture<GLubyte> const &buttonHoverTexture() const;
+    Texture<GLubyte> const &buttonDisableTexture() const;
+    Font &font();
+
+    Mesh const &mesh() const;
+  };
 
 }
 

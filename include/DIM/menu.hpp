@@ -28,14 +28,14 @@
 
 namespace dim
 {
-	class Menu : public Component
-	{
-		size_t d_width, d_height;
-		int d_x, d_y;
-		
-		std::vector<MenuItem*> d_items;
+  class Menu : public Component
+  {
+    size_t d_width, d_height;
+    int d_x, d_y;
+
+    std::vector<MenuItem*> d_items;
     bool d_active;
-      
+
   public:
     Menu(size_t d_width, size_t d_height);
     Menu();
@@ -48,7 +48,7 @@ namespace dim
     bool active() const;
     virtual void setContext(Context *context);
 
-	};
+};
 
 }
 

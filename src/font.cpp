@@ -70,7 +70,7 @@ void Font::generateCharMap(size_t ch)
 	d_glyphs[ch] = glyph;
 }
 
-Texture Font::generateTexture(string const &text, size_t textureWidth, size_t textureHeight) const
+Texture<GLubyte> Font::generateTexture(string const &text, size_t textureWidth, size_t textureHeight) const
 {
   size_t heightAboveLine = 0;
   size_t heightBelowLine = 0;
@@ -126,7 +126,7 @@ Texture Font::generateTexture(string const &text, size_t textureWidth, size_t te
     }
   }
 
-  Texture textTex(textMap, Texture::bilinear, Texture::rg8, textureWidth, textureHeight);
+  Texture<GLubyte> textTex(textMap, Filtering::bilinear, Format::RG8, textureWidth, textureHeight);
 
   delete[] textMap;
 

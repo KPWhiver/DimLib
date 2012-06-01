@@ -94,4 +94,6 @@ namespace dim
 
 }
 
+#include "surface.inl";
+
 #endif

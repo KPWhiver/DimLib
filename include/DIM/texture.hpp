@@ -25,11 +25,11 @@
 #include <type_traits>
 #include <stdexcept>
 
-#include "DIM/dim.hpp"
+#include "DIM/shader.hpp"
 
 namespace dim
 {
-  enum class Filtering
+  enum class Filtering : int
   {
     nearest = -1,
     linear = -2,
@@ -104,7 +104,7 @@ namespace dim
 
     protected:
       void init(Type *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap);
-      void updateData(void *Type) const;
+      void updateData(Type *data) const;
       Type *data() const;
       GLuint externalFormat() const;
 
@@ -117,13 +117,21 @@ namespace dim
   /* Texture<Type> */
 
   template<typename Type, typename ComponentType = Type>
-  class Texture: public TextureBase__
+  class Texture: public TextureBase__<Type, ComponentType>
   {
+      
+      using TextureBase__<Type, ComponentType>::width;
+      using TextureBase__<Type, ComponentType>::height;
+      using TextureBase__<Type, ComponentType>::init;
+      using TextureBase__<Type, ComponentType>::data;
+      using TextureBase__<Type, ComponentType>::externalFormat;
+  
+  
       std::shared_ptr<Type> d_source;
     public:
 
       Texture();
-      Texture(Type *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap = repeat);
+      Texture(Type *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap = Wrapping::repeat);
 
       void update(Type *data);
 
@@ -135,16 +143,18 @@ namespace dim
   /* Texture<GLubyte> */
 
   template<>
-  class Texture<GLubyte> : public TextureBase__
+  class Texture<GLubyte>: public TextureBase__<GLubyte>
   {
+
+      //using TextureBase__<GLubyte>;
 
       unsigned int d_source;
       std::string d_filename;
     public:
 
       Texture();
-      Texture(std::string const &filename, Filtering filter, bool edit, Wrap wrap = repeat);
-      Texture(GLubyte *data, Filtering filter, Format format, size_t width, size_t height, Wrap wrap = repeat);
+      Texture(std::string const &filename, Filtering filter, bool edit, Wrapping wrap = Wrapping::repeat);
+      Texture(GLubyte *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap = Wrapping::repeat);
 
       void update(GLubyte *data);
       void reset();
@@ -157,56 +167,56 @@ namespace dim
 
   /* Some template meta-programming */
 
-  template<Type>
-  DataType
-  {
-    static_assert(false, "Only GLfloat, GLuint, GLint, GLushort, GLshort, GLubyte and GLbyte are supported Texture types");
-  };
+  template<typename Type>
+  class DataType;
+  //{
+  //  static_assert(false, "Only GLfloat, GLuint, GLint, GLushort, GLshort, GLubyte and GLbyte are supported Texture types");
+  //};
 
   template<>
-  DataType<GLubyte>
+  class DataType<GLubyte>
   {
     enum
     { value = GL_UNSIGNED_BYTE};
   };
 
   template<>
-  DataType<GLbyte>
+  class DataType<GLbyte>
   {
     enum
     { value = GL_BYTE};
   };
 
   template<>
-  DataType<GLushort>
+  class DataType<GLushort>
   {
     enum
     { value = GL_UNSIGNED_SHORT};
   };
 
   template<>
-  DataType<GLshort>
+  class DataType<GLshort>
   {
     enum
     { value = GL_SHORT};
   };
 
   template<>
-  DataType<GLuint>
+  class DataType<GLuint>
   {
     enum
     { value = GL_UNSIGNED_INT};
   };
 
   template<>
-  DataType<GLint>
+  class DataType<GLint>
   {
     enum
     { value = GL_INT};
   };
 
   template<>
-  DataType<GLfloat>
+  class DataType<GLfloat>
   {
     enum
     { value = GL_FLOAT};
@@ -214,18 +224,18 @@ namespace dim
 
   /* ****************************** */
 
-  template<Type, ComponentType>
+  template<typename Type, typename ComponentType>
   Texture<Type, ComponentType>::Texture()
       :
           d_source(0, [](Type *ptr)
           { delete[] ptr;})
   {
     GLubyte data(0);
-    init(&data, Filter::nearest, Format::R8, 1, 1, Wrapping::repeat);
+    init(&data, Filtering::nearest, Format::R8, 1, 1, Wrapping::repeat);
   }
 
-  template<Type, ComponentType>
-  Texture<Type, ComponentType>::(Type * data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap)
+  template<typename Type, typename ComponentType>
+  Texture<Type, ComponentType>::Texture(Type * data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap)
   :
   d_source(0, [](Type *ptr)
       { delete[] ptr;})
@@ -233,13 +243,13 @@ namespace dim
     init(data, filter, format, width, height, wrap);
   }
 
-  template<Type, ComponentType>
+  template<typename Type, typename ComponentType>
   void Texture<Type, ComponentType>::update(Type* data)
   {
     updateData(data);
   }
 
-  template<Type, ComponentType>
+  template<typename Type, typename ComponentType>
   Type Texture<Type, ComponentType>::value(size_t x, size_t y, size_t channel) const
   {
     d_source.reset(data());
@@ -249,7 +259,7 @@ namespace dim
       case GL_R:
       case GL_DEPTH_COMPONENT:
         if(channel == 0)
-          return d_ource[(y * width() + x)];
+          return d_source[(y * width() + x)];
         break;
       case GL_RG:
         if(channel < 2)
@@ -266,7 +276,7 @@ namespace dim
     }
   }
 
-  template<Type, ComponentType>
+  template<typename Type, typename ComponentType>
   Type const *Texture<Type, ComponentType>::source()
   {
     d_source.reset(data());

@@ -53,7 +53,7 @@ namespace dim
 	void MenuItem::setContext(Context *context)
 	{
 		d_context = context;
-		d_text = Texture(d_context->font().generateTexture(d_strText, d_width, d_height));
+		d_text = Texture<GLubyte>(d_context->font().generateTexture(d_strText, d_width, d_height));
 	}
 
 	void MenuItem::setSize(size_t width, size_t height)

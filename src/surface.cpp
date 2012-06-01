@@ -22,7 +22,6 @@
 #include <iostream>
 
 #include "DIM/surface.hpp"
-#include "DIM/font.hpp"
 
 using namespace std;
 using namespace glm;

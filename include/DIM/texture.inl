@@ -61,45 +61,45 @@ namespace dim
     glGenTextures(1, d_id.get());
     glBindTexture(GL_TEXTURE_2D, *d_id);
 
-    if(s_anisotropic == false && filter >= 0)
-      filter = Filter::trilinear;
+    if(s_anisotropic == false && static_cast<int>(filter) >= 0)
+      filter = Filtering::trilinear;
 
     switch(filter)
     {
-      case anisotropicMax:
+      case Filtering::anisotropicMax:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, s_maxAnisotropy);
         break;
-      case anisotropic1x:
-      case anisotropic2x:
-      case anisotropic4x:
-      case anisotropic8x:
-      case anisotropic16x:
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, filter);
-      case trilinear:
+      case Filtering::anisotropic1x:
+      case Filtering::anisotropic2x:
+      case Filtering::anisotropic4x:
+      case Filtering::anisotropic8x:
+      case Filtering::anisotropic16x:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, static_cast<GLfloat>(filter));
+      case Filtering::trilinear:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         break;
-      case bilinear:
+      case Filtering::bilinear:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         break;
-      case linear:
+      case Filtering::linear:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         break;
-      case nearest:
+      case Filtering::nearest:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         break;
     }
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLfloat>(wrap));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLfloat>(wrap));
 
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat(), d_width, d_height, 0, externalFormat(), DataType<ComponentType>::value, data);
 
-    if(filter != linear && filter != nearest)
-      glGenerateMipmap (GL_TEXTURE_2D);
+    if(filter != Filtering::linear && filter != Filtering::nearest)
+      glGenerateMipmap(GL_TEXTURE_2D);
   }
 
   template <typename Type, typename ComponentType>
@@ -119,7 +119,7 @@ namespace dim
   }
 
   template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::setBorderColor(vec4 const &color) const
+  void TextureBase__<Type, ComponentType>::setBorderColor(glm::vec4 const &color) const
   {
     glBindTexture(GL_TEXTURE_2D, *d_id);
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
@@ -129,7 +129,7 @@ namespace dim
   void TextureBase__<Type, ComponentType>::generateMipmap() const
   {
     glBindTexture(GL_TEXTURE_2D, *d_id);
-    glgenerateMipmap (GL_TEXTURE_2D);
+    glGenerateMipmap(GL_TEXTURE_2D);
   }
 
   template <typename Type, typename ComponentType>
@@ -151,8 +151,10 @@ namespace dim
   }
 
   template <typename Type, typename ComponentType>
-  TextureBase__<Type, ComponentType>::components()
+  size_t TextureBase__<Type, ComponentType>::components() const
   {
+    uint test;
+  
     switch(externalFormat())
     {
       case GL_RGBA:
@@ -166,7 +168,7 @@ namespace dim
       case GL_DEPTH_COMPONENT:
         return 1;
       default:
-        throw(runtime_error("Unknown Texture format used in TextureBase__::components()"));
+        throw(std::runtime_error("Unknown Texture format used in TextureBase__::components()"));
     }
     return 0;
   }
@@ -199,7 +201,7 @@ namespace dim
       case Format::D32:
         return GL_DEPTH_COMPONENT;
       default:
-        throw(runtime_error("Unknown Texture format used in TextureBase__::externalFormat()"));
+        throw(std::runtime_error("Unknown Texture format used in TextureBase__::externalFormat()"));
     }
     return 0;
   }
@@ -212,7 +214,7 @@ namespace dim
     switch(format)
     {
       /* 8-bit formats */
-      case RGBA8:
+      case Format::RGBA8:
         switch(dataType)
         {
           case GL_INT:
@@ -221,7 +223,7 @@ namespace dim
             return GL_RGBA8UI;
         }
         return GL_RGBA8;
-      case RGB8:
+      case Format::RGB8:
         switch(dataType)
         {
           case GL_INT:
@@ -230,8 +232,7 @@ namespace dim
             return GL_RGB8UI;
         }
         return GL_RGB8;
-      case RG8:
-        d_internalFormat = GL_RG8;
+      case Format::RG8:
         switch(dataType)
         {
           case GL_INT:
@@ -240,7 +241,7 @@ namespace dim
             return GL_RG8UI;
         }
         return GL_RG8;
-      case R8:
+      case Format::R8:
         switch(dataType)
         {
           case GL_INT:
@@ -249,13 +250,13 @@ namespace dim
             return GL_R8UI;
         }
         return GL_R8;
-      case sRGB8A8:
+      case Format::sRGB8A8:
         return GL_SRGB8_ALPHA8;
-      case sRGB8:
+      case Format::sRGB8:
         return GL_SRGB8;
 
         /* 16-bit formats */
-      case RGBA16:
+      case Format::RGBA16:
         switch(dataType)
         {
           case GL_FLOAT:
@@ -266,7 +267,7 @@ namespace dim
             return GL_RGBA16UI;
         }
         return GL_RGBA16;
-      case RGB16:
+      case Format::RGB16:
         switch(dataType)
         {
           case GL_FLOAT:
@@ -277,18 +278,18 @@ namespace dim
             return GL_RGB16UI;
         }
         return GL_RGB16;
-      case RG16:
+      case Format::RG16:
         switch(dataType)
         {
           case GL_FLOAT:
-            d_internalFormat = GL_RG16F;
+            return GL_RG16F;
           case GL_INT:
             return GL_RG16I;
           case GL_UNSIGNED_INT:
             return GL_RG16UI;
         }
         return GL_RG16;
-      case R16:
+      case Format::R16:
         switch(dataType)
         {
           case GL_FLOAT:
@@ -299,11 +300,11 @@ namespace dim
             return GL_R16UI;
         }
         return GL_R16;
-      case D16:
+      case Format::D16:
         return GL_DEPTH_COMPONENT16;
 
         /* 32-bit formats */
-      case RGBA32:
+      case Format::RGBA32:
         switch(dataType)
         {
           case GL_INT:
@@ -312,7 +313,7 @@ namespace dim
             return GL_RGBA32UI;
         }
         return GL_RGBA32F;
-      case RGB32:
+      case Format::RGB32:
         switch(dataType)
         {
           case GL_INT:
@@ -321,7 +322,7 @@ namespace dim
             return GL_RGB32UI;
         }
         return GL_RGB32F;
-      case RG32:
+      case Format::RG32:
         switch(dataType)
         {
           case GL_INT:
@@ -330,7 +331,7 @@ namespace dim
             return GL_RG32UI;
         }
         return GL_RG32F;
-      case R32:
+      case Format::R32:
         switch(dataType)
         {
           case GL_INT:
@@ -339,20 +340,20 @@ namespace dim
             return GL_R32UI;
         }
         return GL_R32F;
-      case D32:
+      case Format::D32:
         return GL_DEPTH_COMPONENT32;
 
-      case R11G11B10:
+      case Format::R11G11B10:
         return GL_R11F_G11F_B10F;
 
       default:
-        throw(runtime_error("Unknown Texture format used in TextureBase__::internalFormat()"));
+        throw(std::runtime_error("Unknown Texture format used in TextureBase__::internalFormat()"));
     }
     return 0;
   }
 
   template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::send(int unit, string const &variable) const
+  void TextureBase__<Type, ComponentType>::send(int unit, std::string const &variable) const
   {
     int textureUnit = GL_TEXTURE0 + unit;
 

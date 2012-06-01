@@ -28,17 +28,17 @@
 
 namespace dim
 {
-	class MenuItem : public Component
-	{
-		Texture d_text;
-		std::string d_strText;
-		
-		bool d_selected;
-		
-		std::function<void(void)> d_listenerFunction;
-		size_t d_width;
-		size_t d_height;
-		  
+  class MenuItem : public Component
+  {
+    Texture<GLubyte> d_text;
+    std::string d_strText;
+
+    bool d_selected;
+
+    std::function<void(void)> d_listenerFunction;
+    size_t d_width;
+    size_t d_height;
+
   public:
     MenuItem(std::string const &text);
     MenuItem();
@@ -50,8 +50,7 @@ namespace dim
     void setListener(std::function<void(void)> const &listenerFunction);
     void setSize(size_t width, size_t height);
     virtual void setContext(Context *context);
-	};
-
+  };
 }
 
 #endif /* BUTTON_HPP_ */
