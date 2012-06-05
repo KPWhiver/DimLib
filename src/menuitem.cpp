@@ -62,11 +62,11 @@ namespace dim
 		d_height = height;
 	}
 
-	bool MenuItem::listen(int x, int y, size_t width, size_t height, dim::Mouse const &mouse)
+	bool MenuItem::listen(int x, int y, dim::Mouse const &mouse)
   {
     ivec2 mouseC = mouse.coor();
   
-    if(mouseC.x > x && mouseC.x < x + static_cast<int>(width) && mouseC.y > y && mouseC.y < y + static_cast<int>(height))
+    if(mouseC.x > x && mouseC.x < x + static_cast<int>(d_width) && mouseC.y > y && mouseC.y < y + static_cast<int>(d_height))
 		{
 		  if(mouse.lRelease())
 		  {
@@ -83,7 +83,7 @@ namespace dim
 		return false;
   }
 
-  void MenuItem::draw(int x, int y, size_t width, size_t height)
+  void MenuItem::draw(int x, int y)
   {
 	  if(d_context == 0)
 	    return;
@@ -94,7 +94,7 @@ namespace dim
 		  d_context->buttonTexture().send(0, "in_texture0");
 
     Shader::in_mat_model() = translate(Shader::in_mat_model(), vec3(x, y, 0));
-	  Shader::in_mat_model() = scale(Shader::in_mat_model(), vec3(width/10.0, height/10.0, 1.0));
+	  Shader::in_mat_model() = scale(Shader::in_mat_model(), vec3(d_width/10.0, d_height/10.0, 1.0));
 	  Shader::active().send(Shader::in_mat_model(), "in_mat_model");
 
     Shader::active().transformBegin();

@@ -45,8 +45,8 @@ namespace dim
     //~MenuItem();
 
 
-    void draw(int x, int y, size_t width, size_t height);
-    bool listen(int x, int y, size_t width, size_t height, dim::Mouse const &mouse);
+    void draw(int x, int y);
+    bool listen(int x, int y, dim::Mouse const &mouse);
     void setListener(std::function<void(void)> const &listenerFunction);
     void setSize(size_t width, size_t height);
     virtual void setContext(Context *context);

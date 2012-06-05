@@ -56,7 +56,7 @@ bool Menu::listen(int x, int y, dim::Mouse const &mouse)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      if(d_items[idx]->listen(x, y - idx * d_height - d_height, d_width, d_height, mouse))
+      if(d_items[idx]->listen(x, y - idx * d_height - d_height, mouse))
       {
         d_active = false;
         return true;
@@ -75,15 +75,15 @@ void Menu::draw(int x, int y)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      d_items[idx]->draw(x, y - idx * d_height - d_height, d_width, d_height);
+      d_items[idx]->draw(x, y - idx * d_height - d_height);
     }
   }
 }
 
 void Menu::add(MenuItem *item)
 {
+  item->setSize(d_width, d_height);
   d_items.push_back(item);
-  //item.setSize(d_width, d_height);
 }
 
 void Menu::setContext(Context *context)
