@@ -24,6 +24,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <stdexcept>
 
 #include "DIM/texture.hpp"
 
@@ -46,7 +47,7 @@ namespace dim
       std::shared_ptr<GLuint> d_id;
 
       FrameBuffer();
-	};
+	  };
 
     std::vector<FrameBuffer> d_frames;
 
@@ -65,16 +66,16 @@ namespace dim
     };
     
   public:
-    Surface(size_t width, size_t height, Texture::Format format, bool pingPongBuffer, Texture::Filtering filter = Texture::linear);
+    Surface(size_t width, size_t height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
     
     template<int Index>
-    void addTarget(Texture::Format format, Texture::Filtering filter = Texture::linear);
+    void addTarget(Format format, Filtering filter = Filtering::linear);
 
     size_t height() const;
     size_t width() const;
 
     template<int Index>
-    std::tuple_element<Index, Texture<Types>...>::type &texture(Component component);
+    typename std::tuple_element<Index, Texture<Types>...>::type &texture();
 
     void renderTo();
     void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);
@@ -82,18 +83,20 @@ namespace dim
     GLuint id() const;
 
   private:
-	Surface::ComponentType processFormat(Texture::Format format);
-	void addBuffer(ComponentType attachment, size_t width, size_t height, size_t buffer, Texture::Format format, Texture::Filtering filter);
+	  Surface::ComponentType processFormat(Format format);
+	  
+    template<int Index>
+    void addBuffer(ComponentType attachment, size_t width, size_t height, size_t buffer, Format format, Filtering filter);
   };
 
   template<>
-  class Surface
+  class Surface<>
   {
     static_assert(true, "Error: Surface needs at least one template argument");
   };
 
 }
 
-#include "surface.inl";
+#include "surface.inl"
 
 #endif

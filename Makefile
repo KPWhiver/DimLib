@@ -21,13 +21,13 @@ vpath %.d obj
 
 CXXSOURCES = drawstate.cpp light.cpp drawmap.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp shaderbuffer.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp
 
-CXXHEADERS = base_iterator__.hpp buffer.hpp button.hpp camera.hpp component.hpp context.hpp dim.hpp drawable.hpp drawablewrapper.hpp drawablewrapper.inl drawmap.hpp drawstate.hpp font.hpp frame.hpp image2d.hpp light.hpp listenarea.hpp menu.hpp menuitem.hpp mesh.hpp mouse.hpp multitypelist.hpp multitypelist.inl onepair.hpp shaderbuffer.hpp shader.hpp staticstorage.hpp staticstorage.inl surface.hpp surface.inl texture.hpp texture.inl tools.hpp typelist.hpp typelist.inl window.hpp wrapper_ptr.hpp
+CXXHEADERS = base_iterator__.hpp buffer.hpp button.hpp camera.hpp component.hpp context.hpp dim.hpp drawable.hpp drawablewrapper.hpp drawablewrapper.inl drawmap.hpp drawstate.hpp font.hpp frame.hpp image2d.hpp light.hpp listenarea.hpp menu.hpp menuitem.hpp mesh.hpp mouse.hpp onepair.hpp shaderbuffer.hpp shader.hpp surface.hpp surface.inl texture.hpp texture.inl tools.hpp window.hpp wrapper_ptr.hpp
 
 CXXOBJECTS = $(CXXSOURCES:.cpp=.o)
 CXXDEPS = $(CXXSOURCES:.cpp=.d)
 CXXFLAGS = -Wall --std=c++0x $(INCLUDEDIRS)
 
-CXX = g++
+CXX = clang++
 
 all: $(DYNAMICPROGRAM)
 
@@ -45,13 +45,13 @@ build = $(CXX) $(CXXFLAGS) -c $(SRCDIR)/$(1).cpp -o $(OBJDIR)/$(1).o
 
 $(DYNAMICPROGRAM): CXXFLAGS += -fPIC
 $(DYNAMICPROGRAM): $(CXXOBJECTS)
-	g++ -shared -Wl,-soname,$(DYNAMICPROGRAM) -o $(DYNAMICPROGRAM) $(addprefix $(OBJDIR)/, $(CXXOBJECTS)) -lc -lGLEW
+	$(CXX) -shared -Wl,-soname,$(DYNAMICPROGRAM) -o $(DYNAMICPROGRAM) $(addprefix $(OBJDIR)/, $(CXXOBJECTS)) -lc -lGLEW
 
 -include $(addprefix $(OBJDIR)/, $(CXXDEPS))
 
 %.o: %.cpp
-	g++ -c $(CXXFLAGS) $< -o $(OBJDIR)/$@
-	g++ -MM $(CXXFLAGS) $< > $(OBJDIR)/$*.d
+	$(CXX) -c $(CXXFLAGS) $< -o $(OBJDIR)/$@
+	$(CXX) -MM $(CXXFLAGS) $< > $(OBJDIR)/$*.d
 
 define \n
 

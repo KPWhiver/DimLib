@@ -152,9 +152,7 @@ namespace dim
 
   template <typename Type, typename ComponentType>
   size_t TextureBase__<Type, ComponentType>::components() const
-  {
-    uint test;
-  
+  {  
     switch(externalFormat())
     {
       case GL_RGBA:
@@ -211,7 +209,7 @@ namespace dim
   {
     GLuint dataType = DataType<ComponentType>::value;
 
-    switch(format)
+    switch(d_format)
     {
       /* 8-bit formats */
       case Format::RGBA8:
