@@ -355,6 +355,8 @@ namespace dim
   template <typename Type, typename ComponentType>
   void TextureBase__<Type, ComponentType>::send(int unit, std::string const &variable) const
   {
+    //TODO logica
+  
     int textureUnit = GL_TEXTURE0 + unit;
 
     glActiveTexture(textureUnit);

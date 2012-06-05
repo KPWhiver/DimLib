@@ -24,10 +24,21 @@ using namespace glm;
 using namespace std;
 
 namespace dim
-{
+{:
+  mat4 Drawable::matrix() const
+  {
+    mat4 modelMat;
+    modelMat = translate(modelMat, d_coor);
+    if(d_rot.x != 0)
+      modelMat = translate(modelMat, d_rot.x, vec3(1, 0, 0));
+    if(d_rot.y != 0)
+      modelMat = translate(modelMat, d_rot.z, vec3(0, 0, 1));
+    if(d_rot.z != 0)
+      modelMat = translate(modelMat, d_rot.y, vec3(0, 1, 0));
+  }
 
-  Drawable::Drawable(const glm::vec3 & coor, float xRot, float yRot, float radius)
-      : d_coor(coor), d_xRot(xRot), d_yRot(yRot), d_radius(radius)
+  Drawable::Drawable(vec3 const &coor, vec3 const &rot, float radius)
+      : d_coor(coor), d_rot(rot), d_radius(radius)
   {
   }
 
@@ -50,14 +61,9 @@ namespace dim
     d_coor = coor;
   }
 
-  float Drawable::xRot() const
+  glm::vec3 const &Drawable::rot() const
   {
-    return d_xRot;
-  }
-
-  float Drawable::yRot() const
-  {
-    return d_yRot;
+    return rot;
   }
 
   void Drawable::draw(const DrawState & state)

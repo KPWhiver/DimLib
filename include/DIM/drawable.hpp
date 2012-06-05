@@ -39,24 +39,23 @@ namespace dim
       friend std::istream &operator>>(std::istream &in, Drawable &object);
 
       glm::vec3 d_coor;
-      float d_xRot, d_yRot, d_radius;
+      glm::vec3 d_rot;
 
-
+      float d_radius;
 
     public:
       typedef Onepair<long, 10000000> Key;
       typedef std::pair<size_t, Key> Id;
 
       Drawable() = default;
-      Drawable(glm::vec3 const &coor, float xRot, float yRot, float radius);
+      Drawable(glm::vec3 const &coor, glm::vec3 const &rot, float radius);
 
       Id id() const;
 
       glm::vec3 coor() const;
       void setCoor(glm::vec3 const &coor);
 
-      float xRot() const;
-      float yRot() const;
+      glm::vec3 const &rot() const;
 
       std::vector<DrawState> const &drawStates() const;
 
@@ -64,6 +63,9 @@ namespace dim
 
       virtual ~Drawable();
 
+    protected:
+      glm::mat4 matrix() const;
+    
     private:
       Id d_id;
 

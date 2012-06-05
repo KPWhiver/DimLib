@@ -49,7 +49,7 @@ public:
 	std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
 
 	bool operator==(DrawState const &other) const;
-  bool operator<(DrawState const &other) const;
+    bool operator<(DrawState const &other) const;
 };
 
 }

@@ -103,7 +103,9 @@ namespace dim
   class DrawableWrapper__<RefType> : public DrawableWrapper__<Drawable>
   {
       //static DrawableWrapper__<RefType> s_instance;
-      std::shared_ptr<std::unordered_map<Drawable::Key, std::vector<RefType>, std::hash<long>, std::equal_to<long>>> d_map;
+      typedef std::unordered_map<Drawable::Key, std::vector<RefType>, std::hash<long>, std::equal_to<long>> Storage; 
+      
+      static std::unordered_map<DrawMap*, Storage> s_map;
 
     public:
       static DrawableWrapper__<RefType> &instance();
