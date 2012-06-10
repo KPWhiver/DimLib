@@ -27,7 +27,7 @@ CXXOBJECTS = $(CXXSOURCES:.cpp=.o)
 CXXDEPS = $(CXXSOURCES:.cpp=.d)
 CXXFLAGS = -Wall --std=c++0x $(INCLUDEDIRS)
 
-CXX = clang++
+CXX = g++
 
 all: $(DYNAMICPROGRAM)
 

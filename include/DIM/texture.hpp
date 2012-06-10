@@ -116,7 +116,7 @@ namespace dim
 
   /* Texture<Type> */
 
-  template<typename Type, typename ComponentType = Type>
+  template<typename Type = GLubyte, typename ComponentType = Type>
   class Texture: public TextureBase__<Type, ComponentType>
   {
       

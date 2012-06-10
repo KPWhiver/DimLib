@@ -21,14 +21,40 @@
 
 namespace dim
 {
-  /* Base */
+  /* constructors */
   DrawableWrapper__<Drawable>::DrawableWrapper__(size_t gridSize)
       :
           d_changed(new bool(false)),
           d_gridSize(gridSize)
   {
+  }  
+  
+  DrawableWrapper__<Drawable>::~DrawableWrapper__()
+  {
   }
-
+  
+  /* static access */
+  void DrawableWrapper__<Drawable>::remove(DrawMap* key) const;
+  {
+    v_remove(key);
+  }
+  
+  void DrawableWrapper__<Drawable>::copy(DrawMap* source, DrawMap* dest) const;
+  {
+    v_copy(source, dest);
+  }
+  
+  void DrawableWrapper__<Drawable>::move(DrawMap* source, DrawMap* dest) const;
+  {
+    v_move(source, dest);
+  }
+  
+  DrawableWrapper__<Drawable>* DrawableWrapper__<Drawable>::clone() const;
+  {
+    return v_clone();
+  }
+  
+  /* general functions */
   void DrawableWrapper__<Drawable>::save()
   {
     v_save();
@@ -42,8 +68,19 @@ namespace dim
   void DrawableWrapper__<Drawable>::draw(DrawState const &state, iterator &object)
   {
     v_draw(state, object);
+  }  
+  
+  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<Drawable>::find(float x, float z)
+  {
+    return v_find(x, z);
   }
 
+  void DrawableWrapper__<Drawable>::del(iterator &object)
+  {
+    v_del(object);
+  }
+
+  /* iterators */
   DrawableWrapper__<Drawable>::IdType DrawableWrapper__<Drawable>::nextId(IdType const &id) const
   {
     return v_nextId(id);
@@ -57,20 +94,6 @@ namespace dim
   Drawable const &DrawableWrapper__<Drawable>::getFromId(IdType const &id) const
   {
     return v_getFromId(id);
-  }
-
-  DrawableWrapper__<Drawable>::~DrawableWrapper__<Drawable>()
-  {
-  }
-
-  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<Drawable>::find(float x, float z)
-  {
-    return v_find(x, z);
-  }
-
-  void DrawableWrapper__<Drawable>::del(iterator &object)
-  {
-    v_del(object);
   }
 
   DrawableWrapper__<Drawable>::iterator DrawableWrapper__<Drawable>::begin()
@@ -93,6 +116,7 @@ namespace dim
     return v_end();
   }
 
+  /* private functions */
   size_t DrawableWrapper__<Drawable>::gridSize() const
   {
     return d_gridSize;
