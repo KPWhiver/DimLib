@@ -47,6 +47,7 @@ namespace dim
       //template <typename RefType>
       //using const_iterator = typename DrawableWrapper__<RefType>::const_iterator;
 
+    // iterators
       typedef std::pair<size_t, DrawableWrapper__<Drawable>::iterator> IdType;
 
       typedef base_iterator__<Drawable, DrawMap, IdType> iterator;
@@ -71,16 +72,24 @@ namespace dim
       Drawable &getFromId(IdType const &id);
       Drawable const &getFromId(IdType const &id) const;
 
-      //iterators
-
+    // constructors
       enum DrawMode
       {
         normal, shadow,
       };
 
       explicit DrawMap(size_t gridSize = 64);
+      
+      //DrawMap(DrawMap const &other);
+      //DrawMap(DrawMap &&tmp);
+      
+      //DrawMap &operator=(DrawMap const &other);
+      //DrawMap &operator=(DrawMap &&tmp);
+      
       ~DrawMap();
 
+
+    // regular functions
       template<typename RefType>
       typename DrawableWrapper__<RefType>::iterator add(bool saved, RefType const &object);
 
