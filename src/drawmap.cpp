@@ -30,6 +30,9 @@ using namespace glm;
 
 namespace dim
 {
+
+  /* constructors */
+  
   DrawMap::DrawMap(size_t gridSize)
       : d_gridSize(gridSize), d_objSelect(end())
   {

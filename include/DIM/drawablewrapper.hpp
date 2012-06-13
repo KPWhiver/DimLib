@@ -51,6 +51,8 @@ namespace dim
       virtual ~DrawableWrapper__();
       DrawableWrapper__(size_t d_gridSize);
       
+      DrawableWrapper__(DrawableWrapper__ const &other)
+      
     // static access
       void remove(DrawMap* key) const;
       void copy(DrawMap* source, DrawMap* dest) const;
