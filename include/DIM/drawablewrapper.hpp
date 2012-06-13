@@ -53,8 +53,8 @@ namespace dim
       
     // static access
       void remove(DrawMap* key) const;
-      void copy(DrawMap* source, DrawMap* dest);
-      void move(DrawMap* source, DrawMap* dest);
+      void copy(DrawMap* source, DrawMap* dest) const;
+      void move(DrawMap* source, DrawMap* dest) const;
 
     // typedefs
       typedef std::pair<size_t, Drawable::Key> IdType;
@@ -162,9 +162,6 @@ namespace dim
       virtual void v_copy(DrawMap* source, DrawMap* dest) const;
       virtual void v_remove(DrawMap* source, DrawMap* dest) const;
       virtual DrawableWrapper__<Drawable>* v_clone() const;
-    
-    // private functions
-      size_t count() const;
 
     // regular functions
       virtual void v_save();
@@ -183,6 +180,9 @@ namespace dim
       DrawableWrapper__<Drawable>::iterator v_end();
       DrawableWrapper__<Drawable>::const_iterator v_begin() const;
       DrawableWrapper__<Drawable>::const_iterator v_end() const;
+
+    // private functions
+      size_t count() const;
   };
   
 

@@ -80,13 +80,6 @@ namespace dim
     return new DrawableWrapper__<RefType>(*this);
   }
 
-  /*template<typename RefType>
-  DrawableWrapper__<RefType> &DrawableWrapper__<RefType>::instance()
-  {
-    static DrawableWrapper__<RefType> lastInstance(0);
-    return lastInstance;
-  }*/
-
   /* iterators */
 
   template <typename RefType>

@@ -151,16 +151,19 @@ namespace dim
   {
     return DrawableWrapper__<RefType>::instance().begin();
   }
+
   template<typename RefType>
   typename DrawableWrapper__<RefType>::iterator DrawMap::end()
   {
     return DrawableWrapper__<RefType>::instance().end();
   }
+
   template<typename RefType>
   typename DrawableWrapper__<RefType>::const_iterator DrawMap::begin() const
   {
     return DrawableWrapper__<RefType>::instance().begin();
   }
+
   template<typename RefType>
   typename DrawableWrapper__<RefType>::const_iterator DrawMap::end() const
   {

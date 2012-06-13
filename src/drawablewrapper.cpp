@@ -34,22 +34,22 @@ namespace dim
   }
   
   /* static access */
-  void DrawableWrapper__<Drawable>::remove(DrawMap* key) const;
+  void DrawableWrapper__<Drawable>::remove(DrawMap* key) const
   {
     v_remove(key);
   }
   
-  void DrawableWrapper__<Drawable>::copy(DrawMap* source, DrawMap* dest) const;
+  void DrawableWrapper__<Drawable>::copy(DrawMap* source, DrawMap* dest) const
   {
     v_copy(source, dest);
   }
   
-  void DrawableWrapper__<Drawable>::move(DrawMap* source, DrawMap* dest) const;
+  void DrawableWrapper__<Drawable>::move(DrawMap* source, DrawMap* dest) const
   {
     v_move(source, dest);
   }
   
-  DrawableWrapper__<Drawable>* DrawableWrapper__<Drawable>::clone() const;
+  DrawableWrapper__<Drawable>* DrawableWrapper__<Drawable>::clone() const
   {
     return v_clone();
   }
