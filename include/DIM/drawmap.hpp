@@ -80,11 +80,11 @@ namespace dim
 
       explicit DrawMap(size_t gridSize = 64);
       
-      //DrawMap(DrawMap const &other);
-      //DrawMap(DrawMap &&tmp);
+      DrawMap(DrawMap const &other);
+      DrawMap(DrawMap &&tmp);
       
-      //DrawMap &operator=(DrawMap const &other);
-      //DrawMap &operator=(DrawMap &&tmp);
+      DrawMap &operator=(DrawMap const &other);
+      DrawMap &operator=(DrawMap &&tmp);
       
       ~DrawMap();
 

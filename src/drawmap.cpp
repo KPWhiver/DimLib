@@ -38,11 +38,40 @@ namespace dim
   {
   }
 
+  DrawMap::DrawMap(DrawMap const &other)
+  :
+      d_drawStateList(other.d_drawStateList),
+      d_drawableWrappers(other.d_drawableWrappers),
+      d_gridSize(other.d_gridSize)
+  {
+    for(auto const &element: d_drawableWrappers)
+      element.copy(&other, this);
+  }
+
+  DrawMap::DrawMap(DrawMap &&tmp)
+  {
+    for(auto const &element: d_drawableWrappers)
+      element.move(&other, this);
+  }
+
+  DrawMap &DrawMap::operator=(DrawMap const &other)
+  {
+    for(auto const &element: d_drawableWrappers)
+      element.copy(&other, this);
+  }
+
+  DrawMap &DrawMap::operator=(DrawMap &&tmp)
+  {
+
+  }
+
   DrawMap::~DrawMap()
   {
     for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
       delete d_drawableWrappers[idx];
   }
+
+  /* iterators */
 
   DrawMap::iterator DrawMap::begin()
   {
@@ -92,6 +121,35 @@ namespace dim
                        , 0))
                , 0);
   }
+
+  DrawMap::IdType DrawMap::nextId(IdType const &id) const
+  {
+    auto iter = id.second;
+
+    for(size_t idx = id.first; idx != d_drawableWrappers.size(); ++idx)
+    {
+      ++iter;
+
+      if(iter != d_drawableWrappers[idx]->end())
+        return std::make_pair(idx, iter);
+
+      if(idx + 1 != d_drawableWrappers.size())
+        iter = d_drawableWrappers[idx + 1]->begin();
+    }
+    return end().id();
+  }
+
+  Drawable &DrawMap::getFromId(IdType const &id)
+  {
+    return *id.second;
+  }
+
+  Drawable const &DrawMap::getFromId(IdType const &id) const
+  {
+    return *id.second;
+  }
+
+  /* regular functions */
 
   void DrawMap::mark(DrawMap::iterator const &object)
   {
@@ -185,33 +243,6 @@ namespace dim
   DrawMap::iterator DrawMap::get(float x, float z)
   {
     return find(x, z);
-  }
-
-  DrawMap::IdType DrawMap::nextId(IdType const &id) const
-  {
-    auto iter = id.second;
-
-    for(size_t idx = id.first; idx != d_drawableWrappers.size(); ++idx)
-    {
-      ++iter;
-
-      if(iter != d_drawableWrappers[idx]->end())
-        return std::make_pair(idx, iter);
-
-      if(idx + 1 != d_drawableWrappers.size())
-        iter = d_drawableWrappers[idx + 1]->begin();
-    }
-    return end().id();
-  }
-
-  Drawable &DrawMap::getFromId(IdType const &id)
-  {
-    return *id.second;
-  }
-
-  Drawable const &DrawMap::getFromId(IdType const &id) const
-  {
-    return *id.second;
   }
 }
 
