@@ -1,4 +1,4 @@
-// wrapper_ptr.hpp
+// copyptr.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,101 +17,120 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef WRAPPER_PTR_HPP
-#define WRAPPER_PTR_HPP
+#ifndef COPYPTR_HPP
+#define COPYPTR_HPP
 
 namespace dim
 {
   template <typename Type>
-  class wrapper_ptr
+  class CopyPtr
   {
     Type *d_ptr;
+    size_t d_size;
 
     public:
-      wrapper_ptr();
-      wrapper_ptr(Type *ptr);
-      wrapper_ptr(wrapper_ptr const &other);
-      wrapper_ptr(wrapper_ptr &&tmp);
+      CopyPtr();
+      CopyPtr(Type *ptr, size_t size = 1);
+      CopyPtr(CopyPtr const &other);
+      CopyPtr(CopyPtr &&tmp);
 
-      wrapper_ptr &operator=(wrapper_ptr const &other);
-      wrapper_ptr &operator=(wrapper_ptr &&tmp);
+      CopyPtr &operator=(CopyPtr const &other);
+      CopyPtr &operator=(CopyPtr &&tmp);
 
       operator Type*();
       Type &operator*();
       Type *operator->();
 
-      ~wrapper_ptr();
+      ~CopyPtr();
   };
 
   template <typename Type>
-  wrapper_ptr<Type>::wrapper_ptr()
+  CopyPtr<Type>::CopyPtr()
   :
-    d_ptr(0)
+    d_ptr(0),
+    d_size(1)
   {
   }
 
   template <typename Type>
-  wrapper_ptr<Type>::wrapper_ptr(Type *ptr)
+  CopyPtr<Type>::CopyPtr(Type *ptr, size_t size)
   :
-    d_ptr(ptr)
+    d_ptr(ptr),
+    d_size(size)
   {
   }
 
   template <typename Type>
-  wrapper_ptr<Type>::wrapper_ptr(wrapper_ptr const &other)
+  CopyPtr<Type>::CopyPtr(CopyPtr const &other)
   :
-    d_ptr(0)
+    d_ptr(0),
+    d_size(other.d_size)
   {
     if(other.d_ptr != 0)
-      d_ptr = new Type(*other.d_ptr);
+    {
+      if(d_size > 1)
+      {
+        d_ptr = new Type[d_size];
+        std::memcpy(other.d_ptr, d_ptr, d_size);
+      }
+      else
+        d_ptr = new Type(*other.d_ptr);
+    }
   }
 
   template <typename Type>
-  wrapper_ptr<Type>::wrapper_ptr(wrapper_ptr &&tmp)
+  CopyPtr<Type>::CopyPtr(CopyPtr &&tmp)
   :
-    d_ptr(tmp.d_ptr)
+    d_ptr(tmp.d_ptr),
+    d_size(tmp.d_size)
   {
     tmp.d_ptr = 0;
+    tmp.d_size = 1;
   }
 
   template <typename Type>
-  wrapper_ptr<Type> &wrapper_ptr<Type>::operator=(wrapper_ptr const &other)
+  CopyPtr<Type> &CopyPtr<Type>::operator=(CopyPtr const &other)
   {
-    wrapper_ptr<Type> tmp(other);
+    CopyPtr<Type> tmp(other);
     std::swap(tmp.d_ptr, d_ptr);
+    std::swap(tmp.d_size, d_size);
     return *this;
   }
 
   template <typename Type>
-  wrapper_ptr<Type> &wrapper_ptr<Type>::operator=(wrapper_ptr &&tmp)
+  CopyPtr<Type> &CopyPtr<Type>::operator=(CopyPtr &&tmp)
   {
     std::swap(tmp.d_ptr, d_ptr);
+    std::swap(tmp.d_size, d_size);
     return *this;
   }
 
   template <typename Type>
-  wrapper_ptr<Type>::operator Type*()
+  CopyPtr<Type>::operator Type*()
   {
     return d_ptr;
   }
 
   template <typename Type>
-  Type &wrapper_ptr<Type>::operator*()
+  Type &CopyPtr<Type>::operator*()
   {
     return *d_ptr;
   }
 
   template <typename Type>
-  Type *wrapper_ptr<Type>::operator->()
+  Type *CopyPtr<Type>::operator->()
   {
     return d_ptr;
   }
 
   template <typename Type>
-  wrapper_ptr<Type>::~wrapper_ptr()
+  CopyPtr<Type>::~CopyPtr()
   {
-    delete d_ptr;
+    if(d_size > 1)
+      delete[] d_ptr;
+    else
+      delete d_ptr;
   }
 
 } /* namespace dim */
-#endif /* PTRWRAPPER_HPP_ */
+#endif /* COPYPTR_HPP_ */

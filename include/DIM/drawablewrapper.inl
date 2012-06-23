@@ -23,32 +23,32 @@ namespace dim
   /* static access */
   
   template <typename RefType>
-  Storage &DrawableWrapper__<RefType>::get(DrawMap* key)
+  DrawableWrapper__<RefType> &DrawableWrapper__<RefType>::get(size_t key)
   {
     return s_map[key];
   }
   
   template <typename RefType>
-  void DrawableWrapper__<RefType>::remove(DrawMap* key)
+  void DrawableWrapper__<RefType>::remove(size_t key)
   {
     s_map.remove(key);
   }
   
   template <typename RefType>
-  void DrawableWrapper__<RefType>::copy(DrawMap* source, DrawMap* dest)
+  void DrawableWrapper__<RefType>::copy(size_t source, size_t dest)
   {
     s_map[dest] = s_map[source];
   }
  
   template <typename RefType>
-  void DrawableWrapper__<RefType>::move(DrawMap* source, DrawMap* dest)
+  void DrawableWrapper__<RefType>::move(size_t source, size_t dest)
   {
     s_map[dest] = std::move(s_map[source]);
     s_map.remove(source);
   }
  
   template <typename RefType>
-  bool DrawableWrapper__<RefType>::isPresent(DrawMap* key)
+  bool DrawableWrapper__<RefType>::isPresent(size_t key)
   {
     if(s_map.get(key) != s_map.end())
       return true;
@@ -57,25 +57,25 @@ namespace dim
   }
 
   template <typename RefType>
-  void DrawableWrapper__<RefType>::v_remove(DrawMap* key) const
+  void DrawableWrapper__<RefType>::v_remove() const
   {
-    remove(key);
+    remove(ownerId());
   }
   
   template <typename RefType>
-  void DrawableWrapper__<RefType>::v_copy(DrawMap* source, DrawMap* dest) const
+  void DrawableWrapper__<RefType>::v_copy(size_t dest) const
   {
-    copy(source, dest);
+    copy(ownerId(), dest);
   }
  
   template <typename RefType>
-  void DrawableWrapper__<RefType>::v_move(DrawMap* source, DrawMap* dest) const
+  void DrawableWrapper__<RefType>::v_move(size_t dest) const
   {
-    move(source, dest);
+    move(ownerId(), dest);
   }
   
   template <typename RefType>
-  DrawableWrapper__<Drawable> DrawableWrapper__<RefType>::v_clone() const
+  DrawableWrapper__<Drawable>* DrawableWrapper__<RefType>::v_clone() const
   {
     return new DrawableWrapper__<RefType>(*this);
   }
@@ -85,7 +85,7 @@ namespace dim
   template <typename RefType>
   typename DrawableWrapper__<RefType>::iterator DrawableWrapper__<RefType>::begin()
   {
-    for(auto mapPart : *d_map)
+    for(auto mapPart : d_map)
     {
       for(RefType &drawable : mapPart.second)
       {
@@ -106,7 +106,7 @@ namespace dim
   template <typename RefType>
   typename DrawableWrapper__<RefType>::const_iterator DrawableWrapper__<RefType>::begin() const
   {
-   for(auto mapPart : *d_map)
+   for(auto mapPart : d_map)
     {
       for(RefType &drawable : mapPart.second)
       {
@@ -151,7 +151,7 @@ namespace dim
   {
     size_t start = id.first;
 
-    for(auto mapPart = d_map->find(id.second); mapPart != d_map->end(); ++mapPart)
+    for(auto mapPart = d_map.find(id.second); mapPart != d_map.end(); ++mapPart)
     {
       for(size_t idx = start; idx != mapPart->second.size(); ++idx)
       {
@@ -166,14 +166,14 @@ namespace dim
   template<typename RefType>
   RefType &DrawableWrapper__<RefType>::getFromId(typename DrawableWrapper__<RefType>::IdType const &id)
   {
-    auto mapPart = d_map->find(id.second);
+    auto mapPart = d_map.find(id.second);
     return mapPart->second[id.first];
   }
 
   template<typename RefType>
   RefType const &DrawableWrapper__<RefType>::getFromId(typename DrawableWrapper__<RefType>::IdType const &id) const
   {
-    auto mapPart = d_map->find(id.second);
+    auto mapPart = d_map.find(id.second);
     return mapPart->second[id.first];
   }
 
@@ -196,7 +196,7 @@ namespace dim
   size_t DrawableWrapper__<RefType>::count() const
   {
     size_t count = 0;
-    for(auto mapPart : *d_map)
+    for(auto mapPart : d_map)
       count += mapPart.second.size();
 
     return count;
@@ -205,13 +205,12 @@ namespace dim
   /* constructors */
 
   template<typename RefType>
-  DrawableWrapper__<RefType>::DrawableWrapper__(size_t gridSize)
+  DrawableWrapper__<RefType>::DrawableWrapper__(size_t gridSize, size_t key)
       :
-        DrawableWrapper__<Drawable>(gridSize),
-        d_map(new std::unordered_map<Drawable::Key, std::vector<RefType>, std::hash<long>, std::equal_to<long>>())
+        DrawableWrapper__<Drawable>(gridSize, key)
   {
-    if(gridSize != 0)
-      instance() = *this;
+    //if(gridSize != 0)
+    //  instance() = *this;
   }
 
   /* regular functions */
@@ -226,7 +225,7 @@ namespace dim
     if(changing)
       setChanged(true);
 
-    std::vector<RefType> &list = (*d_map)[Drawable::Key(xloc, zloc)];
+    std::vector<RefType> &list = d_map[Drawable::Key(xloc, zloc)];
 
     std::pair<size_t, Drawable::Key> id(list.size(), Drawable::Key(xloc, zloc));
 
@@ -290,7 +289,7 @@ namespace dim
     if(changed() == false)
       return;
 
-    d_map->clear();
+    d_map.clear();
     load(filename());
   }
 
@@ -311,7 +310,7 @@ namespace dim
     if(found == false)
       return;
 
-    for(auto mapPart : *d_map)
+    for(auto mapPart : d_map)
     {
 
       for(RefType &drawable : mapPart.second)
@@ -351,8 +350,8 @@ namespace dim
     xloc = x / gridSize();
     zloc = z / gridSize();
 
-    auto mapPart = d_map->find(Drawable::Key(xloc, zloc));
-    if(mapPart == d_map->end())
+    auto mapPart = d_map.find(Drawable::Key(xloc, zloc));
+    if(mapPart == d_map.end())
       return end();
 
     for(RefType &drawable : mapPart->second)

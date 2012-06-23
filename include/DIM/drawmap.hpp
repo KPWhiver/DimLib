@@ -22,6 +22,7 @@
 
 #include "DIM/drawablewrapper.hpp"
 #include "DIM/drawstate.hpp"
+#include "DIM/cloneptr.hpp"
 
 #include <vector>
 #include <set>
@@ -36,7 +37,7 @@ namespace dim
   {
       std::set<DrawState> d_drawStateList;
 
-      std::vector<DrawableWrapper__<Drawable>*> d_drawableWrappers;
+      std::vector<ClonePtr<DrawableWrapper__<Drawable>>> d_drawableWrappers;
 
       size_t d_gridSize;
 
@@ -121,7 +122,7 @@ namespace dim
   void DrawMap::load(std::string const &filename)
   {
     if(DrawableWrapper__<RefType>::instance().gridSize() == 0)
-      d_drawableWrappers.push_back(new DrawableWrapper__<RefType>(d_gridSize));
+      d_drawableWrappers.push_back(new DrawableWrapper__<RefType>(d_gridSize, this));
 
     DrawableWrapper__<RefType>::instance().load(filename);
 
@@ -135,7 +136,7 @@ namespace dim
   {
     // Add the object
     if(DrawableWrapper__<RefType>::instance().gridSize() == 0)
-      d_drawableWrappers.push_back(new DrawableWrapper__<RefType>(d_gridSize));
+      d_drawableWrappers.push_back(new DrawableWrapper__<RefType>(d_gridSize, this));
 
     typename DrawableWrapper__<RefType>::iterator iter =
         DrawableWrapper__<RefType>::instance().add(!saved, object);

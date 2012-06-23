@@ -22,31 +22,29 @@
 namespace dim
 {
   /* constructors */
-  DrawableWrapper__<Drawable>::DrawableWrapper__(size_t gridSize)
+  DrawableWrapper__<Drawable>::DrawableWrapper__(size_t gridSize, size_t ownerId)
       :
-          d_changed(new bool(false)),
-          d_gridSize(gridSize)
+          d_changed(false),
+          d_gridSize(gridSize),
+          d_ownerId(ownerId)
   {
   }  
   
   DrawableWrapper__<Drawable>::~DrawableWrapper__()
   {
+    v_remove(d_ownerId);
   }
   
   /* static access */
-  void DrawableWrapper__<Drawable>::remove(DrawMap* key) const
+  
+  void DrawableWrapper__<Drawable>::copy(size_t dest) const
   {
-    v_remove(key);
+    v_copy(ownerId, dest);
   }
   
-  void DrawableWrapper__<Drawable>::copy(DrawMap* source, DrawMap* dest) const
+  void DrawableWrapper__<Drawable>::move(size_t dest) const
   {
-    v_copy(source, dest);
-  }
-  
-  void DrawableWrapper__<Drawable>::move(DrawMap* source, DrawMap* dest) const
-  {
-    v_move(source, dest);
+    v_move(ownerId, dest);
   }
   
   DrawableWrapper__<Drawable>* DrawableWrapper__<Drawable>::clone() const
@@ -121,6 +119,11 @@ namespace dim
   {
     return d_gridSize;
   }
+  
+  size_t DrawableWrapper__<Drawable>::ownerId() const
+  {
+    return d_ownerId;
+  }
 
   std::string const &DrawableWrapper__<Drawable>::filename() const
   {
@@ -134,11 +137,11 @@ namespace dim
 
   bool DrawableWrapper__<Drawable>::changed() const
   {
-    return *d_changed;
+    return d_changed;
   }
 
   void DrawableWrapper__<Drawable>::setChanged(bool changed)
   {
-    *d_changed = changed;
+    d_changed = changed;
   }
 }

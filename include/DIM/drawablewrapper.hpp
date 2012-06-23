@@ -42,21 +42,22 @@ namespace dim
   template <>
   class DrawableWrapper__<Drawable>
   {
-      std::shared_ptr<bool> d_changed;
+      bool d_changed;
       std::string d_filename;
       size_t d_gridSize;
+      size_t d_ownerId;
+      
       
     public:
     // constructors
       virtual ~DrawableWrapper__();
-      DrawableWrapper__(size_t d_gridSize);
+      DrawableWrapper__(size_t gridSize, size_t ownerId);
       
-      DrawableWrapper__(DrawableWrapper__ const &other)
+      DrawableWrapper__(DrawableWrapper__ const &other);
       
     // static access
-      void remove(DrawMap* key) const;
-      void copy(DrawMap* source, DrawMap* dest) const;
-      void move(DrawMap* source, DrawMap* dest) const;
+      void copy(size_t dest) const;
+      void move(size_t dest) const;
 
     // typedefs
       typedef std::pair<size_t, Drawable::Key> IdType;
@@ -84,11 +85,14 @@ namespace dim
 
       size_t gridSize() const;
       
+    protected:
+      size_t ownerId() const;
+      
     private:
     // static access
-      virtual void v_remove(DrawMap* key) const = 0;
-      virtual void v_copy(DrawMap* source, DrawMap* dest) const = 0;
-      virtual void v_remove(DrawMap* source, DrawMap* dest) const = 0;
+      virtual void v_remove() const = 0;
+      virtual void v_copy(size_t dest) const = 0;
+      virtual void v_remove(size_t dest) const = 0;
       virtual DrawableWrapper__<Drawable>* v_clone() const = 0;
     
     // iterators
@@ -123,20 +127,22 @@ namespace dim
   {
       typedef std::unordered_map<Drawable::Key, std::vector<RefType>, std::hash<long>, std::equal_to<long>> Storage; 
       
-      static std::unordered_map<DrawMap*, Storage> s_map;
+      Storage d_map;
+      
+      static std::unordered_map<size_t, DrawableWrapper__<RefType>> s_map;
 
     public:
     // constuctors
-      DrawableWrapper__(size_t gridSize);
+      DrawableWrapper__(size_t gridSize, size_t key);
       
     // static access
-      static DrawableWrapper__<RefType> &get(DrawMap* key);
+      static DrawableWrapper__<RefType> &get(size_t key);
       
-      static void remove(DrawMap* key);
-      static void copy(DrawMap* source, DrawMap* dest);
-      static void move(DrawMap* source, DrawMap* dest);
+      static void remove(size_t key);
+      static void copy(size_t source, size_t dest);
+      static void move(size_t source, size_t dest);
       
-      static bool isPresent(DrawMap* key);
+      static bool isPresent(size_t key);
 
     // typedefs
       typedef std::pair<size_t, Drawable::Key> IdType;
@@ -160,9 +166,9 @@ namespace dim
 
     private:
     // static access
-      virtual void v_remove(DrawMap* key) const;
-      virtual void v_copy(DrawMap* source, DrawMap* dest) const;
-      virtual void v_remove(DrawMap* source, DrawMap* dest) const;
+      virtual void v_remove() const;
+      virtual void v_copy(size_t dest) const;
+      virtual void v_move(size_t dest) const;
       virtual DrawableWrapper__<Drawable>* v_clone() const;
 
     // regular functions
