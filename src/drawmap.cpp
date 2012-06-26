@@ -45,31 +45,32 @@ namespace dim
       d_gridSize(other.d_gridSize)
   {
     for(auto const &element: d_drawableWrappers)
-      element.copy(&other, this);
+      element->copy(this);
   }
 
   DrawMap::DrawMap(DrawMap &&tmp)
   {
     for(auto const &element: d_drawableWrappers)
-      element.move(&other, this);
+      element->move(this);
   }
 
   DrawMap &DrawMap::operator=(DrawMap const &other)
   {
     for(auto const &element: d_drawableWrappers)
-      element.copy(&other, this);
+      element->copy(this);
   }
 
   DrawMap &DrawMap::operator=(DrawMap &&tmp)
   {
-
+    for(auto const &element: d_drawableWrappers)
+      element->move(this);
   }
 
-  DrawMap::~DrawMap()
-  {
-    for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
-      delete d_drawableWrappers[idx];
-  }
+  //DrawMap::~DrawMap()
+  //{
+  //  for(auto const &element: d_drawableWrappers)
+  //    element->remove();
+  //}
 
   /* iterators */
 
@@ -183,8 +184,8 @@ namespace dim
 
       //TODO save the drawables at the states
 
-      for(DrawableWrapper__<Drawable> *wrapper: d_drawableWrappers)
-        wrapper->draw(state, d_objSelect.id().second);
+      for(auto &element: d_drawableWrappers)
+        element->draw(state, d_objSelect.id().second);
       
       if(mode == DrawMap::shadow)
       {
@@ -230,14 +231,14 @@ namespace dim
 
   void DrawMap::save()
   {
-    for(DrawableWrapper__<Drawable> *wrapper: d_drawableWrappers)
-      wrapper->save();
+    for(auto &element: d_drawableWrappers)
+      element->save();
   }
 
   void DrawMap::reset()
   {
-    for(DrawableWrapper__<Drawable> *wrapper: d_drawableWrappers)
-      wrapper->reset();
+    for(auto &element: d_drawableWrappers)
+      element->reset();
   }
 
   DrawMap::iterator DrawMap::get(float x, float z)
