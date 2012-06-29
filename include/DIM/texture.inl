@@ -103,15 +103,29 @@ namespace dim
   }
 
   template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::updateData(Type *data) const
+  void TextureBase__<Type, ComponentType>::update(Type *data)
   {
+    if(data == 0)
+    {
+      if(d_keepBuffered == false)
+        return;
+      else
+        data = d_buffer;
+    }
+  
     glBindTexture(GL_TEXTURE_2D, *d_id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, d_width, d_height, externalFormat(), DataType<ComponentType>::value, data);
+    
+    if(d_keepBuffered == false)
+      d_buffer = 0; 
   }
 
   template <typename Type, typename ComponentType>
-  Type *TextureBase__<Type, ComponentType>::data() const
+  Type *TextureBase__<Type, ComponentType>::renewBuffer()
   {
+    
+  
+  
     Type *texData = new Type[d_width * d_height * components()];
     glBindTexture(GL_TEXTURE_2D, *d_id);
     glGetTexImage(GL_TEXTURE_2D, 0, externalFormat(), DataType<ComponentType>::value, data);
@@ -148,6 +162,44 @@ namespace dim
   Format TextureBase__<Type, ComponentType>::format() const
   {
     return d_format;
+  }
+  
+  template<typename Type, typename ComponentType>
+  Type TextureBase__<Type, ComponentType>::value(size_t x, size_t y, size_t channel) const
+  {
+    //d_source.reset(data());
+    
+    renewBuffer();
+
+    switch(externalFormat())
+    {
+      case GL_R:
+      case GL_DEPTH_COMPONENT:
+        if(channel == 0)
+          return d_buffer[(y * width() + x)];
+        break;
+      case GL_RG:
+        if(channel < 2)
+          return d_buffer[(y * width() + x) * 2 + channel];
+        break;
+      case GL_RGB:
+        if(channel < 3)
+          return d_buffer[(y * width() + x) * 3 + channel];
+        break;
+      case GL_RGBA:
+        if(channel < 4)
+          return d_buffer[(y * width() + x) * 4 + channel];
+        break;
+    }
+  }
+
+  template<typename Type, typename ComponentType>
+  Type *BaseTexture__<Type, ComponentType>::source()
+  {
+    renewBuffer();
+
+    //d_source.reset(data());
+    return d_buffer;
   }
 
   template <typename Type, typename ComponentType>
