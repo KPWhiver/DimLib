@@ -37,8 +37,8 @@ namespace dim
       ClonePtr &operator=(ClonePtr &&tmp);
 
       operator Type*();
-      Type &operator*();
-      Type *operator->();
+      Type &operator*() const;
+      Type *operator->() const;
 
       ~ClonePtr();
   };
@@ -96,13 +96,13 @@ namespace dim
   }
 
   template <typename Type>
-  Type &ClonePtr<Type>::operator*()
+  Type &ClonePtr<Type>::operator*() const
   {
     return *d_ptr;
   }
 
   template <typename Type>
-  Type *ClonePtr<Type>::operator->()
+  Type *ClonePtr<Type>::operator->() const
   {
     return d_ptr;
   }

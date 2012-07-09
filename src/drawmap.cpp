@@ -42,35 +42,49 @@ namespace dim
   :
       d_drawStateList(other.d_drawStateList),
       d_drawableWrappers(other.d_drawableWrappers),
-      d_gridSize(other.d_gridSize)
+      d_gridSize(other.d_gridSize),
+      d_objSelect(other.d_objSelect)
   {
     for(auto const &element: d_drawableWrappers)
-      element->copy(this);
+      element->copy(reinterpret_cast<size_t>(this));
   }
 
   DrawMap::DrawMap(DrawMap &&tmp)
+  :
+      d_drawStateList(move(tmp.d_drawStateList)),
+      d_drawableWrappers(move(tmp.d_drawableWrappers)),
+      d_gridSize(move(tmp.d_gridSize)),
+      d_objSelect(move(tmp.d_objSelect))
   {
     for(auto const &element: d_drawableWrappers)
-      element->move(this);
+      element->move(reinterpret_cast<size_t>(this));
   }
 
   DrawMap &DrawMap::operator=(DrawMap const &other)
   {
+    d_drawStateList = other.d_drawStateList;
+    d_drawableWrappers = other.d_drawableWrappers;
+    d_gridSize = other.d_gridSize;
+    d_objSelect = other.d_objSelect;
+
     for(auto const &element: d_drawableWrappers)
-      element->copy(this);
+      element->copy(reinterpret_cast<size_t>(this));
+
+    return *this;
   }
 
   DrawMap &DrawMap::operator=(DrawMap &&tmp)
   {
-    for(auto const &element: d_drawableWrappers)
-      element->move(this);
-  }
+    d_drawStateList = move(tmp.d_drawStateList);
+    d_drawableWrappers = move(tmp.d_drawableWrappers);
+    d_gridSize = move(tmp.d_gridSize);
+    d_objSelect = move(tmp.d_objSelect);
 
-  //DrawMap::~DrawMap()
-  //{
-  //  for(auto const &element: d_drawableWrappers)
-  //    element->remove();
-  //}
+    for(auto const &element: d_drawableWrappers)
+      element->move(reinterpret_cast<size_t>(this));
+
+    return *this;
+  }
 
   /* iterators */
 

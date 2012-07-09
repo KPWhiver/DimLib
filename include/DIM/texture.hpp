@@ -119,9 +119,6 @@ namespace dim
   template<typename Type = GLubyte, typename ComponentType = Type>
   class Texture: public TextureBase__<Type, ComponentType>
   {
-      
-      using TextureBase__<Type, ComponentType>::width;
-      using TextureBase__<Type, ComponentType>::height;
       using TextureBase__<Type, ComponentType>::init;
       using TextureBase__<Type, ComponentType>::data;
       using TextureBase__<Type, ComponentType>::externalFormat;
@@ -129,6 +126,8 @@ namespace dim
   
       std::shared_ptr<Type> d_source;
     public:
+      using TextureBase__<Type, ComponentType>::width;
+      using TextureBase__<Type, ComponentType>::height;
 
       Texture();
       Texture(Type *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap = Wrapping::repeat);
@@ -168,55 +167,55 @@ namespace dim
   /* Some template meta-programming */
 
   template<typename Type>
-  class DataType;
+  struct DataType;
   //{
   //  static_assert(false, "Only GLfloat, GLuint, GLint, GLushort, GLshort, GLubyte and GLbyte are supported Texture types");
   //};
 
   template<>
-  class DataType<GLubyte>
+  struct DataType<GLubyte>
   {
     enum
     { value = GL_UNSIGNED_BYTE};
   };
 
   template<>
-  class DataType<GLbyte>
+  struct DataType<GLbyte>
   {
     enum
     { value = GL_BYTE};
   };
 
   template<>
-  class DataType<GLushort>
+  struct DataType<GLushort>
   {
     enum
     { value = GL_UNSIGNED_SHORT};
   };
 
   template<>
-  class DataType<GLshort>
+  struct DataType<GLshort>
   {
     enum
     { value = GL_SHORT};
   };
 
   template<>
-  class DataType<GLuint>
+  struct DataType<GLuint>
   {
     enum
     { value = GL_UNSIGNED_INT};
   };
 
   template<>
-  class DataType<GLint>
+  struct DataType<GLint>
   {
     enum
     { value = GL_INT};
   };
 
   template<>
-  class DataType<GLfloat>
+  struct DataType<GLfloat>
   {
     enum
     { value = GL_FLOAT};
@@ -230,7 +229,7 @@ namespace dim
           d_source(0, [](Type *ptr)
           { delete[] ptr;})
   {
-    GLubyte data(0);
+    Type data(0);
     init(&data, Filtering::nearest, Format::R8, 1, 1, Wrapping::repeat);
   }
 

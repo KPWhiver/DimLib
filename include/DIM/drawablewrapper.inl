@@ -212,6 +212,12 @@ namespace dim
     //if(gridSize != 0)
     //  instance() = *this;
   }
+  
+  template<typename RefType>
+  DrawableWrapper__<RefType>::~DrawableWrapper__()
+  {
+    remove(ownerId());
+  }
 
   /* regular functions */
 

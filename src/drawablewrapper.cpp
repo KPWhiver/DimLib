@@ -32,19 +32,18 @@ namespace dim
   
   DrawableWrapper__<Drawable>::~DrawableWrapper__()
   {
-    v_remove(d_ownerId);
   }
   
   /* static access */
   
   void DrawableWrapper__<Drawable>::copy(size_t dest) const
   {
-    v_copy(ownerId, dest);
+    v_copy(dest);
   }
   
   void DrawableWrapper__<Drawable>::move(size_t dest) const
   {
-    v_move(ownerId, dest);
+    v_move(dest);
   }
   
   DrawableWrapper__<Drawable>* DrawableWrapper__<Drawable>::clone() const

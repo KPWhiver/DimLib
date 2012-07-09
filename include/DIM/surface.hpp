@@ -68,14 +68,14 @@ namespace dim
   public:
     Surface(size_t width, size_t height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
     
-    template<int Index>
+    template<size_t Index>
     void addTarget(Format format, Filtering filter = Filtering::linear);
 
     size_t height() const;
     size_t width() const;
 
-    template<int Index>
-    typename std::tuple_element<Index, Texture<Types>...>::type &texture();
+    template<size_t Index = 0>
+    typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &texture();
 
     void renderTo();
     void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);
@@ -85,7 +85,7 @@ namespace dim
   private:
 	  Surface::ComponentType processFormat(Format format);
 	  
-    template<int Index>
+    template<size_t Index>
     void addBuffer(ComponentType attachment, size_t width, size_t height, size_t buffer, Format format, Filtering filter);
   };
 

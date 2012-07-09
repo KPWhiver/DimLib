@@ -56,9 +56,10 @@ namespace dim
       DrawableWrapper__(DrawableWrapper__ const &other);
       
     // static access
+
       void copy(size_t dest) const;
       void move(size_t dest) const;
-
+      DrawableWrapper__<Drawable>* clone() const;
     // typedefs
       typedef std::pair<size_t, Drawable::Key> IdType;
 
@@ -92,7 +93,7 @@ namespace dim
     // static access
       virtual void v_remove() const = 0;
       virtual void v_copy(size_t dest) const = 0;
-      virtual void v_remove(size_t dest) const = 0;
+      virtual void v_move(size_t dest) const = 0;
       virtual DrawableWrapper__<Drawable>* v_clone() const = 0;
     
     // iterators
@@ -134,6 +135,7 @@ namespace dim
     public:
     // constuctors
       DrawableWrapper__(size_t gridSize, size_t key);
+      virtual ~DrawableWrapper__();
       
     // static access
       static DrawableWrapper__<RefType> &get(size_t key);

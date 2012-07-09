@@ -31,15 +31,15 @@ namespace dim
       : d_bufferToRenderTo(0), d_frames(1 + pingPongBuffer),
         d_colorBuffers(0), d_depthComponent(false), d_colorComponent{false}
   {
-    Component attachment = processFormat(format);
+    ComponentType attachment = processFormat(format);
 
     glGenFramebuffers(1, d_frames[0].d_id.get());
-    addBuffer(attachment, width, height, 0, format, filter);
+    addBuffer<0>(attachment, width, height, 0, format, filter);
 
     if(pingPongBuffer)
     {
       glGenFramebuffers(1, d_frames[1].d_id.get());
-      addBuffer(attachment, width, height, 1, format, filter);
+      addBuffer<0>(attachment, width, height, 1, format, filter);
     }
 
     //if(attachment != depth)
@@ -47,11 +47,11 @@ namespace dim
   }
 
   template<typename ...Types>
-  template<int Index>
+  template<size_t Index>
   void Surface<Types...>::addTarget(Format format, Filtering filter)
   {
     size_t oldDepth = d_depth;
-    Component attachment = processFormat(format);
+    ComponentType attachment = processFormat(format);
 
     if(oldDepth != d_depth)
     {
@@ -70,17 +70,17 @@ namespace dim
   }
 
   template<typename ...Types>
-  template<int Index>
+  template<size_t Index>
   void Surface<Types...>::addBuffer(ComponentType attachment, size_t width, size_t height, size_t buffer, Format format, Filtering filter)
   {
-    typedef typename std::tuple_element<Index, Texture<Types>...>::type TextureType;
+    typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
 
-    Texture<TextureType> &tex = std::get<Index>(d_frames[buffer].d_textures);
-    tex = Texture<TextureType>(0, filter, format, width, height, Wrapping::borderClamp);
+    TextureType &tex = std::get<Index>(d_frames[buffer].d_textures);
+    tex = TextureType(0, filter, format, width, height, Wrapping::borderClamp);
     glBindTexture(GL_TEXTURE_2D, tex.id());
    
     if(attachment == depth)
-      d_frames[buffer].d_texDepth.setBorderColor(glm::vec4(1.0f));
+      tex.setBorderColor(glm::vec4(1.0f));
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
@@ -211,20 +211,15 @@ namespace dim
     return std::get<0>(d_frames[0].d_textures).width();
   }
 
-  template<typename ...Types>
-  template<int Index>
-  typename std::tuple_element<Index, Texture<Types>...>::type &Surface<Types...>::texture()
+  template<typename ...Types> 
+  template<size_t Index> 
+  typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &Surface<Types...>::texture()
   {
-    
     size_t idx = 0;
     if(d_frames.size() == 2 && d_bufferToRenderTo == 1)
       idx = 1;
       
     return std::get<Index>(d_frames[idx].d_textures);
-    //if(component == depth)
-    //  return d_frames[idx].d_texDepth;
-    
-    //return d_frames[idx].d_texList[component - color0];
   }
   
   template<typename ...Types>

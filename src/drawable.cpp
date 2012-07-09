@@ -19,22 +19,25 @@
 
 #include "DIM/drawable.hpp"
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
 
 using namespace glm;
 using namespace std;
 
 namespace dim
-{:
+{
   mat4 Drawable::matrix() const
   {
     mat4 modelMat;
     modelMat = translate(modelMat, d_coor);
     if(d_rot.x != 0)
-      modelMat = translate(modelMat, d_rot.x, vec3(1, 0, 0));
+      modelMat = translate(modelMat, vec3(d_rot.x, 0, 0));
     if(d_rot.y != 0)
-      modelMat = translate(modelMat, d_rot.z, vec3(0, 0, 1));
+      modelMat = translate(modelMat, vec3(0, 0, d_rot.z));
     if(d_rot.z != 0)
-      modelMat = translate(modelMat, d_rot.y, vec3(0, 1, 0));
+      modelMat = translate(modelMat, vec3(0, d_rot.y, 0));
+
+    return modelMat;
   }
 
   Drawable::Drawable(vec3 const &coor, vec3 const &rot, float radius)
@@ -63,7 +66,7 @@ namespace dim
 
   glm::vec3 const &Drawable::rot() const
   {
-    return rot;
+    return d_rot;
   }
 
   void Drawable::draw(const DrawState & state)
@@ -83,7 +86,7 @@ namespace dim
 
   void Drawable::v_insert(ostream &out) const
   {
-	  out << d_coor.x << d_coor.y << d_coor.z << d_xRot << d_yRot << '\n';
+	  out << d_coor.x << ' ' << d_coor.y << ' ' << d_coor.z << ' ' << d_rot.x << ' ' << d_rot.y << ' ' << d_rot.z << '\n';
     //out.write(reinterpret_cast<const char*>(&d_coor.x), 4);
     //out.write(reinterpret_cast<const char*>(&d_coor.y), 4);
     //out.write(reinterpret_cast<const char*>(&d_coor.z), 4);
@@ -93,11 +96,10 @@ namespace dim
 
   void Drawable::v_extract(istream &in)
   {
-	in >> d_coor.x >> d_coor.y >> d_coor.z >> d_xRot >> d_yRot;
+	  in >> d_coor.x >> d_coor.y >> d_coor.z >> d_rot.x >> d_rot.y >> d_rot.z;
 
-	d_coor/=100.0f;
-	d_xRot/=100;
-	d_yRot/=100;
+	  d_coor/=100.0f;
+	  d_rot/=100;
 
     //in.read(reinterpret_cast<char*>(&d_coor.x), 4);
     //in.read(reinterpret_cast<char*>(&d_coor.y), 4);
