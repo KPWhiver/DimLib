@@ -27,12 +27,12 @@ namespace dim
   }
 
   template<typename ...Types>
-  Surface<Types...>::Surface(size_t width, size_t height, Format format, bool pingPongBuffer, Filtering filter)
+  Surface<Types...>::Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter)
       : d_bufferToRenderTo(0), d_frames(1 + pingPongBuffer),
         d_colorBuffers(0), d_depthComponent(false), d_colorComponent{false}
-  {
+  { 
     ComponentType attachment = processFormat(format);
-
+    
     glGenFramebuffers(1, d_frames[0].d_id.get());
     addBuffer<0>(attachment, width, height, 0, format, filter);
 
@@ -42,22 +42,22 @@ namespace dim
       addBuffer<0>(attachment, width, height, 1, format, filter);
     }
 
-    //if(attachment != depth)
-    //  ++d_colorBuffers;
+    if(attachment == color)
+      ++d_colorBuffers;
   }
 
   template<typename ...Types>
-  template<size_t Index>
+  template<uint Index>
   void Surface<Types...>::addTarget(Format format, Filtering filter)
   {
-    size_t oldDepth = d_depth;
+    uint oldDepth = d_depth;
     ComponentType attachment = processFormat(format);
 
     if(oldDepth != d_depth)
     {
       d_depth = oldDepth;
       throw std::runtime_error(
-          "Error: addition of a extra render target to a framebuffer failed because the depth doesn't match");
+          "Addition of a extra render target to a framebuffer failed because the depth doesn't match");
     }
 
     addBuffer<Index>(attachment, width(), height(), 0, format, filter);
@@ -65,27 +65,28 @@ namespace dim
     if(d_frames.size() == 2)
       addBuffer<Index>(attachment, width(), height(), 1, format, filter);
 
-    if(attachment != depth)
+    if(attachment == color)
       ++d_colorBuffers;
   }
 
   template<typename ...Types>
-  template<size_t Index>
-  void Surface<Types...>::addBuffer(ComponentType attachment, size_t width, size_t height, size_t buffer, Format format, Filtering filter)
+  template<uint Index>
+  void Surface<Types...>::addBuffer(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter)
   {
     typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
-
+    
     TextureType &tex = std::get<Index>(d_frames[buffer].d_textures);
-    tex = TextureType(0, filter, format, width, height, Wrapping::borderClamp);
+    tex = TextureType(0, filter, format, width, height, false, Wrapping::borderClamp);
+    
     glBindTexture(GL_TEXTURE_2D, tex.id());
-   
+    
     if(attachment == depth)
       tex.setBorderColor(glm::vec4(1.0f));
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[buffer].d_id);
-
+    
     if(attachment == depth)
     {
       glDrawBuffer(GL_NONE);
@@ -100,16 +101,17 @@ namespace dim
     if(attachment == depth)
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.id(), 0);
     else
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + d_colorBuffers, GL_TEXTURE_2D, tex.id(), 0);
-
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.id(), 0);
+    
     GLenum fbo_status;
-    fbo_status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
+    fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if(fbo_status != GL_FRAMEBUFFER_COMPLETE)
-      throw std::runtime_error("Error: creation of a framebuffer failed");
-      
-    //if(attachment == color)
-    //  ++d_colorBuffers;
+    {
+      std::stringstream ss;
+      ss << "Creation of a framebuffer failed with error code: " << fbo_status;
+      throw std::runtime_error(ss.str());   
+    }
   }
 
   template<typename ...Types>
@@ -200,22 +202,22 @@ namespace dim
   }
 
   template<typename ...Types>
-  size_t Surface<Types...>::height() const
+  uint Surface<Types...>::height() const
   {
     return std::get<0>(d_frames[0].d_textures).height();
   }
 
   template<typename ...Types>
-  size_t Surface<Types...>::width() const
+  uint Surface<Types...>::width() const
   {
     return std::get<0>(d_frames[0].d_textures).width();
   }
 
   template<typename ...Types> 
-  template<size_t Index> 
+  template<uint Index> 
   typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &Surface<Types...>::texture()
   {
-    size_t idx = 0;
+    uint idx = 0;
     if(d_frames.size() == 2 && d_bufferToRenderTo == 1)
       idx = 1;
       
@@ -229,7 +231,7 @@ namespace dim
   }
 
   template<typename ...Types>
-  void Surface<Types...>::renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear)
+  void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clear)
   {
     glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[d_bufferToRenderTo].d_id);
     if(clear && d_colorComponent[4])
@@ -242,15 +244,23 @@ namespace dim
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     glViewport(x, y, width, height);
+    
 
+    
     if(clear)
-    {
+    {    
+      if(d_clearColor != glm::vec4())
+        glClearColor(d_clearColor.r, d_clearColor.g, d_clearColor.b, d_clearColor.a);
+      
       if(d_depthComponent && (d_colorComponent[0] || d_colorComponent[3]))
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       else if(d_depthComponent)
         glClear(GL_DEPTH_BUFFER_BIT);
       else
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);    
+      
+      if(d_clearColor != glm::vec4())
+        glClearColor(0, 0, 0, 0);
     }
 
     //glColorMask(d_colorComponent[0], d_colorComponent[1], d_colorComponent[2], d_colorComponent[3]);
@@ -258,9 +268,16 @@ namespace dim
   }
 
   template<typename ...Types>
-  GLuint Surface<Types...>::id() const
+  void Surface<Types...>::clear()
   {
-    return *d_frames[0].d_id;
+    renderTo();
+    renderTo();
+  }
+  
+  template<typename ...Types>
+  void Surface<Types...>::setClearColor(glm::vec4 const &color)
+  {
+    d_clearColor = color;
   }
 
 }

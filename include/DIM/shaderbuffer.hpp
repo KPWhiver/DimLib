@@ -24,9 +24,10 @@ namespace dim
   class ShaderBuffer
   {
     GLuint d_programId;
-    GLuint d_vertexShaderId;
     GLuint d_fragmentShaderId;
+    GLuint d_vertexShaderId;
     
+
     public:
       ShaderBuffer();
       ~ShaderBuffer();

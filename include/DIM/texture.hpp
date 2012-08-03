@@ -24,6 +24,8 @@
 #include <memory>
 #include <type_traits>
 #include <stdexcept>
+#include <sstream>
+#include <iostream>
 
 #include "DIM/shader.hpp"
 
@@ -73,44 +75,69 @@ namespace dim
   };
 
   /* TextureBase__ */
+  class TextureProperties__
+  {
+    protected:
+      /* static texture properties */
+      static bool s_anisotropic;
+      static float s_maxAnisotropy;
+      static float s_maxTextureSize;
+      static float s_maxTextureUnits;
+
+      static bool s_integerFormats;
+      static bool s_floatFormats;
+
+    public:
+      static void initialize();
+  };
+
 
   template<typename Type, typename ComponentType = Type>
-  class TextureBase__
+  class TextureBase__ : public TextureProperties__
   {
+      /* texture properties */
       std::shared_ptr<GLuint> d_id;
-      size_t d_height;
-      size_t d_width;
+      uint d_height;
+      uint d_width;
 
       Format d_format;
 
-      static bool s_anisotropic;
-      static float s_maxAnisotropy;
+      /* local texture buffer */
+      std::vector<Type> d_buffer;
+      bool d_keepBuffered;
+      bool d_outdatedBuffer;
+      uint d_bufferLevel;
 
     public:
       TextureBase__();
 
+      /* texture properties */
       void setBorderColor(glm::vec4 const &color) const;
 
       void generateMipmap() const;
 
       GLuint id() const;
-      size_t height() const;
-      size_t width() const;
+      uint height() const;
+      uint width() const;
       Format format() const;
+      
+      /* local texture buffer */
+      void renewBuffer();
+      void update(Type *data = 0);
+      
+      Type value(uint x, uint y, uint channel, uint level = 0);
+      Type *buffer(uint level = 0);
 
-      void send(int unit, std::string const &variable) const;
-
-      static void initialize();
+      /* shader */
+      void send(uint unit, std::string const &variable) const;
 
     protected:
-      void init(Type *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap);
-      void updateData(Type *data) const;
-      Type *data() const;
+      void init(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);
       GLuint externalFormat() const;
 
     private:
       GLuint internalFormat() const;
-      size_t components() const;
+      uint components() const;
       GLuint depth() const;
   };
 
@@ -120,23 +147,15 @@ namespace dim
   class Texture: public TextureBase__<Type, ComponentType>
   {
       using TextureBase__<Type, ComponentType>::init;
-      using TextureBase__<Type, ComponentType>::data;
       using TextureBase__<Type, ComponentType>::externalFormat;
   
-  
-      std::shared_ptr<Type> d_source;
     public:
       using TextureBase__<Type, ComponentType>::width;
       using TextureBase__<Type, ComponentType>::height;
 
+
       Texture();
-      Texture(Type *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap = Wrapping::repeat);
-
-      void update(Type *data);
-
-      Type value(size_t x, size_t y, size_t channel) const;
-
-      Type const *source();
+      Texture(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
   };
 
   /* Texture<GLubyte> */
@@ -144,33 +163,22 @@ namespace dim
   template<>
   class Texture<GLubyte>: public TextureBase__<GLubyte>
   {
-
-      //using TextureBase__<GLubyte>;
-
-      unsigned int d_source;
+      //unsigned int d_source;//
       std::string d_filename;
     public:
 
       Texture();
-      Texture(std::string const &filename, Filtering filter, bool edit, Wrapping wrap = Wrapping::repeat);
-      Texture(GLubyte *data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap = Wrapping::repeat);
+      Texture(std::string const &filename, Filtering filter, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
+      Texture(GLubyte *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
 
-      void update(GLubyte *data);
       void reset();
-      void save(std::string const &filename = "");
-
-      GLubyte value(size_t x, size_t y, size_t channel) const;
-
-      GLubyte const *source();
+      void save(std::string filename = "");
   };
 
   /* Some template meta-programming */
 
   template<typename Type>
   struct DataType;
-  //{
-  //  static_assert(false, "Only GLfloat, GLuint, GLint, GLushort, GLshort, GLubyte and GLbyte are supported Texture types");
-  //};
 
   template<>
   struct DataType<GLubyte>
@@ -225,61 +233,15 @@ namespace dim
 
   template<typename Type, typename ComponentType>
   Texture<Type, ComponentType>::Texture()
-      :
-          d_source(0, [](Type *ptr)
-          { delete[] ptr;})
   {
     Type data(0);
-    init(&data, Filtering::nearest, Format::R8, 1, 1, Wrapping::repeat);
+    init(&data, Filtering::nearest, Format::R8, 1, 1, false, Wrapping::repeat);
   }
 
   template<typename Type, typename ComponentType>
-  Texture<Type, ComponentType>::Texture(Type * data, Filtering filter, Format format, size_t width, size_t height, Wrapping wrap)
-  :
-  d_source(0, [](Type *ptr)
-      { delete[] ptr;})
+  Texture<Type, ComponentType>::Texture(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
-    init(data, filter, format, width, height, wrap);
-  }
-
-  template<typename Type, typename ComponentType>
-  void Texture<Type, ComponentType>::update(Type* data)
-  {
-    updateData(data);
-  }
-
-  template<typename Type, typename ComponentType>
-  Type Texture<Type, ComponentType>::value(size_t x, size_t y, size_t channel) const
-  {
-    d_source.reset(data());
-
-    switch(externalFormat())
-    {
-      case GL_R:
-      case GL_DEPTH_COMPONENT:
-        if(channel == 0)
-          return d_source[(y * width() + x)];
-        break;
-      case GL_RG:
-        if(channel < 2)
-          return d_source[(y * width() + x) * 2 + channel];
-        break;
-      case GL_RGB:
-        if(channel < 3)
-          return d_source[(y * width() + x) * 3 + channel];
-        break;
-      case GL_RGBA:
-        if(channel < 4)
-          return d_source[(y * width() + x) * 4 + channel];
-        break;
-    }
-  }
-
-  template<typename Type, typename ComponentType>
-  Type const *Texture<Type, ComponentType>::source()
-  {
-    d_source.reset(data());
-    return d_source;
+    init(data, filter, format, width, height, keepBuffered, wrap);
   }
 }
 

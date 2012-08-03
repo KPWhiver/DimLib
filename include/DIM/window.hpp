@@ -39,6 +39,8 @@ namespace dim
 
 		double d_startTime;
 
+		glm::vec4 d_clearColor;
+
 	public:
 		enum Mode
 		{
@@ -47,6 +49,9 @@ namespace dim
 
 		Window(size_t width, size_t height, Window::Mode mode, std::string title);
 		Window(Window const &other) = delete;
+
+		~Window();
+
 		void operator=(Window const &other) = delete;
 
 		size_t height() const;
@@ -59,6 +64,8 @@ namespace dim
 
 		Mouse const &mouse() const;
 
+		void setClearColor(glm::vec4 const &color);
+
     void renderTo();
     void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);
 
@@ -68,11 +75,6 @@ namespace dim
 		Window::Mode d_mode;
 
 		//void set(size_t width, size_t height, Window::mode mode, std::string title);
-
-
-
-
-
 	};
 
 }

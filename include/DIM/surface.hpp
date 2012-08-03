@@ -34,9 +34,9 @@ namespace dim
   class Surface
   {
     //size_t d_width, d_height;
-    size_t d_depth;
+    uint d_depth;
 
-   	size_t d_bufferToRenderTo;
+   	uint d_bufferToRenderTo;
 
     struct FrameBuffer
     {
@@ -51,11 +51,13 @@ namespace dim
 
     std::vector<FrameBuffer> d_frames;
 
-    size_t d_colorBuffers;
+    uint d_colorBuffers;
 
     bool d_depthComponent;
     bool d_colorComponent[4];
     
+    glm::vec4 d_clearColor;
+
     static Surface* lastRenderedTo;
     
     enum ComponentType
@@ -66,27 +68,30 @@ namespace dim
     };
     
   public:
-    Surface(size_t width, size_t height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
+    Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
     
-    template<size_t Index>
+    template<uint Index>
     void addTarget(Format format, Filtering filter = Filtering::linear);
 
-    size_t height() const;
-    size_t width() const;
+    uint height() const;
+    uint width() const;
 
-    template<size_t Index = 0>
+    template<uint Index = 0>
     typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &texture();
 
+    void setClearColor(glm::vec4 const &color);
+    void clear();
+
     void renderTo();
-    void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);
+    void renderToPart(uint x, uint y, uint width, uint height, bool clear);
 
     GLuint id() const;
 
   private:
 	  Surface::ComponentType processFormat(Format format);
 	  
-    template<size_t Index>
-    void addBuffer(ComponentType attachment, size_t width, size_t height, size_t buffer, Format format, Filtering filter);
+    template<uint Index>
+    void addBuffer(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter);
   };
 
   template<>

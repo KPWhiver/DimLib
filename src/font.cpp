@@ -126,7 +126,7 @@ Texture<GLubyte> Font::generateTexture(string const &text, size_t textureWidth, 
     }
   }
 
-  Texture<GLubyte> textTex(textMap, Filtering::bilinear, Format::RG8, textureWidth, textureHeight);
+  Texture<GLubyte> textTex(textMap, Filtering::bilinear, Format::RG8, textureWidth, textureHeight, false);
 
   delete[] textMap;
 

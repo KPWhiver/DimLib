@@ -24,4 +24,9 @@
 #include <GL/glfw.h>
 #include <glm/glm.hpp>
 
+namespace dim
+{
+  typedef unsigned int uint;
+}
+
 #endif /* DIM_HPP_ */

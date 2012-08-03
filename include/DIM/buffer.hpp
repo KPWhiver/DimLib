@@ -23,77 +23,80 @@
 #include "DIM/dim.hpp"
 
 #include <memory>
+#include <iostream>
 
 namespace dim
 {
-  template <typename Type>
-	class Buffer
-	{
+  template<typename Type>
+  class Buffer
+  {
 
-		std::shared_ptr<GLuint> d_id;
+      std::shared_ptr<GLuint> d_id;
 
-	public:		
-	
-    enum Mode
-		{
-		  texture = GL_TEXTURE_BUFFER,
-		  element = GL_ELEMENT_ARRAY_BUFFER,
-		  data = GL_ARRAY_BUFFER,
-		  uniform = GL_UNIFORM_BUFFER,
-		  //pixelRead
-		  //pixelWrite
-		};
-		Buffer(Buffer::Mode mode, size_t size, Type* data);
-		
-		void bind() const;
-		void update(size_t bytes, Type* data);
-		
-		GLuint id() const;
+    public:
 
-	private:
-		Mode d_bufferType;
-	};
+      enum Mode
+      {
+        texture = GL_TEXTURE_BUFFER,
+        element = GL_ELEMENT_ARRAY_BUFFER,
+        data = GL_ARRAY_BUFFER,
+        uniform = GL_UNIFORM_BUFFER,
+      //pixelRead
+      //pixelWrite
+      };
+      Buffer(Buffer::Mode mode, size_t size, Type* data);
 
-  template <typename Type>
+      void bind() const;
+      void update(size_t bytes, Type* data);
+
+      GLuint id() const;
+
+    private:
+      Mode d_bufferType;
+  };
+
+  template<typename Type>
   Buffer<Type>::Buffer(Buffer::Mode mode, size_t size, Type* data)
-    :
-      d_id(new GLuint(0), [](GLuint *ptr){glDeleteBuffers(1, ptr); delete ptr;}),
-      d_bufferType(mode)
-    {
+      :
+          d_id(new GLuint, [](GLuint *ptr)
+          { glDeleteBuffers(1, ptr);}),
+          d_bufferType(mode)
+  {
+    *d_id = 0;
 
-      if(data == 0 && size == 0)
-        return;
+    if(data == 0 && size == 0)
+      return;
 
+    glGenBuffers(1, d_id.get());
+    glBindBuffer(d_bufferType, *d_id);
+    glBufferData(d_bufferType, size * sizeof(Type), data, GL_STATIC_DRAW);
+  }
+
+  template<typename Type>
+  GLuint Buffer<Type>::id() const
+  {
+    return *d_id;
+  }
+
+  template<typename Type>
+  void Buffer<Type>::bind() const
+  {
+    if(*d_id == 0)
+      return;
+
+    glBindBuffer(d_bufferType, *d_id);
+  }
+
+  template<typename Type>
+  void Buffer<Type>::update(size_t size, Type *data)
+  {
+    if(*d_id == 0)
       glGenBuffers(1, d_id.get());
-      glBindBuffer(d_bufferType, *d_id);
-      glBufferData(d_bufferType, size * sizeof(Type), data, GL_STATIC_DRAW);
-    }
 
-    template <typename Type>
-    GLuint Buffer<Type>::id() const
-    {
-      return *d_id;
-    }
-
-    template <typename Type>
-    void Buffer<Type>::bind() const
-    {
-      if(*d_id == 0)
-        return;
-
-      glBindBuffer(d_bufferType, *d_id);
-    }
-
-    template <typename Type>
-    void Buffer<Type>::update(size_t size, Type *data)
-    {
-      if(*d_id == 0)
-        glGenBuffers(1, d_id.get());
-
-      glBindBuffer(d_bufferType, *d_id);
-      glBufferData(d_bufferType, size * sizeof(Type), 0, GL_DYNAMIC_DRAW);
-      glBufferSubData(d_bufferType, 0, size * sizeof(Type), data);
-    }
+    glBindBuffer(d_bufferType, *d_id);
+    glBufferData(d_bufferType, size * sizeof(Type), 0, GL_DYNAMIC_DRAW);
+    glBufferSubData(d_bufferType, 0, size * sizeof(Type), data);
+  }
 
 } /* namespace dim */
 #endif /* DATABUFFER_HPP_ */

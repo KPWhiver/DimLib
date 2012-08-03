@@ -24,9 +24,8 @@ namespace dim
   ShaderBuffer::ShaderBuffer()
   :
   	d_programId(glCreateProgram()),
-    d_vertexShaderId(glCreateShader(GL_VERTEX_SHADER)),
-    d_fragmentShaderId(glCreateShader(GL_FRAGMENT_SHADER))
-
+  	d_fragmentShaderId(glCreateShader(GL_FRAGMENT_SHADER)),
+    d_vertexShaderId(glCreateShader(GL_VERTEX_SHADER))
   {
   }
 

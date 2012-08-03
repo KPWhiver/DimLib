@@ -32,36 +32,32 @@ using namespace std;
 namespace dim
 {
   Texture<GLubyte>::Texture()
-      :
-          d_source(0)
   {
     GLubyte data(0);
-    init(&data, Texture::nearest, Format::R8, 1, 1, Wrapping::repeat);
+    init(&data, Filtering::nearest, Format::R8, 1, 1, false, Wrapping::repeat);
   }
 
-  Texture<GLubyte>::Texture(GLubyte * data, Filtering filter, Format format, size_t width, size_t height, Wrap wrap)
-      :
-          d_source(0)
+  Texture<GLubyte>::Texture(GLubyte * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
-    init(data, filter, format, width, height, wrap);
+    init(data, filter, format, width, height, keepBuffered, wrap);
   }
 
-  Texture<GLubyte>::Texture(string const &filename, Filtering filter, bool edit, Wrap wrap)
+  Texture<GLubyte>::Texture(string const &filename, Filtering filter, bool keepBuffered, Wrapping wrap)
   {
-    ilGenImages(1, &d_source);
-    ilBindImage (d_source);
+    ILuint source;
+
+    ilGenImages(1, &source);
+    ilBindImage (source);
 
     if(ilLoadImage(filename.c_str()) == false)
     {
 
-      ilDeleteImages(1, &d_source);
+      ilDeleteImages(1, &source);
       throw(runtime_error("Unable to load: " + filename + ", unknown file format"));
     }
 
     int format = ilGetInteger(IL_IMAGE_FORMAT);
-    size_t pixelDepth = ilGetInteger(IL_IMAGE_BYTES_PER_PIXEL);
-    d_width = ilGetInteger(IL_IMAGE_WIDTH);
-    d_height = ilGetInteger(IL_IMAGE_HEIGHT);
+    uint pixelDepth = ilGetInteger(IL_IMAGE_BYTES_PER_PIXEL);
 
     if(format == IL_BGR)
       ilConvertImage(IL_RGB, IL_UNSIGNED_BYTE);
@@ -86,31 +82,24 @@ namespace dim
         throw runtime_error("Unable to load: " + filename + ", depth is not loadable");
     }
 
-    init(static_cast<void*>(ilGetData()), filter, form, d_width, d_height, wrap);
+    init(ilGetData(), filter, form, ilGetInteger(IL_IMAGE_WIDTH),
+                            ilGetInteger(IL_IMAGE_HEIGHT), keepBuffered, wrap);
 
     d_filename = filename;
 
-    if(edit == false)
-    {
-      ilDeleteImages(1, &d_source);
-      d_source = 0;
-    }
+    ilDeleteImages(1, &source);
   }
 
   void Texture<GLubyte>::reset()
   {
+    ILuint source;
+
     if(d_filename == "")
       return;
 
-    bool edit = true;
+    ilGenImages(1, &source);
 
-    if(d_source == 0)
-    {
-      ilGenImages(1, &d_source);
-      edit = false;
-    }
-
-    ilBindImage(d_source);
+    ilBindImage(source);
     ilLoadImage(d_filename.c_str());
 
     int format = ilGetInteger(IL_IMAGE_FORMAT);
@@ -120,109 +109,45 @@ namespace dim
     if(format == IL_BGRA)
       ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
 
-    updateData(ilGetData());
+    update(ilGetData());
 
-    if(edit == false)
-    {
-      ilDeleteImages(1, &d_source);
-      d_source = 0;
-    }
+    ilDeleteImages(1, &source);
   }
 
-  void Texture<GLubyte>::update(GLubyte* data)
+  void Texture<GLubyte>::save(string filename)
   {
-    updateData(data);
+    ILuint source;
 
-    if(d_source != 0)
-    {
-      size_t pixelDepth = ilGetInteger(IL_IMAGE_BYTES_PER_PIXEL);
-      int format = ilGetInteger(IL_IMAGE_FORMAT);
-
-      ilTexImage(d_width, d_height, 1, pixelDepth, format, IL_UNSIGNED_BYTE, data);
-    }
-  }
-
-  void Texture<GLubyte>::save(string const &filename)
-  {
     if(filename == "")
       filename = d_filename;
 
-    if(d_source != 0)
-    {
-      ilBindImage(d_source);
-      ilSaveImage(filename.c_str());
-    }
-    else
-    {
-      size_t bbp = 0;
-      int format = IL_ALPHA;
-      switch(externalFormat())
-      {
-        case GL_R:
-          bbp = 1;
-          break;
-        case GL_RGB:
-          bbp = 3;
-          format = IL_RGB;
-          break;
-        case GL_RGBA:
-          bbp = 4;
-          format = IL_RGBA;
-          break;
-      }
-
-      Type *dataSource = source();
-
-      ilGenImages(1, &d_source);
-      ilBindImage(d_source);
-      ilTexImage(d_width, d_height, 1, bbp, format, IL_UNSIGNED_BYTE, dataSource);
-      ilSaveImage(filename.c_str());
-      ilDeleteImages(1, &d_source);
-      d_source = 0;
-      delete[] dataSource;
-
-    }
-  }
-
-  GLubyte Texture<GLubyte>::value(size_t x, size_t y, size_t channel) const
-  {
-    GLubyte *dataSource;
-
-    if(d_source != 0)
-    {
-      ilBindImage(d_source);
-      dataSource = ilGetData();
-    }
-    else
-    {
-      dataSource = source();
-    }
-
+    uint bbp = 0;
+    int format = IL_ALPHA;
     switch(externalFormat())
     {
       case GL_R:
-        if(channel == 0)
-          return dataSource[(y * width() + x)];
+        bbp = 1;
         break;
       case GL_RGB:
-        if(channel < 3)
-          return dataSource[(y * width() + x) * 3 + channel];
+        bbp = 3;
+        format = IL_RGB;
         break;
       case GL_RGBA:
-        if(channel < 4)
-          return dataSource[(y * width() + x) * 4 + channel];
+        bbp = 4;
+        format = IL_RGBA;
         break;
+      default:
+        std::stringstream ss;
+        ss << "Unable to save texture with format: " << externalFormat();
+        throw(std::runtime_error(ss.str()));
     }
 
-    if(d_source == 0)
-      delete[] dataSource;
+    GLubyte *dataSource = buffer();
 
-    return 0;
-  }
-
-  GLubyte *Texture<GLubyte>::source()
-  {
-    ilBindImage(d_source);
-    return ilGetData();
+    ilGenImages(1, &source);
+    ilBindImage(source);
+    ilTexImage(width(), height(), 1, bbp, format, IL_UNSIGNED_BYTE, dataSource);
+    ilSaveImage(filename.c_str());
+    ilDeleteImages(1, &source);
   }
 }

@@ -28,8 +28,10 @@
 #include "DIM/window.hpp"
 #include "DIM/mesh.hpp"
 #include "DIM/font.hpp"
+#include "DIM/texture.hpp"
 
 using namespace std;
+using namespace glm;
 
 namespace dim
 {
@@ -81,9 +83,28 @@ namespace dim
     d_mouse.update();
 
     int error = glGetError();
-    if(error != 0)
+    switch(error)
     {
-      cerr << "OpenGL error: " << error << '\n';
+      case GL_INVALID_ENUM:
+        cerr << "OpenGL reported an error: GL_INVALID_ENUM\n";
+        break;
+      case GL_INVALID_VALUE:
+        cerr << "OpenGL reported an error: GL_INVALID_VALUE\n";
+        break;
+      case GL_INVALID_OPERATION:
+        cerr << "OpenGL reported an error: GL_INVALID_OPERATION\n";
+        break;
+      case GL_OUT_OF_MEMORY:
+        cerr << "OpenGL reported an error: GL_OUT_OF_MEMORY\n";
+        break;
+      case GL_INVALID_FRAMEBUFFER_OPERATION:
+        cerr << "OpenGL reported an error: GL_INVALID_FRAMEBUFFER_OPERATION\n";
+        break;
+      case 0:
+        break;
+      default:
+        cerr << "OpenGL reported an error: " << error << '\n';
+        break;
     }
   }
 
@@ -170,10 +191,20 @@ namespace dim
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    glClearColor(0.7f, 0.9f, 1.0f, 1.0f); //???
-
     Mesh::initialize();
     Font::initialize();
+    TextureProperties__::initialize();
+  }
+
+  Window::~Window()
+  {
+    glfwCloseWindow();
+    glfwTerminate();
+  }
+
+  void Window::setClearColor(vec4 const &color)
+  {
+    d_clearColor = color;
   }
 
   void Window::renderTo()
@@ -188,7 +219,15 @@ namespace dim
     glViewport(x, y, width, height);
 
     if(clear)
+    {
+      if(d_clearColor != glm::vec4())
+        glClearColor(d_clearColor.r, d_clearColor.g, d_clearColor.b, d_clearColor.a);
+
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      if(d_clearColor != glm::vec4())
+        glClearColor(0, 0, 0, 0);
+    }
 
     glColorMask(true, true, true, true);
 

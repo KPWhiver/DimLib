@@ -19,7 +19,7 @@ vpath %.hpp include/DIM
 vpath %.o obj
 vpath %.d obj
 
-CXXSOURCES = drawstate.cpp light.cpp drawmap.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp shaderbuffer.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp
+CXXSOURCES = textureproperties__.cpp drawstate.cpp light.cpp drawmap.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp shaderbuffer.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp texture.cpp
 
 CXXHEADERS = base_iterator__.hpp buffer.hpp button.hpp camera.hpp component.hpp context.hpp dim.hpp drawable.hpp drawablewrapper.hpp drawablewrapper.inl drawmap.hpp drawstate.hpp font.hpp frame.hpp image2d.hpp light.hpp listenarea.hpp menu.hpp menuitem.hpp mesh.hpp mouse.hpp onepair.hpp shaderbuffer.hpp shader.hpp surface.hpp surface.inl texture.hpp texture.inl tools.hpp window.hpp copyptr.hpp cloneptr.hpp
 
@@ -27,7 +27,7 @@ CXXOBJECTS = $(CXXSOURCES:.cpp=.o)
 CXXDEPS = $(CXXSOURCES:.cpp=.d)
 CXXFLAGS = -Wall --std=c++0x $(INCLUDEDIRS)
 
-CXX = g++
+CXX = clang++
 
 all: $(DYNAMICPROGRAM)
 
