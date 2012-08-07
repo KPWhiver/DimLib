@@ -29,6 +29,7 @@
 #include "DIM/mesh.hpp"
 #include "DIM/font.hpp"
 #include "DIM/texture.hpp"
+#include "DIM/surface.hpp"
 
 using namespace std;
 using namespace glm;
@@ -118,7 +119,8 @@ namespace dim
 
     s_set = true;
 
-    if(glfwInit() != GL_TRUE) //glfw started check
+    //initialize glfw
+    if(glfwInit() != GL_TRUE)
     {
       throw runtime_error("Failed to open a window.");
     }
@@ -168,11 +170,10 @@ namespace dim
     glfwSetWindowTitle(title.c_str());
     //glfwDisable(GLFW_MOUSE_CURSOR);
 
+    //initialize glew
     GLenum err = glewInit();
     if(GLEW_OK != err)
     {
-      //Problem: glewInit failed, something is seriously wrong :P
-      //cerr << "Error: " << glewGetErrorString(err) << '\n';
       throw std::runtime_error(string("Error: ") + reinterpret_cast<char const *>(glewGetErrorString(err)));
     }
 
@@ -218,6 +219,13 @@ namespace dim
 
     glViewport(x, y, width, height);
 
+    // If the last FBO is a pingpong buffer now is the time to swap those buffers
+    if(SurfaceBase__::s_renderTarget != 0)
+      SurfaceBase__::s_renderTarget->swapBuffers();
+
+    SurfaceBase__::s_renderTarget = 0;
+
+    // Clear the buffer before drawing
     if(clear)
     {
       if(d_clearColor != glm::vec4())

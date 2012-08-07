@@ -1,4 +1,4 @@
-// surface.cpp
+// surface.inl
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -19,6 +19,7 @@
 
 namespace dim
 {
+  
   template<typename ...Types>
   Surface<Types...>::FrameBuffer::FrameBuffer()
     :
@@ -28,7 +29,7 @@ namespace dim
 
   template<typename ...Types>
   Surface<Types...>::Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter)
-      : d_bufferToRenderTo(0), d_frames(1 + pingPongBuffer),
+      : d_frames(1 + pingPongBuffer),
         d_colorBuffers(0), d_depthComponent(false), d_colorComponent{false}
   { 
     ComponentType attachment = processFormat(format);
@@ -45,7 +46,7 @@ namespace dim
     if(attachment == color)
       ++d_colorBuffers;
   }
-
+  
   template<typename ...Types>
   template<uint Index>
   void Surface<Types...>::addTarget(Format format, Filtering filter)
@@ -73,6 +74,7 @@ namespace dim
   template<uint Index>
   void Surface<Types...>::addBuffer(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter)
   {
+    // Create the texture
     typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
     
     TextureType &tex = std::get<Index>(d_frames[buffer].d_textures);
@@ -80,6 +82,7 @@ namespace dim
     
     glBindTexture(GL_TEXTURE_2D, tex.id());
     
+    // Set some texture coefficients
     if(attachment == depth)
       tex.setBorderColor(glm::vec4(1.0f));
     
@@ -87,6 +90,7 @@ namespace dim
 
     glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[buffer].d_id);
     
+    // TODO replace with glDrawBuffers
     if(attachment == depth)
     {
       glDrawBuffer(GL_NONE);
@@ -98,6 +102,7 @@ namespace dim
       glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
 
+    // Add the texture to the FBO
     if(attachment == depth)
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.id(), 0);
     else
@@ -119,6 +124,13 @@ namespace dim
   {
     switch(format)
     {
+      case Format::R11G11B10:
+        d_depth = 32;
+        d_colorComponent[0] = true;
+        d_colorComponent[1] = true;
+        d_colorComponent[2] = true;
+        return color;
+      
       case Format::RGBA8:
       case Format::sRGB8A8:
         d_depth = 32;
@@ -218,7 +230,7 @@ namespace dim
   typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &Surface<Types...>::texture()
   {
     uint idx = 0;
-    if(d_frames.size() == 2 && d_bufferToRenderTo == 1)
+    if(d_frames.size() == 2 && d_bufferToRenderTo == 0)
       idx = 1;
       
     return std::get<Index>(d_frames[idx].d_textures);
@@ -232,21 +244,27 @@ namespace dim
 
   template<typename ...Types>
   void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clear)
-  {
+  {    
+    // If the last FBO is a pingpong buffer now is the time to swap those buffers
+    if(s_renderTarget != 0)
+      s_renderTarget->swapBuffers();
+    
+    s_renderTarget = this;
+    
+    
     glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[d_bufferToRenderTo].d_id);
+    
+    // TODO make this a user defined value instead of 1.0
     if(clear && d_colorComponent[4])
       glClearDepth(1.0);
-
-    if(d_frames.size() == 2)
-      d_bufferToRenderTo = ((d_bufferToRenderTo == 0) ? 1 : 0);
-      
+    
+    // TODO change this to glDrawBuffers
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     glViewport(x, y, width, height);
     
-
-    
+    // Clear the buffer before drawing
     if(clear)
     {    
       if(d_clearColor != glm::vec4())
@@ -266,6 +284,17 @@ namespace dim
     //glColorMask(d_colorComponent[0], d_colorComponent[1], d_colorComponent[2], d_colorComponent[3]);
 
   }
+  
+  template<typename ...Types>
+  void Surface<Types...>::swapBuffers()
+  {
+    std::cerr << "swap1\n";
+    if(d_frames.size() == 2)
+    {
+      std::cerr << "swap2\n";
+      d_bufferToRenderTo = ((d_bufferToRenderTo == 0) ? 1 : 0);
+    }
+  }
 
   template<typename ...Types>
   void Surface<Types...>::clear()
@@ -279,6 +308,5 @@ namespace dim
   {
     d_clearColor = color;
   }
-
 }
 

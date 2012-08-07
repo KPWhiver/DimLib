@@ -30,20 +30,33 @@
 
 namespace dim
 {
-  template<typename ...Types>
-  class Surface
+  class SurfaceBase__
   {
-    //size_t d_width, d_height;
-    uint d_depth;
+    friend class Window;
 
-   	uint d_bufferToRenderTo;
+    protected:
+      static SurfaceBase__* s_renderTarget;
+
+      uint d_bufferToRenderTo;
+
+      SurfaceBase__();
+      virtual ~SurfaceBase__();
+
+    public:
+      // TODO fix this mess (this is supposed to be private)
+      virtual void swapBuffers() = 0;
+  };
+
+
+  template<typename ...Types>
+  class Surface : public SurfaceBase__
+  {
+    uint d_depth;
 
     struct FrameBuffer
     {
       std::tuple<Texture<Types>...> d_textures;
     
-      //Texture d_texDepth;
-      //Texture d_texList[4];
       std::shared_ptr<GLuint> d_id;
 
       FrameBuffer();
@@ -58,8 +71,6 @@ namespace dim
     
     glm::vec4 d_clearColor;
 
-    static Surface* lastRenderedTo;
-    
     enum ComponentType
     {
       depth, 
@@ -90,6 +101,8 @@ namespace dim
   private:
 	  Surface::ComponentType processFormat(Format format);
 	  
+	  virtual void swapBuffers();
+
     template<uint Index>
     void addBuffer(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter);
   };
