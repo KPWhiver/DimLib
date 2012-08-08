@@ -30,7 +30,7 @@ namespace dim
   template<typename ...Types>
   Surface<Types...>::Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter)
       : d_frames(1 + pingPongBuffer),
-        d_colorBuffers(0), d_depthComponent(false), d_colorComponent{false}
+        d_colorBuffers(0), d_depthComponent(false), d_colorComponent{false}, d_clearDepth(0)
   { 
     ComponentType attachment = processFormat(format);
     
@@ -254,9 +254,7 @@ namespace dim
     
     glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[d_bufferToRenderTo].d_id);
     
-    // TODO make this a user defined value instead of 1.0
-    if(clear && d_colorComponent[4])
-      glClearDepth(1.0);
+
     
     // TODO change this to glDrawBuffers
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -266,8 +264,10 @@ namespace dim
     
     // Clear the buffer before drawing
     if(clear)
-    {    
-      if(d_clearColor != glm::vec4())
+    {        
+      if(d_clearDepth != 0 && d_depthComponent)
+        glClearDepth(d_clearDepth);
+      if(d_clearColor != glm::vec4() && (d_colorComponent[0] || d_colorComponent[3]))
         glClearColor(d_clearColor.r, d_clearColor.g, d_clearColor.b, d_clearColor.a);
       
       if(d_depthComponent && (d_colorComponent[0] || d_colorComponent[3]))
@@ -277,7 +277,9 @@ namespace dim
       else
         glClear(GL_COLOR_BUFFER_BIT);    
       
-      if(d_clearColor != glm::vec4())
+      if(d_clearDepth != 0 && d_depthComponent)
+        glClearDepth(0);
+      if(d_clearColor != glm::vec4() && (d_colorComponent[0] || d_colorComponent[3]))
         glClearColor(0, 0, 0, 0);
     }
 
@@ -288,12 +290,8 @@ namespace dim
   template<typename ...Types>
   void Surface<Types...>::swapBuffers()
   {
-    std::cerr << "swap1\n";
     if(d_frames.size() == 2)
-    {
-      std::cerr << "swap2\n";
       d_bufferToRenderTo = ((d_bufferToRenderTo == 0) ? 1 : 0);
-    }
   }
 
   template<typename ...Types>
@@ -307,6 +305,12 @@ namespace dim
   void Surface<Types...>::setClearColor(glm::vec4 const &color)
   {
     d_clearColor = color;
+  }
+  
+  template<typename ...Types>
+  void Surface<Types...>::setClearDepth(float depth)
+  {
+    d_clearDepth = depth;
   }
 }
 

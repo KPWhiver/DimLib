@@ -70,6 +70,7 @@ namespace dim
     bool d_colorComponent[4];
     
     glm::vec4 d_clearColor;
+    float d_clearDepth;
 
     enum ComponentType
     {
@@ -91,6 +92,7 @@ namespace dim
     typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &texture();
 
     void setClearColor(glm::vec4 const &color);
+    void setClearDepth(float depth);
     void clear();
 
     void renderTo();
