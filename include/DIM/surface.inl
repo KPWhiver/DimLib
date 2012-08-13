@@ -232,30 +232,31 @@ namespace dim
     uint idx = 0;
     if(d_frames.size() == 2 && d_bufferToRenderTo == 0)
       idx = 1;
-      
+    
     return std::get<Index>(d_frames[idx].d_textures);
   }
   
   template<typename ...Types>
   void Surface<Types...>::renderTo()
   {
-    renderToPart(0, 0, width(), height(), true);
+    renderToPart(0, 0, width(), height(), true, true);
   }
 
   template<typename ...Types>
-  void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clear)
+  void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clear, bool swapBuffers)
   {    
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(s_renderTarget != 0)
       s_renderTarget->swapBuffers();
     
-    s_renderTarget = this;
-    
-    
-    glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[d_bufferToRenderTo].d_id);
+    if(swapBuffers)
+      s_renderTarget = this;
+    else
+      s_renderTarget = 0;
     
 
-    
+    glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[d_bufferToRenderTo].d_id);
+
     // TODO change this to glDrawBuffers
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glReadBuffer(GL_COLOR_ATTACHMENT0);

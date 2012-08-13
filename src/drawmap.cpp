@@ -181,7 +181,7 @@ namespace dim
     for(DrawState const &state: d_drawStateList)
     {
       if(mode == DrawMap::normal)
-        state.shader().begin();
+        state.shader().use();
       else
       {
         glCullFace(GL_FRONT);

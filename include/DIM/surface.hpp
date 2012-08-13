@@ -93,17 +93,17 @@ namespace dim
 
     void setClearColor(glm::vec4 const &color);
     void setClearDepth(float depth);
+
     void clear();
+    virtual void swapBuffers();
 
     void renderTo();
-    void renderToPart(uint x, uint y, uint width, uint height, bool clear);
+    void renderToPart(uint x, uint y, uint width, uint height, bool clear, bool swapBuffers);
 
     GLuint id() const;
 
   private:
 	  Surface::ComponentType processFormat(Format format);
-	  
-	  virtual void swapBuffers();
 
     template<uint Index>
     void addBuffer(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter);

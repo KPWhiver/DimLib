@@ -22,7 +22,6 @@
 
 #include "DIM/camera.hpp"
 #include "DIM/light.hpp"
-#include "DIM/shaderbuffer.hpp"
 
 #include <string>
 #include <vector>
@@ -35,10 +34,9 @@ class Light;
 
 class Shader
 {
-  //GLuint d_id;
-  //GLuint d_vertexShader;
-  //GLuint d_fragmentShader;
-	std::shared_ptr<ShaderBuffer> d_id;
+  std::shared_ptr<GLuint> d_id;
+  std::shared_ptr<GLuint> d_fragmentId;
+  std::shared_ptr<GLuint> d_vertexId;
   
   static Shader *s_activeShader;
 
@@ -73,22 +71,17 @@ public:
 
   Shader(std::string const &vsFile, std::string const &fsFile);
 
-  void send(glm::mat4* value, std::string const &variable);
-  void send(glm::mat3* value, std::string const &variable);
-  void send(glm::vec4* value, std::string const &variable);
-  void send(glm::vec3* value, std::string const &variable);
-  void send(glm::vec2* value, std::string const &variable);
-  void send(int* value, std::string const &variable);
-  void send(Light* light);
-  void send(Camera* camera);
+  void sendAtUse(glm::mat4* value, std::string const &variable);
+  void sendAtUse(glm::mat3* value, std::string const &variable);
+  void sendAtUse(glm::vec4* value, std::string const &variable);
+  void sendAtUse(glm::vec3* value, std::string const &variable);
+  void sendAtUse(glm::vec2* value, std::string const &variable);
+  void sendAtUse(int* value, std::string const &variable);
+  void sendAtUse(Light* light);
+  void sendAtUse(Camera* camera);
 
-  void send(glm::mat4 const &value, std::string const &variable);
-  void send(glm::mat3 const &value, std::string const &variable);
-  void send(glm::vec4 const &value, std::string const &variable);
-  void send(glm::vec3 const &value, std::string const &variable);
-  void send(glm::vec2 const &value, std::string const &variable);
-  void send(float value, std::string const &variable);
-  void send(int value, std::string const &variable);
+  template<typename Type>
+  void send(Type const &value, std::string const &variable);
 
   void send(glm::mat4 const &value, GLint variable) const;
   void send(glm::mat3 const &value, GLint variable) const;
@@ -98,7 +91,7 @@ public:
   void send(float value, GLint variable) const;
   void send(int value, GLint variable) const;
 
-  void begin() const;
+  void use() const;
 
   static Shader &active();
 
@@ -121,6 +114,16 @@ private:
   //bool instanced;
 
 };
+
+//
+// Using string
+//
+  template<typename Type>
+  void Shader::send(Type const &value, std::string const &variable)
+  {
+    GLint loc = uniform(variable);
+    send(value, loc);
+  }
 
 }
 

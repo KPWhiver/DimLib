@@ -46,7 +46,7 @@ namespace dim
 
     if(it == d_uniforms.end())
     {
-      GLint loc = glGetUniformLocation(d_id->program(), variable.c_str());
+      GLint loc = glGetUniformLocation(*d_id, variable.c_str());
 
       if(loc == -1)
       {
@@ -120,36 +120,54 @@ namespace dim
   }
 
   Shader::Shader(string const &vsFile, string const &fsFile)
-      : d_id(new ShaderBuffer()), d_vsName(vsFile), d_fsName(fsFile)
+      :
+          d_id(new GLuint(glCreateProgram()), [&](GLuint *ptr)
+               {
+                 glDeleteProgram(*d_id);
+                 delete ptr;
+               }),
+          d_fragmentId(new GLuint(glCreateShader(GL_FRAGMENT_SHADER)), [&](GLuint *ptr)
+               {
+                 glDetachShader(*d_id, *d_fragmentId);
+                 glDeleteShader(*d_fragmentId);
+                 delete ptr;
+               }),
+          d_vertexId(new GLuint(glCreateShader(GL_VERTEX_SHADER)), [&](GLuint *ptr)
+               {
+                 glDetachShader(*d_id, *d_vertexId);
+                 glDeleteShader(*d_vertexId);
+                 delete ptr;
+               }),
+          d_vsName(vsFile), d_fsName(fsFile)
   {
     //d_vertexShader = glCreateShader(GL_VERTEX_SHADER);
     //d_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
     const char * fsText = returnshader(fsFile);
-    glShaderSource(d_id->fragment(), 1, &fsText, 0);
-    glCompileShader(d_id->fragment());
-    check_compile(d_id->fragment(), fsFile);
+    glShaderSource(*d_fragmentId, 1, &fsText, 0);
+    glCompileShader(*d_fragmentId);
+    check_compile(*d_fragmentId, fsFile);
     delete[] fsText;
 
     const char * defines = "";
 
     const char * vsText[2] = { defines, returnshader(vsFile) };
-    glShaderSource(d_id->vertex(), 2, vsText, 0);
-    glCompileShader(d_id->vertex());
-    check_compile(d_id->vertex(), vsFile);
+    glShaderSource(*d_vertexId, 2, vsText, 0);
+    glCompileShader(*d_vertexId);
+    check_compile(*d_vertexId, vsFile);
     delete[] vsText[1];
 
     //d_id = glCreateProgram();
-    glAttachShader(d_id->program(), d_id->fragment());
-    glAttachShader(d_id->program(), d_id->vertex());
+    glAttachShader(*d_id, *d_fragmentId);
+    glAttachShader(*d_id, *d_vertexId);
 
-    glBindAttribLocation(d_id->program(), 0, "in_position");
-    glBindAttribLocation(d_id->program(), 1, "in_normal");
-    glBindAttribLocation(d_id->program(), 2, "in_texcoord0");
-    glBindAttribLocation(d_id->program(), 3, "in_inst_placement");
+    glBindAttribLocation(*d_id, 0, "in_position");
+    glBindAttribLocation(*d_id, 1, "in_normal");
+    glBindAttribLocation(*d_id, 2, "in_texcoord0");
+    glBindAttribLocation(*d_id, 3, "in_inst_placement");
 
-    glLinkProgram(d_id->program());
-    check_program(d_id->program());
+    glLinkProgram(*d_id);
+    check_program(*d_id);
   }
 
   /*Shader::~Shader()
@@ -162,11 +180,11 @@ namespace dim
    glDeleteProgram(d_id);
    }*/
 
-  void Shader::begin() const
+  void Shader::use() const
   {
     if(s_activeShader == 0 || id() != active().id())
     {
-      glUseProgram(d_id->program());
+      glUseProgram(*d_id);
       s_activeShader = const_cast<Shader*>(this);
     }
 
@@ -230,98 +248,50 @@ namespace dim
     send(s_in_mat_normal, "in_mat_normal");
   }
 
-  void Shader::send(glm::mat4* value, string const &variable)
+  void Shader::sendAtUse(glm::mat4* value, string const &variable)
   {
     d_mat4List.push_back(value);
     d_mat4Names.push_back(uniform(variable));
   }
 
-  void Shader::send(glm::mat3* value, string const &variable)
+  void Shader::sendAtUse(glm::mat3* value, string const &variable)
   {
     d_mat3List.push_back(value);
     d_mat3Names.push_back(uniform(variable));
   }
 
-  void Shader::send(glm::vec4* value, string const &variable)
+  void Shader::sendAtUse(glm::vec4* value, string const &variable)
   {
     d_vec4List.push_back(value);
     d_vec4Names.push_back(uniform(variable));
   }
 
-  void Shader::send(glm::vec3* value, string const &variable)
+  void Shader::sendAtUse(glm::vec3* value, string const &variable)
   {
     d_vec3List.push_back(value);
     d_vec3Names.push_back(uniform(variable));
   }
 
-  void Shader::send(glm::vec2* value, string const &variable)
+  void Shader::sendAtUse(glm::vec2* value, string const &variable)
   {
     d_vec2List.push_back(value);
     d_vec2Names.push_back(uniform(variable));
   }
 
-  void Shader::send(int* value, string const &variable)
+  void Shader::sendAtUse(int* value, string const &variable)
   {
     d_intList.push_back(value);
     d_intNames.push_back(uniform(variable));
   }
 
-  void Shader::send(Light* light)
+  void Shader::sendAtUse(Light* light)
   {
     d_lightList.push_back(light);
   }
 
-  void Shader::send(Camera* camera)
+  void Shader::sendAtUse(Camera* camera)
   {
     d_cameraList.push_back(camera);
-  }
-
-//
-// Using string
-//
-  void Shader::send(glm::mat4 const &value, string const &variable)
-  {
-    GLint loc = uniform(variable);
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &value[0][0]);
-  }
-
-  void Shader::send(glm::mat3 const &value, string const &variable)
-  {
-    GLint loc = uniform(variable);
-    glUniformMatrix3fv(loc, 1, GL_FALSE, &value[0][0]);
-  }
-
-  void Shader::send(glm::vec3 const &value, string const &variable)
-  {
-    GLint loc = uniform(variable);
-    glUniform3fv(loc, 1, &value[0]);
-
-  }
-
-  void Shader::send(glm::vec2 const &value, string const &variable)
-  {
-    GLint loc = uniform(variable);
-    glUniform2fv(loc, 1, &value[0]);
-
-  }
-
-  void Shader::send(glm::vec4 const &value, string const &variable)
-  {
-    GLint loc = uniform(variable);
-    glUniform4fv(loc, 1, &value[0]);
-
-  }
-
-  void Shader::send(float value, string const &variable)
-  {
-    GLint loc = uniform(variable);
-    glUniform1f(loc, value);
-  }
-
-  void Shader::send(int value, string const &variable)
-  {
-    GLint loc = uniform(variable);
-    glUniform1i(loc, value);
   }
 
 //
@@ -364,7 +334,7 @@ namespace dim
 
   GLuint Shader::id() const
   {
-    return d_id->program();
+    return *d_id;
   }
 
 }
