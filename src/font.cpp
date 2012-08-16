@@ -30,9 +30,10 @@ FT_Library Font::s_library;
 
 void Font::initialize()
 {
-int error = FT_Init_FreeType(&s_library);
-if(error)
-	cerr << "Error initializng FreeType2\n";
+  int error = FT_Init_FreeType(&s_library);
+
+  if(error)
+    log(__FILE__, __LINE__, LogType::error, "Failed to initialize FreeType2");
 }
 
 Font::Font(string filename)
@@ -41,9 +42,9 @@ Font::Font(string filename)
 	int error = FT_New_Face(s_library, filename.c_str(), 0, &d_face);
 
 	if(error == FT_Err_Unknown_File_Format)
-		cerr << "Unsupported file format\n";
+	  log(__FILE__, __LINE__, LogType::error, "File: " + filename + " has a unsupported file format");
 	else if (error)
-		cerr << "Error reading file\n";
+	  log(__FILE__, __LINE__, LogType::error, "Failed to read file: " + filename);
 
 	FT_Set_Char_Size(d_face, 64 * 64, 64 * 64, 96, 96);
 
@@ -59,12 +60,12 @@ void Font::generateCharMap(size_t ch)
 	//d_charTex[ch].reset(new TextureBuffer);
 
 	if (FT_Load_Glyph(d_face, FT_Get_Char_Index(d_face, ch), FT_LOAD_DEFAULT))
-		cerr << "Error loading glyph\n";
+	  log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
 
 	// Hamdle to a glyph
 	FT_Glyph glyph;
 	if (FT_Get_Glyph(d_face->glyph, &glyph))
-		cerr << "Error getting glyph\n";
+	  log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
 
 	FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
 	d_glyphs[ch] = glyph;

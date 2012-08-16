@@ -22,6 +22,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 #include "DIM/shader.hpp"
 #include "DIM/scanner.hpp"
@@ -52,8 +53,9 @@ namespace dim
 
       if(loc == -1)
       {
-        cerr << "Can`t find uniform " << variable << " in shader " << d_vsName << " \\ " << d_fsName
-            << '\n';
+        stringstream ss;
+        ss << "Can`t find uniform " << variable << " in shader " << d_vsName << " \\ " << d_fsName;
+        log(__FILE__, __LINE__, LogType::warning, ss.str());
       }
 
       d_uniforms[variable] = loc;
@@ -78,14 +80,21 @@ namespace dim
 	    Scanner scanner(filename, "out");
 	    scanner.switchOstream(output);
 	
-	    while(int token = scanner.lex())
+	    try
 	    {
-	      if(token == Scanner::include)
-	        output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
-	      else if(token == Scanner::endOfFile)
-	        output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
-	  	  else
-	        break;
+        while(int token = scanner.lex())
+        {
+          if(token == Scanner::include)
+            output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
+          else if(token == Scanner::endOfFile)
+            output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
+          else
+            break;
+        }
+	    }
+	    catch(runtime_error &exc)
+	    {
+	      log(__FILE__, __LINE__, LogType::warning, string("Compiling shader (file: ") + filename + ") failed: " + exc.what());
 	    }
 	
       string str = output.str();
@@ -107,7 +116,9 @@ namespace dim
     glGetShaderInfoLog(sha_ver, buffer_size, &length, buffer);
     if(length > 0)
     {
-      cerr << "Shader " << sha_ver << " (file: " << sha_file << ") compile: " << buffer << '\n';
+      stringstream ss;
+      ss << "Compiling shader " << sha_ver << " (file: " << sha_file << "): " << buffer;
+      log(__FILE__, __LINE__, LogType::note, ss.str());
     }
   }
 
@@ -120,7 +131,9 @@ namespace dim
     glGetProgramInfoLog(program, buffer_size, &length, buffer);
     if(length > 0)
     {
-      cerr << "Program " << program << " link: " << buffer << '\n';
+      stringstream ss;
+      ss << "Linking shader" << program << " (files: " << d_vsName << " \\ " << d_fsName << "): " << buffer;
+      log(__FILE__, __LINE__, LogType::note, ss.str());
     }
 
     glValidateProgram(program);
@@ -129,8 +142,9 @@ namespace dim
     glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
     if(status == GL_FALSE)
     {
-      cerr << "Error validating shader " << d_vsName << " \\ " << d_fsName << " validate: "
-          << buffer << '\n';
+      stringstream ss;
+      ss << "Building shader " << program << " (files: " << d_vsName << " \\ " << d_fsName << ") failed:" << buffer;
+      log(__FILE__, __LINE__, LogType::warning, ss.str());
     }
   }
 

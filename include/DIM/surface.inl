@@ -57,8 +57,7 @@ namespace dim
     if(oldDepth != d_depth)
     {
       d_depth = oldDepth;
-      throw std::runtime_error(
-          "Addition of a extra render target to a framebuffer failed because the depth doesn't match");
+      log(__FILE__, __LINE__, LogType::error, "Addition of a extra render target to a framebuffer failed because the depth doesn't match");
     }
 
     addBuffer<Index>(attachment, width(), height(), 0, format, filter);
@@ -115,7 +114,7 @@ namespace dim
     {
       std::stringstream ss;
       ss << "Creation of a framebuffer failed with error code: " << fbo_status;
-      throw std::runtime_error(ss.str());   
+      log(__FILE__, __LINE__, LogType::error, ss.str());
     }
   }
 

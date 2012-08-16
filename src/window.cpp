@@ -87,24 +87,26 @@ namespace dim
     switch(error)
     {
       case GL_INVALID_ENUM:
-        cerr << "OpenGL reported an error: GL_INVALID_ENUM\n";
+        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_ENUM");
         break;
       case GL_INVALID_VALUE:
-        cerr << "OpenGL reported an error: GL_INVALID_VALUE\n";
+        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_VALUE");
         break;
       case GL_INVALID_OPERATION:
-        cerr << "OpenGL reported an error: GL_INVALID_OPERATION\n";
+        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_OPERATION");
         break;
       case GL_OUT_OF_MEMORY:
-        cerr << "OpenGL reported an error: GL_OUT_OF_MEMORY\n";
+        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_OUT_OF_MEMORY");
         break;
       case GL_INVALID_FRAMEBUFFER_OPERATION:
-        cerr << "OpenGL reported an error: GL_INVALID_FRAMEBUFFER_OPERATION\n";
+        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_FRAMEBUFFER_OPERATION");
         break;
       case 0:
         break;
       default:
-        cerr << "OpenGL reported an error: " << error << '\n';
+        stringstream ss;
+        ss << "OpenGL reported an error: " << error;
+        log(__FILE__, __LINE__, LogType::warning, ss.str());
         break;
     }
   }
@@ -121,9 +123,7 @@ namespace dim
 
     //initialize glfw
     if(glfwInit() != GL_TRUE)
-    {
-      throw runtime_error("Failed to open a window.");
-    }
+      log(__FILE__, __LINE__, LogType::error, "Failed to open a window");
 
     d_startTime = glfwGetTime();
 
@@ -162,10 +162,7 @@ namespace dim
 
     //create new window
     if(glfwOpenWindow(d_width, d_height, 8, 8, 8, 8, 32, 0, screen) != GL_TRUE)
-    {
-      //cerr << "GLFW failed to open a window. This could be a bug, please contact the creators.";
-      throw runtime_error("Failed to open a window.");
-    }
+      log(__FILE__, __LINE__, LogType::error, "Failed to open a window");
 
     glfwSetWindowTitle(title.c_str());
     //glfwDisable(GLFW_MOUSE_CURSOR);
@@ -173,9 +170,7 @@ namespace dim
     //initialize glew
     GLenum err = glewInit();
     if(GLEW_OK != err)
-    {
-      throw std::runtime_error(string("Error: ") + reinterpret_cast<char const *>(glewGetErrorString(err)));
-    }
+      log(__FILE__, __LINE__, LogType::error, string("Failed to open a window: ") + reinterpret_cast<char const *>(glewGetErrorString(err)));
 
     //initialize DevIL
     ilInit();

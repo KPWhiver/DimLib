@@ -20,6 +20,8 @@
 #ifndef COPYPTR_HPP
 #define COPYPTR_HPP
 
+#include <cstring>
+
 namespace dim
 {
   template <typename Type>
@@ -40,6 +42,8 @@ namespace dim
       operator Type*();
       Type &operator*();
       Type *operator->();
+
+      void reset(Type *ptr, size_t size = 1);
 
       ~CopyPtr();
   };
@@ -121,6 +125,12 @@ namespace dim
   Type *CopyPtr<Type>::operator->()
   {
     return d_ptr;
+  }
+
+  template <typename Type>
+  void CopyPtr<Type>::reset(Type *ptr, size_t size)
+  {
+    *this = CopyPtr<Type>(ptr, size);
   }
 
   template <typename Type>

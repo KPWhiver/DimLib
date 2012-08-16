@@ -51,9 +51,8 @@ namespace dim
 
     if(ilLoadImage(filename.c_str()) == false)
     {
-
       ilDeleteImages(1, &source);
-      throw(runtime_error("Unable to load: " + filename + ", unknown file format"));
+      log(__FILE__, __LINE__, LogType::error, "Unable to load: " + filename + ", unknown file format");
     }
 
     int format = ilGetInteger(IL_IMAGE_FORMAT);
@@ -79,7 +78,7 @@ namespace dim
         form = Format::RGBA8;
         break;
       default:
-        throw runtime_error("Unable to load: " + filename + ", depth is not loadable");
+        log(__FILE__, __LINE__, LogType::error, "Unable to load: " + filename + ", depth is not loadable");
     }
 
     init(ilGetData(), filter, form, ilGetInteger(IL_IMAGE_WIDTH),
@@ -139,7 +138,7 @@ namespace dim
       default:
         std::stringstream ss;
         ss << "Unable to save texture with format: " << externalFormat();
-        throw(std::runtime_error(ss.str()));
+        log(__FILE__, __LINE__, LogType::error, ss.str());
     }
 
     GLubyte *dataSource = buffer();

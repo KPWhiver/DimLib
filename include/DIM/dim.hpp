@@ -31,8 +31,17 @@ namespace dim
 {
   typedef unsigned int uint;
 
+  enum class LogType
+  {
+    note,
+    warning,
+    error,
+  };
+
   void setLogStream(std::ostream &outputStream);
   void setLogFile(std::string const &outputFile);
+
+  void log(std::string const &file, int line, LogType type, std::string const &message);
 }
 
 #endif /* DIM_HPP_ */

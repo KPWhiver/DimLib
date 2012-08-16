@@ -155,7 +155,7 @@ namespace dim
     size_t mode = 0;
 
     if (format.length() > 6 || format.length() % 2 != 0)
-      throw runtime_error("Error in Mesh format string");
+      log(__FILE__, __LINE__, LogType::error, "Failed to read Mesh format string: " + format);
 
     for (size_t idx = 0; idx != format.length(); idx += 2)
     {
@@ -175,10 +175,10 @@ namespace dim
         mode = 2;
         break;
       default:
-        throw runtime_error("Error in Mesh format string");
+        log(__FILE__, __LINE__, LogType::error, "Failed to read Mesh format string: " + format);
       }
       if (not isdigit(format[idx + 1]))
-        throw runtime_error("Error in Mesh format string");
+        log(__FILE__, __LINE__, LogType::error, "Failed to read Mesh format string: " + format);
 
       d_attribSize[slot] = format[idx + 1] - '0';
     }
