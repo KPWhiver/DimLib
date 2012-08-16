@@ -24,9 +24,15 @@
 #include <GL/glfw.h>
 #include <glm/glm.hpp>
 
+#include <iosfwd>
+#include <string>
+
 namespace dim
 {
   typedef unsigned int uint;
+
+  void setLogStream(std::ostream &outputStream);
+  void setLogFile(std::string const &outputFile);
 }
 
 #endif /* DIM_HPP_ */

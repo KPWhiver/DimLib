@@ -24,6 +24,8 @@
 #include <iostream>
 
 #include "DIM/shader.hpp"
+#include "DIM/scanner.hpp"
+
 #include <glm/gtc/matrix_inverse.hpp>
 
 using namespace std;
@@ -71,9 +73,22 @@ namespace dim
     }
     else
     {
-      stringstream ss;
-      ss << file.rdbuf();
-      string str = ss.str();
+      stringstream output;
+
+	    Scanner scanner(filename, "out");
+	    scanner.switchOstream(output);
+	
+	    while(int token = scanner.lex())
+	    {
+	      if(token == Scanner::include)
+	        output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
+	      else if(token == Scanner::endOfFile)
+	        output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
+	  	  else
+	        break;
+	    }
+	
+      string str = output.str();
       char* cstr;
       cstr = new char[str.size() + 1];
       strcpy(cstr, str.c_str());
