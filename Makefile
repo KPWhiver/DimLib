@@ -14,8 +14,8 @@ libdir = $(prefix)/lib
 includedir = $(prefix)/include
 
 vpath %.cpp src
-vpath %.h include/DIM
-vpath %.hpp include/DIM
+vpath %.h include/dim
+vpath %.hpp include/dim
 vpath %.o obj
 vpath %.d obj
 
@@ -61,8 +61,8 @@ endef
 install: all
 	$(INSTALL) $(DYNAMICPROGRAM) $(libdir)/$(DYNAMICPROGRAM)
 	/sbin/ldconfig -l $(libdir)
-	$(INSTALL) -d include/DIM $(includedir)/DIM
-	$(addprefix $(INSTALL) -t $(includedir)/DIM/ include/DIM/,$(addsuffix ;$(\n),$(CXXHEADERS)))
+	$(INSTALL) -d include/dim $(includedir)/dim
+	$(addprefix $(INSTALL) -t $(includedir)/dim/ include/dim/,$(addsuffix ;$(\n),$(CXXHEADERS)))
   
 clean:
 	rm -f *~

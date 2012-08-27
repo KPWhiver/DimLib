@@ -17,16 +17,19 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include "DIM/surface.hpp"
+#include "dim/surface.hpp"
 
 namespace dim
 {
   SurfaceBase__* SurfaceBase__::s_renderTarget(0);
   
+  GLint SurfaceBase__::s_maxAttachment(0);
+
   SurfaceBase__::SurfaceBase__()
   :
       d_bufferToRenderTo(0)
   {
+    glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_maxAttachment);
   }
   
   SurfaceBase__::~SurfaceBase__()

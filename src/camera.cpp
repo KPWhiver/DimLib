@@ -21,8 +21,8 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/intersect.hpp>
 
-#include "DIM/camera.hpp"
-#include "DIM/shader.hpp"
+#include "dim/camera.hpp"
+#include "dim/shader.hpp"
 
 using namespace glm;
 

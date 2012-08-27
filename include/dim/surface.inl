@@ -29,22 +29,27 @@ namespace dim
 
   template<typename ...Types>
   Surface<Types...>::Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter)
-      : d_frames(1 + pingPongBuffer),
-        d_colorBuffers(0), d_depthComponent(false), d_colorComponent{false}, d_clearDepth(0)
+      : d_buffers(1 + pingPongBuffer),
+        d_colorAttachments(0), d_depthComponent(false), d_colorComponent{false}, d_clearDepth(0)
   { 
     ComponentType attachment = processFormat(format);
     
-    glGenFramebuffers(1, d_frames[0].d_id.get());
-    addBuffer<0>(attachment, width, height, 0, format, filter);
+    glGenFramebuffers(1, d_buffers[0].d_id.get());
+    addAttachment<0>(attachment, width, height, 0, format, filter);
 
+    if(attachment == depth)
+      d_attachments[0] = GL_NONE;
+    else
+      d_attachments[0] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
+    
     if(pingPongBuffer)
     {
-      glGenFramebuffers(1, d_frames[1].d_id.get());
-      addBuffer<0>(attachment, width, height, 1, format, filter);
+      glGenFramebuffers(1, d_buffers[1].d_id.get());
+      addAttachment<0>(attachment, width, height, 1, format, filter);
     }
 
     if(attachment == color)
-      ++d_colorBuffers;
+      ++d_colorAttachments;
   }
   
   template<typename ...Types>
@@ -59,24 +64,29 @@ namespace dim
       d_depth = oldDepth;
       log(__FILE__, __LINE__, LogType::error, "Addition of a extra render target to a framebuffer failed because the depth doesn't match");
     }
+    
+    addAttachment<Index>(attachment, width(), height(), 0, format, filter);
+    
+    if(attachment == depth)
+      d_attachments[Index] = GL_NONE;
+    else
+      d_attachments[Index] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
 
-    addBuffer<Index>(attachment, width(), height(), 0, format, filter);
-
-    if(d_frames.size() == 2)
-      addBuffer<Index>(attachment, width(), height(), 1, format, filter);
+    if(d_buffers.size() == 2)
+      addAttachment<Index>(attachment, width(), height(), 1, format, filter);
 
     if(attachment == color)
-      ++d_colorBuffers;
+      ++d_colorAttachments;
   }
 
   template<typename ...Types>
   template<uint Index>
-  void Surface<Types...>::addBuffer(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter)
+  void Surface<Types...>::addAttachment(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter)
   {
     // Create the texture
     typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
     
-    TextureType &tex = std::get<Index>(d_frames[buffer].d_textures);
+    TextureType &tex = std::get<Index>(d_buffers[buffer].d_textures);
     tex = TextureType(0, filter, format, width, height, false, Wrapping::borderClamp);
     
     glBindTexture(GL_TEXTURE_2D, tex.id());
@@ -87,26 +97,18 @@ namespace dim
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[buffer].d_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, *d_buffers[buffer].d_id);
     
-    // TODO replace with glDrawBuffers
-    if(attachment == depth)
-    {
-      glDrawBuffer(GL_NONE);
-      glReadBuffer(GL_NONE);
-    }
-    else
-    {
-      glDrawBuffer(GL_COLOR_ATTACHMENT0);
-      glReadBuffer(GL_COLOR_ATTACHMENT0);
-    }
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
 
     // Add the texture to the FBO
     if(attachment == depth)
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.id(), 0);
     else
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.id(), 0);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + d_colorAttachments, GL_TEXTURE_2D, tex.id(), 0);
     
+    // Check FBO
     GLenum fbo_status;
     fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -215,13 +217,13 @@ namespace dim
   template<typename ...Types>
   uint Surface<Types...>::height() const
   {
-    return std::get<0>(d_frames[0].d_textures).height();
+    return std::get<0>(d_buffers[0].d_textures).height();
   }
 
   template<typename ...Types>
   uint Surface<Types...>::width() const
   {
-    return std::get<0>(d_frames[0].d_textures).width();
+    return std::get<0>(d_buffers[0].d_textures).width();
   }
 
   template<typename ...Types> 
@@ -229,10 +231,10 @@ namespace dim
   typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &Surface<Types...>::texture()
   {
     uint idx = 0;
-    if(d_frames.size() == 2 && d_bufferToRenderTo == 0)
+    if(d_buffers.size() == 2 && d_bufferToRenderTo == 0)
       idx = 1;
     
-    return std::get<Index>(d_frames[idx].d_textures);
+    return std::get<Index>(d_buffers[idx].d_textures);
   }
   
   template<typename ...Types>
@@ -254,11 +256,12 @@ namespace dim
       s_renderTarget = 0;
     
 
-    glBindFramebuffer(GL_FRAMEBUFFER, *d_frames[d_bufferToRenderTo].d_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, *d_buffers[d_bufferToRenderTo].d_id);
 
     // TODO change this to glDrawBuffers
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
+    //glDrawBuffers(d_colorAttachments - 1, d_attachments);
 
     glViewport(x, y, width, height);
     
@@ -282,15 +285,27 @@ namespace dim
       if(d_clearColor != glm::vec4() && (d_colorComponent[0] || d_colorComponent[3]))
         glClearColor(0, 0, 0, 0);
     }
+    
+    // Tell the attached textures that they might be changed
+    if(d_buffers.size() == 2)
+      notifyTextures(d_bufferToRenderTo);
+    else
+      notifyTextures(0);
 
     //glColorMask(d_colorComponent[0], d_colorComponent[1], d_colorComponent[2], d_colorComponent[3]);
 
   }
   
   template<typename ...Types>
+  void Surface<Types...>::notifyTextures(uint buffer)
+  {
+    TupleCaller<std::tuple_size<TupleType>::value - 1, TupleType> call(d_buffers[buffer].d_textures);
+  }
+  
+  template<typename ...Types>
   void Surface<Types...>::swapBuffers()
   {
-    if(d_frames.size() == 2)
+    if(d_buffers.size() == 2)
       d_bufferToRenderTo = ((d_bufferToRenderTo == 0) ? 1 : 0);
   }
 

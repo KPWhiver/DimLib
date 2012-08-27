@@ -24,8 +24,8 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "DIM/shader.hpp"
-#include "DIM/scanner.hpp"
+#include "dim/shader.hpp"
+#include "dim/scanner.hpp"
 
 #include <glm/gtc/matrix_inverse.hpp>
 

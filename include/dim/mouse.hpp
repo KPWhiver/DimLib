@@ -1,4 +1,4 @@
-// component.cpp
+// mouse.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,59 +17,46 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include "dim/component.hpp"
+#ifndef MOUSE_HPP
+#define MOUSE_HPP
 
-namespace dim {
+#include "dim/dim.hpp"
 
-Component::Component()
-:
-		d_context(0),
-		d_priority(0)//,
-		//d_id(0)
+namespace dim
 {
+
+	class Mouse
+	{
+	  bool d_lButton;
+	  bool d_rButton;
+	  
+	  bool d_lPressed;
+	  bool d_rPressed;
+	  
+	  bool d_lRelease;
+	  bool d_rRelease;
+	  
+	  glm::ivec2 d_coor;
+
+  public:  
+    Mouse();
+    
+    void update();
+
+    bool lPressed() const;
+    bool rPressed() const;
+    
+    bool lRelease() const;
+    bool rRelease() const;
+    
+    glm::ivec2 const &coor() const;
+
+  private:  
+    //void rRelease();
+    //void lRelease();
+
+	};
+
 }
 
-Component::~Component()
-{
-}
-
-void Component::draw(int x, int y)
-{
-}
-
-void Component::setContext(Context *context)
-{
-	d_context = context;
-}
-
-bool Component::listen(int x, int y, Mouse const &mouse)
-{
-	return false;
-}
-
-void Component::setPriority(size_t priority)
-{
-	d_priority = priority;
-}
-
-size_t Component::priority() const
-{
-	return d_priority;
-}
-
-//void Component::setId(size_t id)
-//{
-//  d_id = id;
-//}
-
-//size_t Component::id() const
-//{
-//  return d_id;
-//}
-
-bool Component::operator<(Component const &component)
-{
-	return d_priority < component.d_priority;
-}
-
-} /* namespace dim */
+#endif /* BUTTON_HPP_ */

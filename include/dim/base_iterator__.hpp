@@ -21,7 +21,7 @@
 #define BASEITERATOR_HPP__
 
 #include <iterator>
-#include <DIM/drawable.hpp>
+#include <dim/drawable.hpp>
 
 namespace dim
 {

@@ -4,7 +4,7 @@
 #define Scanner_H_INCLUDED_
 
 // $insert baseclass_h
-#include "DIM/scannerbase.hpp"
+#include "dim/scannerbase.hpp"
 
 
 // $insert classHead
@@ -19,11 +19,21 @@ class Scanner: public ScannerBase
         // $insert lexFunctionDecl
         int lex();
 
-        enum Tokens
+        enum Token : int
         {
-            include = 256,
-            endOfFile,
-            error,
+          vertex = 256,
+          fragment,
+          geometry,
+          tessControl,
+          tessEval,
+          compute,
+          
+          version,
+          number,
+          include,
+          endOfFile,
+          glslToken,
+          glslWhitespace,
         };
 
     private:

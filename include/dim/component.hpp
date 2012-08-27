@@ -1,4 +1,4 @@
-// image2d.hpp
+// component.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,33 +17,43 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef IMAGE2D_HPP
-#define IMAGE2D_HPP
+#ifndef COMPONENT_HPP
+#define COMPONENT_HPP
 
-#include "DIM/texture.hpp"
-#include "DIM/component.hpp"
+#include "dim/context.hpp"
+#include "dim/mouse.hpp"
 
-#include <functional>
-#include <memory>
-
-namespace dim
+namespace dim 
 {
-	class Image2D : public Component
+	class Component
 	{
-	  int d_x;
-	  int d_y;
-	  		
-		size_t d_width;
-		size_t d_height;
-		Texture<GLubyte> d_image;
+		protected:
+		  Context *d_context;
 
-  public:
-    Image2D(int x, int y, size_t width, size_t height, Texture<GLubyte> const &image);
-    virtual void draw(int x, int y);
-    void setCoor(int x, int y);
+		  size_t d_priority;
+		  
+		  //size_t d_id;
 
+		public:
+		  Component();
+
+		  virtual bool listen(int x, int y, dim::Mouse const &mouse);
+		  virtual void draw(int x, int y);
+
+
+		  void setPriority(size_t priority);
+		  size_t priority() const;
+		  bool operator<(Component const &component);
+		  
+		  //void setId(size_t id);
+		  //size_t id() const;
+
+		  virtual ~Component();
+
+		  virtual void setContext(Context *context);
+		  
+		  
 	};
 
-}
-
-#endif /* IMAGE2D_HPP */
+} /* namespace dim */
+#endif /* COMPONENT_HPP_ */

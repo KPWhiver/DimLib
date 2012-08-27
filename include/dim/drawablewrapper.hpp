@@ -28,9 +28,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "DIM/drawable.hpp"
-#include "DIM/base_iterator__.hpp"
-#include "DIM/onepair.hpp"
+#include "dim/drawable.hpp"
+#include "dim/base_iterator__.hpp"
+#include "dim/onepair.hpp"
 
 namespace dim
 {

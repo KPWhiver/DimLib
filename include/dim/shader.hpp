@@ -20,8 +20,8 @@
 #ifndef SHADERS_HPP
 #define SHADERS_HPP
 
-#include "DIM/camera.hpp"
-#include "DIM/light.hpp"
+#include "dim/camera.hpp"
+#include "dim/light.hpp"
 
 #include <string>
 #include <vector>

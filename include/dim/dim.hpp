@@ -17,11 +17,19 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef DIM_HPP
-#define DIM_HPP
+#ifndef dim_HPP
+#define dim_HPP
 
-#include <GL/glew.h>
-#include <GL/glfw.h>
+#define GLFW_NO_GLU
+
+#if defined(__APPLE_CC__)
+ #include <GLEW/glew.h>
+ #include <OpenGL/gl.h>
+#else
+ #include <GL/glew.h>
+ #include <GL/gl.h>
+#endif
+
 #include <glm/glm.hpp>
 
 #include <iosfwd>
@@ -44,4 +52,4 @@ namespace dim
   void log(std::string const &file, int line, LogType type, std::string const &message);
 }
 
-#endif /* DIM_HPP_ */
+#endif /* dim_HPP_ */

@@ -20,8 +20,8 @@
 #ifndef LISTENAREA_HPP
 #define LISTENAREA_HPP
 
-#include "DIM/texture.hpp"
-#include "DIM/component.hpp"
+#include "dim/texture.hpp"
+#include "dim/component.hpp"
 
 #include <functional>
 

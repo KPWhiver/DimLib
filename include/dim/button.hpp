@@ -1,4 +1,4 @@
-// font.hpp
+// button.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,42 +17,43 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef FONT_HPP
-#define FONT_HPP
+#ifndef BUTTON_HPP
+#define BUTTON_HPP
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
+#include "dim/texture.hpp"
+#include "dim/menu.hpp"
+#include "dim/component.hpp"
 
+#include <functional>
 #include <string>
 #include <memory>
 
-#include "DIM/texture.hpp"
-
 namespace dim
 {
-
-  class Font
+  class Button : public Component
   {
-    FT_Face d_face;
+    std::function<void(void)> d_listenerFunction;
+    std::shared_ptr<Menu> d_menu;
 
-    FT_Glyph d_glyphs[128];
-    static FT_Library s_library;
+    int d_x, d_y;
+    size_t d_width, d_height;
+    Texture<GLubyte> d_text;
+    std::string d_strText;
+
+    bool d_selected;
 
   public:
-    Font(std::string filename);
-
-    static void initialize();
-
-    Texture<GLubyte> generateTexture(std::string const &text, size_t width, size_t height) const;
-    //GLuint letter(size_t ch);
-
-  private:
-    size_t nextPowerOf2(size_t number);
-    void generateCharMap(size_t ch);
-
-  };;
-
+    Button(int x, int y, size_t width, size_t height, std::string const &text);
+    Button();
+    //~Button();
+    virtual void draw(int x, int y);
+    virtual bool listen(int x, int y, dim::Mouse const &mouse);
+    void size();
+    void setListener(std::function<void(void)> const &listenerFunction);
+    void setMenu(Menu *menu);
+    virtual void setContext(Context *context);
+  };
 
 }
-#endif
+
+#endif /* BUTTON_HPP_ */

@@ -17,8 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include "DIM/tools.hpp"
-#include "DIM/mesh.hpp"
+#include "dim/tools.hpp"
+#include "dim/mesh.hpp"
 
 namespace dim
 {

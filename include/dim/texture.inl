@@ -28,7 +28,7 @@ namespace dim
   {
   }
   
-  namespace
+  namespace dim__
   {
     inline std::string internalFormatName(GLuint format)
     {
@@ -157,74 +157,74 @@ namespace dim
   }
   
   template <typename Type, typename ComponentType>
-    void TextureBase__<Type, ComponentType>::init(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  void TextureBase__<Type, ComponentType>::init(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  {
+    d_format = format;      
+    d_width = width;
+    d_height = height;
+    
+    // give the buffer the correct size
+    if(keepBuffered)
+      d_buffer.assign(data, data + width * height * components());
+    
+    d_keepBuffered = keepBuffered;
+    d_outdatedBuffer = false;
+        
+    // check wether we exceed the maximum texture size
+    if(d_width > s_maxTextureSize + 2 || d_height > s_maxTextureSize + 2)
     {
-      d_format = format;      
-      d_width = width;
-      d_height = height;
-      
-      // give the buffer the correct size
-      if(keepBuffered)
-        d_buffer.assign(data, data + width * height * components());
-      
-      d_keepBuffered = keepBuffered;
-      d_outdatedBuffer = false;
-          
-      // check wether we exceed the maximum texture size
-      if(d_width > s_maxTextureSize + 2 || d_height > s_maxTextureSize + 2)
-      {
-        std::stringstream ss;
-        ss << "Texture size: " << d_width << "x" << d_height << " exceeds maximum texture size: " << s_maxTextureSize << "x" << s_maxTextureSize; 
-        throw std::runtime_error(ss.str());
-      }
-
-      glGenTextures(1, d_id.get());
-      glBindTexture(GL_TEXTURE_2D, *d_id);
-
-      // set the correct filtering
-      if(s_anisotropic == false && static_cast<int>(filter) >= 0)
-        filter = Filtering::trilinear;
-
-      switch(filter)
-      {
-        case Filtering::anisotropicMax:
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, s_maxAnisotropy);
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-        case Filtering::anisotropic1x:
-        case Filtering::anisotropic2x:
-        case Filtering::anisotropic4x:
-        case Filtering::anisotropic8x:
-        case Filtering::anisotropic16x:
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, static_cast<GLfloat>(filter));
-        case Filtering::trilinear:
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-        case Filtering::bilinear:
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-        case Filtering::linear:
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          break;
-        case Filtering::nearest:
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          break;
-      }
-
-      // set the correct wrapping
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap));
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap));
-      
-      glTexImage2D(GL_TEXTURE_2D, 0, internalFormat(), d_width, d_height, 0, externalFormat(), DataType<ComponentType>::value, data);
-
-      if(filter != Filtering::linear && filter != Filtering::nearest)
-        glGenerateMipmap(GL_TEXTURE_2D);
+      std::stringstream ss;
+      ss << "Texture size: " << d_width << "x" << d_height << " exceeds maximum texture size: " << s_maxTextureSize << "x" << s_maxTextureSize; 
+      throw std::runtime_error(ss.str());
     }
+
+    glGenTextures(1, d_id.get());
+    glBindTexture(GL_TEXTURE_2D, *d_id);
+
+    // set the correct filtering
+    if(s_anisotropic == false && static_cast<int>(filter) >= 0)
+      filter = Filtering::trilinear;
+
+    switch(filter)
+    {
+      case Filtering::anisotropicMax:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, s_maxAnisotropy);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        break;
+      case Filtering::anisotropic1x:
+      case Filtering::anisotropic2x:
+      case Filtering::anisotropic4x:
+      case Filtering::anisotropic8x:
+      case Filtering::anisotropic16x:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, static_cast<GLfloat>(filter));
+      case Filtering::trilinear:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        break;
+      case Filtering::bilinear:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        break;
+      case Filtering::linear:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        break;
+      case Filtering::nearest:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        break;
+    }
+
+    // set the correct wrapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap));
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat(), d_width, d_height, 0, externalFormat(), DataType<ComponentType>::value, data);
+
+    if(filter != Filtering::linear && filter != Filtering::nearest)
+      glGenerateMipmap(GL_TEXTURE_2D);
+  }
   
   /* texture properties */
   template <typename Type, typename ComponentType>
@@ -252,7 +252,7 @@ namespace dim
     // update the internal buffer
     if(not d_keepBuffered)
       d_buffer = std::vector<Type>(); 
-    else
+    else if(data != &d_buffer[0])
       d_buffer.assign(data, data + d_width * d_height * components());
   }
 
@@ -270,6 +270,8 @@ namespace dim
     // calculate width and height based on the mipmap level
     uint bufferWidth = d_width / (1 << level);
     uint bufferHeight = d_width / (1 << level);
+    
+    // TODO make wrapping behaviour based on Wrapping flag
     
     // wrap coordinates
     x %= bufferWidth;

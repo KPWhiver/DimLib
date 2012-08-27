@@ -20,7 +20,7 @@
 #include <iostream>
 #include <cstring>
 
-#include "DIM/font.hpp"
+#include "dim/font.hpp"
 
 using namespace std;
 

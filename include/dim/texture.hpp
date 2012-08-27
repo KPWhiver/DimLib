@@ -27,7 +27,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "DIM/shader.hpp"
+#include "dim/shader.hpp"
 
 namespace dim
 {

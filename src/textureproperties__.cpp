@@ -17,7 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include "DIM/texture.hpp"
+#include "dim/texture.hpp"
 
 namespace dim
 {

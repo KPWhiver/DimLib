@@ -1,4 +1,4 @@
-// menu.hpp
+// font.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,39 +17,42 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef MENU_HPP
-#define MENU_HPP
+#ifndef FONT_HPP
+#define FONT_HPP
 
-#include "DIM/texture.hpp"
-#include "DIM/menuitem.hpp"
-#include "DIM/component.hpp"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 
+#include <string>
 #include <memory>
+
+#include "dim/texture.hpp"
 
 namespace dim
 {
-  class Menu : public Component
-  {
-    size_t d_width, d_height;
-    int d_x, d_y;
 
-    std::vector<MenuItem*> d_items;
-    bool d_active;
+  class Font
+  {
+    FT_Face d_face;
+
+    FT_Glyph d_glyphs[128];
+    static FT_Library s_library;
 
   public:
-    Menu(size_t d_width, size_t d_height);
-    Menu();
+    Font(std::string filename);
 
-    void draw(int x, int y);
-    bool listen(int x, int y, dim::Mouse const &mouse);
-    void add(MenuItem *item);
-    void activate(int x, int y);
-    void deactivate();
-    bool active() const;
-    virtual void setContext(Context *context);
+    static void initialize();
 
-};
+    Texture<GLubyte> generateTexture(std::string const &text, size_t width, size_t height) const;
+    //GLuint letter(size_t ch);
+
+  private:
+    size_t nextPowerOf2(size_t number);
+    void generateCharMap(size_t ch);
+
+  };;
+
 
 }
-
-#endif /* BUTTON_HPP_ */
+#endif

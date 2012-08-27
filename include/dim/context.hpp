@@ -1,4 +1,4 @@
-// mouse.hpp
+// context.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,46 +17,37 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef MOUSE_HPP
-#define MOUSE_HPP
+#ifndef CONTEXT_HPP
+#define CONTEXT_HPP
 
-#include "DIM/dim.hpp"
+#include <vector>
+
+#include "dim/mesh.hpp"
+#include "dim/font.hpp"
 
 namespace dim
 {
+  class Context
+  {
+    Texture<GLubyte> d_butTexture;
+    Texture<GLubyte> d_butHoverTexture;
+    Texture<GLubyte> d_butDisableTexture;
 
-	class Mouse
-	{
-	  bool d_lButton;
-	  bool d_rButton;
-	  
-	  bool d_lPressed;
-	  bool d_rPressed;
-	  
-	  bool d_lRelease;
-	  bool d_rRelease;
-	  
-	  glm::ivec2 d_coor;
+    Font d_font;
 
-  public:  
-    Mouse();
-    
-    void update();
+    static bool s_initialized;
 
-    bool lPressed() const;
-    bool rPressed() const;
-    
-    bool lRelease() const;
-    bool rRelease() const;
-    
-    glm::ivec2 const &coor() const;
+  public:
+    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font);
 
-  private:  
-    //void rRelease();
-    //void lRelease();
+    Texture<GLubyte> const &buttonTexture() const;
+    Texture<GLubyte> const &buttonHoverTexture() const;
+    Texture<GLubyte> const &buttonDisableTexture() const;
+    Font &font();
 
-	};
+    Mesh const &mesh() const;
+  };
 
 }
 
-#endif /* BUTTON_HPP_ */
+#endif /* CONTEXT_HPP_ */

@@ -23,7 +23,7 @@
 //#include <vector>
 #include <string>
 
-#include "DIM/buffer.hpp"
+#include "dim/buffer.hpp"
 
 namespace dim
 {

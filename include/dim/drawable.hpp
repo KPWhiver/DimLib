@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "DIM/drawstate.hpp"
-#include "DIM/onepair.hpp"
+#include "dim/drawstate.hpp"
+#include "dim/onepair.hpp"
 
 namespace dim
 {

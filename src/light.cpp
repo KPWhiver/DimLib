@@ -19,9 +19,9 @@
 
 #include <iostream>
 
-#include "DIM/light.hpp"
-#include "DIM/shader.hpp"
-#include "DIM/camera.hpp"
+#include "dim/light.hpp"
+#include "dim/shader.hpp"
+#include "dim/camera.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>

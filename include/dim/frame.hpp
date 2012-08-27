@@ -23,8 +23,8 @@
 #include <vector>
 #include <memory>
 
-#include "DIM/component.hpp"
-#include "DIM/mouse.hpp"
+#include "dim/component.hpp"
+#include "dim/mouse.hpp"
 #include <memory>
 
 namespace dim

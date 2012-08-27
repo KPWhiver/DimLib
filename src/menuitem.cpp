@@ -17,8 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include "DIM/menuitem.hpp"
-#include "DIM/shader.hpp"
+#include "dim/menuitem.hpp"
+#include "dim/shader.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 

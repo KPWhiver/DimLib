@@ -19,8 +19,8 @@
 
 #include <fstream>
 
-#include "DIM/drawmap.hpp"
-#include "DIM/shader.hpp"
+#include "dim/drawmap.hpp"
+#include "dim/shader.hpp"
 
 #include <algorithm>
 #include <stdexcept>

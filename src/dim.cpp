@@ -22,8 +22,8 @@
 #include <string>
 #include <stdexcept>
 
-#include <DIM/copyptr.hpp>
-#include <DIM/dim.hpp>
+#include <dim/copyptr.hpp>
+#include <dim/dim.hpp>
 
 using namespace std;
 

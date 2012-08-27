@@ -22,7 +22,7 @@
 
 #include <string>
 
-#include "DIM/mouse.hpp"
+#include "dim/mouse.hpp"
 
 namespace dim
 {

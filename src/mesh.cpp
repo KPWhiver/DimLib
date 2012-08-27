@@ -20,8 +20,8 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "DIM/mesh.hpp"
-#include "DIM/shader.hpp"
+#include "dim/mesh.hpp"
+#include "dim/shader.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"

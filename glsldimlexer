@@ -1,0 +1,55 @@
+%class-header="include/dim/scanner.hpp"
+%baseclass-header="include/dim/scannerbase.hpp"
+%lex-source="src/lex.cpp"
+%implementation-header="src/scanner.ih"
+%namespace=dim
+
+%x string include
+
+%%
+
+// shader stages
+^[ \t]*%-vertex-shader        return Scanner::vertex;
+^[ \t]*%-fragment-shader      return Scanner::fragment;
+^[ \t]*%-geometry-shader      return Scanner::geometry;
+^[ \t]*%-tess-control-shader  return Scanner::tessControl;
+^[ \t]*%-tess-eval-shader     return Scanner::tessEval;
+^[ \t]*%-compute-shader       return Scanner::compute;
+
+// preprocessor directives
+^[ \t]*#version[ \t]*         return Scanner::version;
+
+[0-9]*                        return Scanner::number;
+
+^[ \t]*#include               begin(StartCondition__::include);          
+
+<include>{
+  [ \t]*\"                    begin(StartCondition__::string);
+}
+
+<string>{
+  \"[ \t]*\n                  {
+                                begin(StartCondition__::INITIAL); 
+                                size_t quotePos = matched().find_last_of('\"');
+                                
+                                setMatched(matched().substr(0, quotePos));
+
+                                pushStream(matched());
+                                return Scanner::include;
+                              }
+                  
+  \\.|.                       more();
+}
+
+<INITIAL,string><<EOF>>    	  {
+                                if(popStream())
+                                  return Scanner::endOfFile;
+                                else
+                                  return 0;
+                              }
+			 
+// regular GLSL               
+[^ \t\n]*                     return Scanner::glslToken;
+[ \t\n]*                      return Scanner::glslWhitespace;
+
+                              

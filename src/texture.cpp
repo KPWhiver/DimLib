@@ -19,8 +19,8 @@
 
 #include <IL/il.h>
 
-#include "DIM/texture.hpp"
-#include "DIM/shader.hpp"
+#include "dim/texture.hpp"
+#include "dim/shader.hpp"
 
 using namespace glm;
 using namespace std;

@@ -20,7 +20,7 @@
 #ifndef BUFFER_HPP_
 #define BUFFER_HPP_
 
-#include "DIM/dim.hpp"
+#include "dim/dim.hpp"
 
 #include <memory>
 #include <iostream>

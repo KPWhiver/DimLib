@@ -1,4 +1,4 @@
-// context.hpp
+// menu.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,37 +17,39 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef CONTEXT_HPP
-#define CONTEXT_HPP
+#ifndef MENU_HPP
+#define MENU_HPP
 
-#include <vector>
+#include "dim/texture.hpp"
+#include "dim/menuitem.hpp"
+#include "dim/component.hpp"
 
-#include "DIM/mesh.hpp"
-#include "DIM/font.hpp"
+#include <memory>
 
 namespace dim
 {
-  class Context
+  class Menu : public Component
   {
-    Texture<GLubyte> d_butTexture;
-    Texture<GLubyte> d_butHoverTexture;
-    Texture<GLubyte> d_butDisableTexture;
+    size_t d_width, d_height;
+    int d_x, d_y;
 
-    Font d_font;
-
-    static bool s_initialized;
+    std::vector<MenuItem*> d_items;
+    bool d_active;
 
   public:
-    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font);
+    Menu(size_t d_width, size_t d_height);
+    Menu();
 
-    Texture<GLubyte> const &buttonTexture() const;
-    Texture<GLubyte> const &buttonHoverTexture() const;
-    Texture<GLubyte> const &buttonDisableTexture() const;
-    Font &font();
+    void draw(int x, int y);
+    bool listen(int x, int y, dim::Mouse const &mouse);
+    void add(MenuItem *item);
+    void activate(int x, int y);
+    void deactivate();
+    bool active() const;
+    virtual void setContext(Context *context);
 
-    Mesh const &mesh() const;
-  };
+};
 
 }
 
-#endif /* CONTEXT_HPP_ */
+#endif /* BUTTON_HPP_ */

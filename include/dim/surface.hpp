@@ -26,7 +26,7 @@
 #include <tuple>
 #include <stdexcept>
 
-#include "DIM/texture.hpp"
+#include "dim/texture.hpp"
 
 namespace dim
 {
@@ -37,13 +37,16 @@ namespace dim
     protected:
       static SurfaceBase__* s_renderTarget;
 
+      static GLint s_maxAttachment;
+
       uint d_bufferToRenderTo;
 
       SurfaceBase__();
       virtual ~SurfaceBase__();
 
+      // TODO add initialize
+
     public:
-      // TODO fix this mess (this is supposed to be private)
       virtual void swapBuffers() = 0;
   };
 
@@ -51,20 +54,24 @@ namespace dim
   template<typename ...Types>
   class Surface : public SurfaceBase__
   {
+    typedef std::tuple<Texture<Types>...> TupleType;
+
     uint d_depth;
 
     struct FrameBuffer
     {
-      std::tuple<Texture<Types>...> d_textures;
-    
+      TupleType d_textures;
+
       std::shared_ptr<GLuint> d_id;
 
       FrameBuffer();
 	  };
 
-    std::vector<FrameBuffer> d_frames;
+    GLuint d_attachments[std::tuple_size<TupleType>::value];
 
-    uint d_colorBuffers;
+    std::vector<FrameBuffer> d_buffers;
+
+    uint d_colorAttachments;
 
     bool d_depthComponent;
     bool d_colorComponent[4];
@@ -89,7 +96,7 @@ namespace dim
     uint width() const;
 
     template<uint Index = 0>
-    typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &texture();
+    typename std::tuple_element<Index, TupleType>::type &texture();
 
     void setClearColor(glm::vec4 const &color);
     void setClearDepth(float depth);
@@ -105,8 +112,28 @@ namespace dim
   private:
 	  Surface::ComponentType processFormat(Format format);
 
+	  void notifyTextures(uint buffer);
+
     template<uint Index>
-    void addBuffer(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter);
+    void addAttachment(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter);
+
+    //TupleCaller class
+    template<uint Index, typename TupleCallType>
+    class TupleCaller
+    {
+      TupleCaller<Index - 1, TupleCallType> d_next;
+
+      public:
+      TupleCaller(TupleCallType &tuple);
+    };
+
+    template<typename TupleCallType>
+    class TupleCaller<0, TupleCallType>
+    {
+      public:
+      TupleCaller(TupleCallType &tuple);
+    };
+    //--
   };
 
   template<>
@@ -115,6 +142,21 @@ namespace dim
     static_assert(true, "Error: Surface needs at least one template argument");
   };
 
+  template<typename ...Types>
+  template<uint Index, typename TupleCallType>
+  Surface<Types...>::TupleCaller<Index, TupleCallType>::TupleCaller(TupleCallType &tuple)
+  :
+    d_next(tuple)
+  {
+    std::get<Index>(tuple).renewBuffer();
+  }
+
+  template<typename ...Types>
+  template<typename TupleCallType>
+  Surface<Types...>::TupleCaller<0, TupleCallType>::TupleCaller(TupleCallType &tuple)
+  {
+    std::get<0>(tuple).renewBuffer();
+  }
 }
 
 #include "surface.inl"

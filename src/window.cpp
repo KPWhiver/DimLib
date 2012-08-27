@@ -25,11 +25,11 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "DIM/window.hpp"
-#include "DIM/mesh.hpp"
-#include "DIM/font.hpp"
-#include "DIM/texture.hpp"
-#include "DIM/surface.hpp"
+#include "dim/window.hpp"
+#include "dim/mesh.hpp"
+#include "dim/font.hpp"
+#include "dim/texture.hpp"
+#include "dim/surface.hpp"
 
 using namespace std;
 using namespace glm;
@@ -190,6 +190,8 @@ namespace dim
     Mesh::initialize();
     Font::initialize();
     TextureProperties__::initialize();
+
+    swapBuffers();
   }
 
   Window::~Window()

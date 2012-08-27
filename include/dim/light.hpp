@@ -20,7 +20,7 @@
 #ifndef LIGHTS_HPP
 #define	LIGHTS_HPP
 
-#include "DIM/dim.hpp"
+#include "dim/dim.hpp"
 
 namespace dim
 {

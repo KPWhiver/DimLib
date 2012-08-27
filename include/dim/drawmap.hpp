@@ -20,9 +20,9 @@
 #ifndef DRAWMAP_HPP
 #define DRAWMAP_HPP
 
-#include "DIM/drawablewrapper.hpp"
-#include "DIM/drawstate.hpp"
-#include "DIM/cloneptr.hpp"
+#include "dim/drawablewrapper.hpp"
+#include "dim/drawstate.hpp"
+#include "dim/cloneptr.hpp"
 
 #include <vector>
 #include <set>

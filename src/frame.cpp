@@ -19,11 +19,11 @@
 
 #include <algorithm>
 
-#include "DIM/frame.hpp"
+#include "dim/frame.hpp"
 
 #include "GL/glfw.h"
 
-#include "DIM/mesh.hpp"
+#include "dim/mesh.hpp"
 
 using namespace std;
 

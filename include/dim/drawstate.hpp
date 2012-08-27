@@ -1,4 +1,4 @@
-// menuitem.hpp
+// drawstate.hpp
 //
 // Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
 //
@@ -17,40 +17,41 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef MENUITEM_HPP
-#define MENUITEM_HPP
+#ifndef DRAWSTATE_HPP
+#define DRAWSTATE_HPP
 
-#include "DIM/texture.hpp"
-#include "DIM/component.hpp"
+#include <vector>
 
-#include <functional>
-#include <string>
+
+#include "dim/mesh.hpp"
+#include "dim/shader.hpp"
+#include "dim/texture.hpp"
 
 namespace dim
 {
-  class MenuItem : public Component
-  {
-    Texture<GLubyte> d_text;
-    std::string d_strText;
 
-    bool d_selected;
+class DrawState
+{
+	Mesh d_mesh;
+	Shader d_shader;
+	std::vector<std::pair<Texture<GLubyte>, std::string>> d_textures;
+	bool d_culling;
 
-    std::function<void(void)> d_listenerFunction;
-    size_t d_width;
-    size_t d_height;
+public:
+	DrawState(Mesh const &mesh, Shader const &shader, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures);
 
-  public:
-    MenuItem(std::string const &text);
-    MenuItem();
-    //~MenuItem();
+    bool culling() const;
+  
+    void setCulling(bool culling);
 
+	Mesh const &mesh() const;
+	Shader const &shader() const;
+	std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
 
-    void draw(int x, int y);
-    bool listen(int x, int y, dim::Mouse const &mouse);
-    void setListener(std::function<void(void)> const &listenerFunction);
-    void setSize(size_t width, size_t height);
-    virtual void setContext(Context *context);
-  };
+	bool operator==(DrawState const &other) const;
+    bool operator<(DrawState const &other) const;
+};
+
 }
 
-#endif /* BUTTON_HPP_ */
+#endif /* DRAWSTATE_HPP */
