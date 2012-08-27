@@ -6,7 +6,8 @@
 // $insert baseclass_h
 #include "dim/scannerbase.hpp"
 
-
+namespace dim
+{
 // $insert classHead
 class Scanner: public ScannerBase
 {
@@ -72,6 +73,6 @@ inline void Scanner::print()
     print__();
 }
 
-
+}
 #endif // Scanner_H_INCLUDED_
 
