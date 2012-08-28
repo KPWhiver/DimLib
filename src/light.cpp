@@ -118,11 +118,11 @@ void Light::transform()
 
 	if(d_mode == Light::directional)
 	{
-		d_transformedPosition = vec4(Shader::active().in_mat_normal() * vec3(d_position), 1.0);
+		d_transformedPosition = vec4(Shader::active().normalMatrix() * vec3(d_position), 1.0);
 	}
 	else
 	{
-		d_transformedPosition = Shader::active().in_mat_model() * d_position;
+		d_transformedPosition = Shader::active().modelMatrix() * d_position;
 	}
 }
 

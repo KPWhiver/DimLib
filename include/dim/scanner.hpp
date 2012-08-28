@@ -20,6 +20,8 @@ class Scanner: public ScannerBase
         // $insert lexFunctionDecl
         int lex();
 
+
+
         enum Token : int
         {
           vertex = 256,

@@ -4,7 +4,7 @@
 %implementation-header="src/scanner.ih"
 %namespace=dim
 
-%x string include
+%x string include comment1 comment2
 
 %%
 
@@ -28,20 +28,42 @@
 }
 
 <string>{
-  \"[ \t]*\n                  {
+  \"                          {
                                 begin(StartCondition__::INITIAL); 
                                 size_t quotePos = matched().find_last_of('\"');
                                 
                                 setMatched(matched().substr(0, quotePos));
+                                
+                                std::string path = filename().substr(0, filename().find_last_of('/') + 1);
 
-                                pushStream(matched());
+                                pushStream(path + matched());
                                 return Scanner::include;
                               }
                   
   \\.|.                       more();
 }
 
-<INITIAL,string><<EOF>>    	  {
+// comments
+"/*"                          begin(StartCondition__::comment1);
+
+<comment1>{
+  "*/"                        begin(StartCondition__::INITIAL);
+  \\.|.                       //more();
+  \n                          return Scanner::glslWhitespace;
+}
+
+"//"                          begin(StartCondition__::comment2);
+
+<comment2>{
+  \n                          {
+                                begin(StartCondition__::INITIAL);
+                                return Scanner::glslWhitespace;
+                              }
+  \\.|.                       
+}                 
+
+// end of file
+<INITIAL,string,comment1,comment2><<EOF>>    	  {
                                 if(popStream())
                                   return Scanner::endOfFile;
                                 else
@@ -49,7 +71,7 @@
                               }
 			 
 // regular GLSL               
-[^ \t\n]*                     return Scanner::glslToken;
-[ \t\n]*                      return Scanner::glslWhitespace;
+[^ \t\n]                      return Scanner::glslToken;
+[ \t\n]                       return Scanner::glslWhitespace;
 
                               

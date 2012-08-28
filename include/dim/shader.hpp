@@ -34,17 +34,22 @@ class Light;
 
 class Shader
 {
+  static bool s_geometryShader;
+  static bool s_tessellationShader;
+  static bool s_computeShader;
+
   std::shared_ptr<GLuint> d_id;
   std::shared_ptr<GLuint> d_fragmentId;
   std::shared_ptr<GLuint> d_vertexId;
+  std::shared_ptr<GLuint> d_geometryId;
+  std::shared_ptr<GLuint> d_tessControlId;
+  std::shared_ptr<GLuint> d_tessEvalId;
+  std::shared_ptr<GLuint> d_computeId;
   
   static Shader *s_activeShader;
 
-  static glm::mat4 s_in_mat_model;
-  //static glm::mat4 s_tmp_in_mat_model;
-
-  static glm::mat3 s_in_mat_normal;
-  //static glm::mat3 s_tmp_in_mat_normal;
+  static glm::mat4 s_modelMatrix;
+  static glm::mat3 s_normalMatrix;
     
   std::unordered_map<std::string, GLint> d_uniforms;
   
@@ -63,13 +68,12 @@ class Shader
   std::vector<Light*> d_lightList;
   std::vector<Camera*> d_cameraList;
 
-  std::string d_vsName;
-  std::string d_fsName;
+  std::string d_filename;
 
 public:
-  //~Shader();
+  ~Shader();
 
-  Shader(std::string const &vsFile, std::string const &fsFile);
+  Shader(std::string const &filename);
 
   void sendAtUse(glm::mat4* value, std::string const &variable);
   void sendAtUse(glm::mat3* value, std::string const &variable);
@@ -95,20 +99,21 @@ public:
 
   static Shader &active();
 
-  static glm::mat4 &in_mat_model();
-  static glm::mat3 &in_mat_normal();
+  static glm::mat4 &modelMatrix();
+  static glm::mat3 &normalMatrix();
 
   void transformBegin();
   void transformEnd();
 
   GLuint id() const;
 
-private:
-  void preprocess(std::string const &filename);
+  //static void initialize();
 
-  char* const returnshader(std::string const &filename) const;
-  void check_compile(GLuint sha_ver, std::string const &file) const;
-  void check_program(GLuint program) const;
+private:
+  void parseShader(std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
+  void compileShader(std::string const &file, std::string const &stage, std::shared_ptr<GLuint> &shader, GLuint shaderType);
+  void checkCompile(GLuint shader, std::string const &stage) const;
+  void checkProgram(GLuint program) const;
   GLint uniform(std::string const &variable);
 
   //bool instanced;

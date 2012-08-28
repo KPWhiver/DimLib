@@ -93,9 +93,9 @@ namespace dim
 		else
 		  d_context->buttonTexture().send(0, "in_texture0");
 
-    Shader::in_mat_model() = translate(Shader::in_mat_model(), vec3(x, y, 0));
-	  Shader::in_mat_model() = scale(Shader::in_mat_model(), vec3(d_width/10.0, d_height/10.0, 1.0));
-	  Shader::active().send(Shader::in_mat_model(), "in_mat_model");
+    Shader::modelMatrix() = translate(Shader::modelMatrix(), vec3(x, y, 0));
+	  Shader::modelMatrix() = scale(Shader::modelMatrix(), vec3(d_width/10.0, d_height/10.0, 1.0));
+	  Shader::active().send(Shader::modelMatrix(), "in_mat_model");
 
     Shader::active().transformBegin();
 	  //mesh.draw();

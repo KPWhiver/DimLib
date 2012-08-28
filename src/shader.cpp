@@ -34,14 +34,16 @@ using namespace glm;
 
 namespace dim
 {
+  bool Shader::s_geometryShader(GLEW_ARB_geometry_shader4);
+  bool Shader::s_tessellationShader(GLEW_ARB_tessellation_shader);
+  bool Shader::s_computeShader(GLEW_ARB_compute_shader);
+
 
   Shader *Shader::s_activeShader = 0;
 
-  mat4 Shader::s_in_mat_model = mat4(1.0);
-//mat4 Shader::s_tmp_in_mat_model = mat4(1.0);
+  mat4 Shader::s_modelMatrix = mat4(1.0);
 
-  mat3 Shader::s_in_mat_normal = mat3(1.0);
-//mat3 Shader::s_tmp_in_mat_normal = mat3(1.0);
+  mat3 Shader::s_normalMatrix = mat3(1.0);
 
   GLint Shader::uniform(string const &variable)
   {
@@ -52,11 +54,7 @@ namespace dim
       GLint loc = glGetUniformLocation(*d_id, variable.c_str());
 
       if(loc == -1)
-      {
-        stringstream ss;
-        ss << "Can`t find uniform " << variable << " in shader " << d_vsName << " \\ " << d_fsName;
-        log(__FILE__, __LINE__, LogType::warning, ss.str());
-      }
+        log(d_filename, 0, LogType::warning, "Can`t find uniform " + variable);
 
       d_uniforms[variable] = loc;
       return loc;
@@ -65,64 +63,143 @@ namespace dim
     return it->second;
   }
 
-  char* const Shader::returnshader(string const &filename) const
+  void Shader::parseShader(string &vertexShader, string &fragmentShader, string &geometryShader, string &tessControlShader, string &tessEvalShader, string &computeShader) const
   {
+    // open file
+    //ifstream file(d_filename.c_str());
+    //if(file.is_open() == 0)
+    //  log(__FILE__, __LINE__, LogType::error, "Failed to open" + d_filename);
 
-    ifstream file(filename.c_str());
-    if(file.is_open() == 0)
-    {
-      cerr << filename << " is empty\n";
-    }
-    else
-    {
-      stringstream output;
+    // set up scanner
+    stringstream unmatched;
+    int unmatchedPos = unmatched.tellp();
 
-	    Scanner scanner(filename, "out");
-	    scanner.switchOstream(output);
-	
-	    try
-	    {
-        while(int token = scanner.lex())
+    Scanner scanner;
+    scanner.switchOstream(unmatched);
+    scanner.switchIstream(d_filename);
+
+    // set up stages
+    int const numStages = 6;
+    stringstream shaders[numStages];
+
+    stringstream *output = 0;
+
+    int fileNumber = 0;
+    uint version = 0;
+
+    try
+    {
+      // parse tokens
+      while(int token = scanner.lex())
+      {
+        // --- I. things either inside or outside the header ---
+
+        // check for things we couldn't match
+        if(unmatchedPos != unmatched.tellp())
+          log(scanner.filename(), scanner.lineNr(), LogType::warning, "Unexpected symbol(s): " + unmatched.str());
+
+        // shader stage switch
+        if(token >= Scanner::vertex && token < Scanner::vertex + 6)
         {
-          if(token == Scanner::include)
-            output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
-          else if(token == Scanner::endOfFile)
-            output << "#line " << scanner.lineNr() << ' ' << 0 << '\n';
-          else
-            break;
+          output = &shaders[token - Scanner::vertex];
+
+          if(version != 0)
+            *output << "#version " << version << '\n';
+
+          *output << "#line " << scanner.lineNr() + (version != 0) << ' ' << fileNumber;
+          continue;
         }
-	    }
-	    catch(runtime_error &exc)
-	    {
-	      log(__FILE__, __LINE__, LogType::warning, string("Compiling shader (file: ") + filename + ") failed: " + exc.what());
-	    }
-	
-      string str = output.str();
-      char* cstr;
-      cstr = new char[str.size() + 1];
-      strcpy(cstr, str.c_str());
-      return cstr;
+        else if(token == Scanner::include)
+        {
+          ++fileNumber;
+          if(output != 0)
+            *output << "#line " << 0 << ' ' << fileNumber << '\n';
+          continue;
+        }
+        else if(token == Scanner::endOfFile)
+        {
+          --fileNumber;
+          if(output != 0)
+            *output << "#line " << scanner.lineNr() + 1 << ' ' << fileNumber;
+          continue;
+        }
+        // check for #version
+        else if(token == Scanner::version)
+        {
+          if(version == 0)
+          {
+            token = scanner.lex();
+            if(token == Scanner::number)
+            {
+              if(output == 0)
+              {
+                stringstream ss(scanner.matched());
+                ss >> version;
+              }
+              else
+                *output << "#version " << scanner.matched();
+            }
+            else
+              log(scanner.filename(), scanner.lineNr(), LogType::warning, "Expected a number after #version instead of: " + scanner.matched());
+          }
+          else
+            log(scanner.filename(), scanner.lineNr(), LogType::warning, "Ignoring #version since it has already been set");
+
+          continue;
+        }
+
+        // --- II. things inside the header ---
+        if(output == 0)
+        {
+          // inside header
+          if(token == Scanner::glslWhitespace)
+            continue;
+
+          log(scanner.filename(), scanner.lineNr(), LogType::warning, "Can't parse: " + scanner.matched() + " shader stage has not yet been set");
+        }
+        // --- III. things outside the header ---
+        else
+        {
+          // outside header
+          switch(token)
+          {
+            case Scanner::number:
+            case Scanner::glslToken:
+            case Scanner::glslWhitespace:
+              *output << scanner.matched();
+              break;
+            default:
+              log(scanner.filename(), scanner.lineNr(), LogType::warning, "Unexpected symbol(s): " + scanner.matched());
+          }
+        }
+      }
+      // tokens parsed
+    }
+    catch(runtime_error &exc)
+    {
+      log(scanner.filename(), scanner.lineNr(), LogType::error, exc.what());
     }
 
-    return 0;
+    vertexShader = shaders[0].str();
+    fragmentShader = shaders[1].str();
+    geometryShader = shaders[2].str();
+    tessControlShader = shaders[3].str();
+    tessEvalShader = shaders[4].str();
+    computeShader = shaders[5].str();
   }
 
-  void Shader::check_compile(GLuint sha_ver, string const &sha_file) const
+  void Shader::checkCompile(GLuint shader, string const &stage) const
   {
-    const int buffer_size = 512;
+    int const buffer_size = 512;
     char buffer[buffer_size] = { 0 };
     GLsizei length = 0;
 
-    glGetShaderInfoLog(sha_ver, buffer_size, &length, buffer);
+    glGetShaderInfoLog(shader, buffer_size, &length, buffer);
     if(length > 0)
-    {
-      stringstream ss;
-      ss << "Compiling shader " << sha_ver << " (file: " << sha_file << "): " << buffer;
-      log(__FILE__, __LINE__, LogType::note, ss.str());
-    }
+      log(d_filename, 0, LogType::note, "Compiling " + stage + ": " + buffer);
   }
 
-  void Shader::check_program(GLuint program) const
+  void Shader::checkProgram(GLuint program) const
   {
     const int buffer_size = 512;
     char buffer[buffer_size] = { 0 };
@@ -130,65 +207,99 @@ namespace dim
 
     glGetProgramInfoLog(program, buffer_size, &length, buffer);
     if(length > 0)
-    {
-      stringstream ss;
-      ss << "Linking shader" << program << " (files: " << d_vsName << " \\ " << d_fsName << "): " << buffer;
-      log(__FILE__, __LINE__, LogType::note, ss.str());
-    }
+      log(d_filename, 0, LogType::note, string("Linking: ") + buffer);
 
     glValidateProgram(program);
     glGetProgramInfoLog(program, buffer_size, &length, buffer);
     GLint status;
     glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
     if(status == GL_FALSE)
-    {
-      stringstream ss;
-      ss << "Building shader " << program << " (files: " << d_vsName << " \\ " << d_fsName << ") failed:" << buffer;
-      log(__FILE__, __LINE__, LogType::warning, ss.str());
-    }
+      log(d_filename, 0, LogType::warning, string("Building failed: ") + buffer);
   }
 
-  Shader::Shader(string const &vsFile, string const &fsFile)
-      :
-          d_id(new GLuint(glCreateProgram()), [&](GLuint *ptr)
-               {
-                 glDeleteProgram(*d_id);
-                 delete ptr;
-               }),
-          d_fragmentId(new GLuint(glCreateShader(GL_FRAGMENT_SHADER)), [&](GLuint *ptr)
-               {
-                 glDetachShader(*d_id, *d_fragmentId);
-                 glDeleteShader(*d_fragmentId);
-                 delete ptr;
-               }),
-          d_vertexId(new GLuint(glCreateShader(GL_VERTEX_SHADER)), [&](GLuint *ptr)
-               {
-                 glDetachShader(*d_id, *d_vertexId);
-                 glDeleteShader(*d_vertexId);
-                 delete ptr;
-               }),
-          d_vsName(vsFile), d_fsName(fsFile)
+  void Shader::compileShader(string const &file, string const &stage, shared_ptr<GLuint> &shader, GLuint shaderType)
   {
-    //d_vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    //d_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    shader.reset(new GLuint(glCreateShader(shaderType)), [&](GLuint *ptr)
+                 {
+                   glDetachShader(*d_id, *ptr);
+                   glDeleteShader(*ptr);
+                   delete ptr;
+                 });
 
-    const char * fsText = returnshader(fsFile);
-    glShaderSource(*d_fragmentId, 1, &fsText, 0);
-    glCompileShader(*d_fragmentId);
-    check_compile(*d_fragmentId, fsFile);
-    delete[] fsText;
+    char const *cfile = file.c_str();
+    glShaderSource(*shader, 1, &cfile, 0);
+    glCompileShader(*shader);
+    checkCompile(*shader, stage);
+    glAttachShader(*d_id, *shader);
 
-    const char * defines = "";
+  }
 
-    const char * vsText[2] = { defines, returnshader(vsFile) };
-    glShaderSource(*d_vertexId, 2, vsText, 0);
-    glCompileShader(*d_vertexId);
-    check_compile(*d_vertexId, vsFile);
-    delete[] vsText[1];
+  Shader::Shader(string const &filename)
+      :
+          d_id(new GLuint(glCreateProgram()), [](GLuint *ptr)
+               {
+                 glDeleteProgram(*ptr);
+                 delete ptr;
+               }),
+          d_filename(filename)
+  {
+    string standardVertex("#version 120\n attribute vec2 in_position;void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
 
-    //d_id = glCreateProgram();
-    glAttachShader(*d_id, *d_fragmentId);
-    glAttachShader(*d_id, *d_vertexId);
+    string vertex;
+    string fragment;
+    string geometry;
+    string tessControl;
+    string tessEval;
+    string compute;
+
+    parseShader(vertex, fragment, geometry, tessControl, tessEval, compute);
+
+    /*cout << vertex << "\n------\n";
+    cout << fragment << "\n------\n";
+    cout << geometry << "\n------\n";
+    cout << tessControl << "\n------\n";
+    cout << tessEval << "\n------\n";
+    cout << compute << "\n------------\n";*/
+
+    if(vertex != "")
+      compileShader(vertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
+    else
+      compileShader(standardVertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
+
+    if(fragment != "")
+      compileShader(fragment, "fragment shader", d_fragmentId, GL_FRAGMENT_SHADER);
+
+    if(geometry != "")
+    {
+      if(s_geometryShader)
+        compileShader(geometry, "geometry shader", d_geometryId, GL_GEOMETRY_SHADER);
+      else
+        log(d_filename, 0, LogType::warning, "Ignoring geometry shader because they are not supported on this graphics card");
+    }
+
+    if(tessControl != "")
+    {
+      if(s_tessellationShader)
+        compileShader(tessControl, "tessellation control shader", d_tessControlId, GL_TESS_CONTROL_SHADER);
+      else
+        log(d_filename, 0, LogType::warning, "Ignoring tesselation control shader because they are not supported on this graphics card");
+    }
+
+    if(tessEval != "")
+    {
+      if(s_tessellationShader)
+        compileShader(tessEval, "tesselation evaluation shader", d_tessEvalId, GL_TESS_EVALUATION_SHADER);
+      else
+        log(d_filename, 0, LogType::warning, "Ignoring tesselation evaluation shader because they are not supported on this graphics card");
+    }
+
+    if(compute != "")
+    {
+      if(s_computeShader)
+        compileShader(compute, "compute shader", d_computeId, GL_COMPUTE_SHADER);
+      else
+        log(d_filename, 0, LogType::warning, "Ignoring compute shader because they are not supported on this graphics card");
+    }
 
     glBindAttribLocation(*d_id, 0, "in_position");
     glBindAttribLocation(*d_id, 1, "in_normal");
@@ -196,18 +307,14 @@ namespace dim
     glBindAttribLocation(*d_id, 3, "in_inst_placement");
 
     glLinkProgram(*d_id);
-    check_program(*d_id);
+    checkProgram(*d_id);
   }
 
-  /*Shader::~Shader()
-   {
-   glDetachShader(d_id, d_fragmentShader);
-   glDetachShader(d_id, d_vertexShader);
-
-   glDeleteShader(d_fragmentShader);
-   glDeleteShader(d_vertexShader);
-   glDeleteProgram(d_id);
-   }*/
+  Shader::~Shader()
+  {
+    if(s_activeShader == this)
+      s_activeShader = 0;
+  }
 
   void Shader::use() const
   {
@@ -248,33 +355,33 @@ namespace dim
     return *s_activeShader;
   }
 
-  mat4 &Shader::in_mat_model()
+  mat4 &Shader::modelMatrix()
   {
-    return s_in_mat_model;
+    return s_modelMatrix;
   }
 
-  mat3 &Shader::in_mat_normal()
+  mat3 &Shader::normalMatrix()
   {
-    return s_in_mat_normal;
+    return s_normalMatrix;
   }
 
   void Shader::transformBegin()
   {
-    //s_tmp_in_mat_model = s_in_mat_model;
-    //s_tmp_in_mat_normal = s_in_mat_normal;
+    //s_tmp_modelMatrix = s_modelMatrix;
+    //s_tmp_normalMatrix = s_normalMatrix;
 
-    send(s_in_mat_model, "in_mat_model");
-    s_in_mat_normal = inverseTranspose(mat3(s_in_mat_model));
-    send(s_in_mat_normal, "in_mat_normal");
+    send(s_modelMatrix, "modelMatrix");
+    s_normalMatrix = inverseTranspose(mat3(s_modelMatrix));
+    send(s_normalMatrix, "normalMatrix");
   }
 
   void Shader::transformEnd()
   {
-    s_in_mat_model = mat4(1.0);
-    s_in_mat_normal = mat3(1.0);
+    s_modelMatrix = mat4(1.0);
+    s_normalMatrix = mat3(1.0);
 
-    send(s_in_mat_model, "in_mat_model");
-    send(s_in_mat_normal, "in_mat_normal");
+    send(s_modelMatrix, "modelMatrix");
+    send(s_normalMatrix, "normalMatrix");
   }
 
   void Shader::sendAtUse(glm::mat4* value, string const &variable)
