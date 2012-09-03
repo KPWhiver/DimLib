@@ -28,8 +28,12 @@ namespace dim {
 
 FT_Library Font::s_library;
 
+bool Font::s_initialized(false);
+
 void Font::initialize()
 {
+  s_initialized = true;
+
   int error = FT_Init_FreeType(&s_library);
 
   if(error)
@@ -38,6 +42,8 @@ void Font::initialize()
 
 Font::Font(string filename)
 {
+  if(s_initialized == false)
+    initialize();
 
 	int error = FT_New_Face(s_library, filename.c_str(), 0, &d_face);
 
@@ -134,7 +140,8 @@ Texture<GLubyte> Font::generateTexture(string const &text, size_t textureWidth, 
   return textTex;
 }
 
-size_t Font::nextPowerOf2(size_t number) {
+size_t Font::nextPowerOf2(size_t number) const
+{
 	size_t ret = 2;
 	while (ret < number)
 		ret <<= 1;

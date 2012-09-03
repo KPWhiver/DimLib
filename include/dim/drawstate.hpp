@@ -40,16 +40,16 @@ class DrawState
 public:
 	DrawState(Mesh const &mesh, Shader const &shader, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures);
 
-    bool culling() const;
+  bool culling() const;
   
-    void setCulling(bool culling);
+  void setCulling(bool culling);
 
 	Mesh const &mesh() const;
 	Shader const &shader() const;
 	std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
 
 	bool operator==(DrawState const &other) const;
-    bool operator<(DrawState const &other) const;
+  bool operator<(DrawState const &other) const;
 };
 
 }

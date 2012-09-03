@@ -28,12 +28,13 @@ namespace dim
 	bool Context::s_initialized = false;
 	
 	Context::Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable,
-			Font const &font)
+			Font const &font, Shader const &shader)
 			:
 				d_butTexture(but),
 				d_butHoverTexture(butHover),
 				d_butDisableTexture(butDisable),
-				d_font(font)
+				d_font(font),
+				d_shader(shader)
 	{
 
 	}
@@ -42,7 +43,7 @@ namespace dim
 	{
 		static GLfloat interleaved[24]{0, 0,  0, 0,  0, 10,  0, 1,  10, 0,  1, 0,  10, 10,  1, 1,  10, 0,  1, 0,  0, 10,  0, 1};
 		
-		static Mesh mesh(interleaved, "V2T2", 6);
+		static Mesh mesh(interleaved, {{Attribute::vertex, Attribute::vec2}, {Attribute::texCoord, Attribute::vec2}}, 6, Mesh::triangle, Mesh::interleaved);
 		
 		return mesh;
 	}
@@ -65,6 +66,11 @@ namespace dim
 	Font &Context::font()
 	{
 	  return d_font;
+	}
+
+	Shader const &Context::shader() const
+	{
+	  return d_shader;
 	}
 
 }

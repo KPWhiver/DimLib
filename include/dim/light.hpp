@@ -22,6 +22,8 @@
 
 #include "dim/dim.hpp"
 
+#include "dim/shader.hpp"
+
 namespace dim
 {
 
@@ -54,7 +56,7 @@ public:
   
   glm::mat4 &in_mat_light();
 
-  void send() const;
+  void setAtShader(Shader const &shader) const;
   
 private:
   Light::type d_mode;

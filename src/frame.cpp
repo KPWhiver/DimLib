@@ -30,13 +30,13 @@ using namespace std;
 namespace dim
 {	
 	Frame::Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable,
-			size_t width, size_t height, Font const &font)
+			size_t width, size_t height, Font const &font, Shader const &shader)
 			:
 			  d_x(0),
 			  d_y(0),
 			  d_width(width),
 			  d_height(height),
-			  d_context(new Context(but, butHover, butDisable, font))
+			  d_context(new Context(but, butHover, butDisable, font, shader))
 	{
 
 	}

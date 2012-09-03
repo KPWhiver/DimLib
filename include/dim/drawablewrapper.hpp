@@ -43,7 +43,7 @@ namespace dim
   class DrawableWrapper__<Drawable>
   {
       bool d_changed;
-      std::string d_filename;
+      //std::string d_filename;
       size_t d_gridSize;
       size_t d_ownerId;
       
@@ -117,7 +117,7 @@ namespace dim
     protected:
     // private functions
       std::string const &filename() const;
-      void setFilename(std::string const &filename);
+      //void setFilename(std::string const &filename);
 
       bool changed() const;
       void setChanged(bool changed);
@@ -126,7 +126,7 @@ namespace dim
   template<typename RefType>
   class DrawableWrapper__<RefType> : public DrawableWrapper__<Drawable>
   {
-      typedef std::unordered_map<Drawable::Key, std::vector<RefType>, std::hash<long>, std::equal_to<long>> Storage; 
+      typedef std::unordered_map<Drawable::Key, std::vector<RefType*>, std::hash<long>, std::equal_to<long>> Storage;
       
       Storage d_map;
       
@@ -163,7 +163,7 @@ namespace dim
 
     // regular functions
       iterator add(bool changing, RefType const &object);
-      void load(std::string const &strFilename);
+      //void load(std::string const &strFilename);
       iterator find(float x, float z);
 
     private:

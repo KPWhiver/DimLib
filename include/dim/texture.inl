@@ -19,8 +19,8 @@
 
 namespace dim
 {  
-  template <typename Type, typename ComponentType>
-  TextureBase__<Type, ComponentType>::TextureBase__()
+  template <typename Type>
+  TextureBase__<Type>::TextureBase__()
       :
           d_id(new GLuint(0), [](GLuint *ptr)
           { glDeleteTextures(1, ptr); delete ptr;}),
@@ -28,7 +28,7 @@ namespace dim
   {
   }
   
-  namespace dim__
+  namespace internal
   {
     inline std::string internalFormatName(GLuint format)
     {
@@ -156,8 +156,8 @@ namespace dim
     }
   }
   
-  template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::init(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  template <typename Type>
+  void TextureBase__<Type>::init(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
     d_format = format;      
     d_width = width;
@@ -220,22 +220,22 @@ namespace dim
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap));
     
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat(), d_width, d_height, 0, externalFormat(), DataType<ComponentType>::value, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat(), d_width, d_height, 0, externalFormat(), DataType<Type>::value, data);
 
     if(filter != Filtering::linear && filter != Filtering::nearest)
       glGenerateMipmap(GL_TEXTURE_2D);
   }
   
   /* texture properties */
-  template <typename Type, typename ComponentType>
-  GLuint TextureBase__<Type, ComponentType>::id() const
+  template <typename Type>
+  GLuint TextureBase__<Type>::id() const
   {
     return *d_id;
   }
 
   /* local texture buffer */
-  template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::update(Type *data)
+  template <typename Type>
+  void TextureBase__<Type>::update(Type *data)
   {
     // decide which data to use
     if(data == 0)
@@ -247,7 +247,7 @@ namespace dim
     }
   
     glBindTexture(GL_TEXTURE_2D, *d_id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, d_width, d_height, externalFormat(), DataType<ComponentType>::value, data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, d_width, d_height, externalFormat(), DataType<Type>::value, data);
     
     // update the internal buffer
     if(not d_keepBuffered)
@@ -256,14 +256,14 @@ namespace dim
       d_buffer.assign(data, data + d_width * d_height * components());
   }
 
-  template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::renewBuffer()
+  template <typename Type>
+  void TextureBase__<Type>::renewBuffer()
   {    
     d_outdatedBuffer = true;
   }  
   
-  template<typename Type, typename ComponentType>
-  Type TextureBase__<Type, ComponentType>::value(uint x, uint y, uint channel, uint level)
+  template<typename Type>
+  Type TextureBase__<Type>::value(uint x, uint y, uint channel, uint level)
   {
     Type *source = buffer(level);
     
@@ -303,8 +303,8 @@ namespace dim
     log(__FILE__, __LINE__, LogType::error, ss.str());
   }
 
-  template<typename Type, typename ComponentType>
-  Type *TextureBase__<Type, ComponentType>::buffer(uint level)
+  template<typename Type>
+  Type *TextureBase__<Type>::buffer(uint level)
   {        
     // check wether level is too big
     if(1 << level > s_maxTextureSize)
@@ -320,7 +320,7 @@ namespace dim
       d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * components());
       
       glBindTexture(GL_TEXTURE_2D, *d_id);
-      glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<ComponentType>::value, &d_buffer[0]);
+      glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, &d_buffer[0]);
     
       d_bufferLevel = level;
     }
@@ -329,40 +329,40 @@ namespace dim
   }
 
   /* texture properties */
-  template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::setBorderColor(glm::vec4 const &color) const
+  template <typename Type>
+  void TextureBase__<Type>::setBorderColor(glm::vec4 const &color) const
   {
     glBindTexture(GL_TEXTURE_2D, *d_id);
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
   }
 
-  template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::generateMipmap() const
+  template <typename Type>
+  void TextureBase__<Type>::generateMipmap() const
   {
     glBindTexture(GL_TEXTURE_2D, *d_id);
     glGenerateMipmap(GL_TEXTURE_2D);
   }
 
-  template <typename Type, typename ComponentType>
-  uint TextureBase__<Type, ComponentType>::height() const
+  template <typename Type>
+  uint TextureBase__<Type>::height() const
   {
     return d_height;
   }
 
-  template <typename Type, typename ComponentType>
-  uint TextureBase__<Type, ComponentType>::width() const
+  template <typename Type>
+  uint TextureBase__<Type>::width() const
   {
     return d_width;
   }
   
-  template <typename Type, typename ComponentType>
-  Format TextureBase__<Type, ComponentType>::format() const
+  template <typename Type>
+  Format TextureBase__<Type>::format() const
   {
     return d_format;
   }
   
-  template <typename Type, typename ComponentType>
-  uint TextureBase__<Type, ComponentType>::components() const
+  template <typename Type>
+  uint TextureBase__<Type>::components() const
   {  
     switch(externalFormat())
     {
@@ -384,8 +384,8 @@ namespace dim
     return 0;
   }
 
-  template <typename Type, typename ComponentType>
-  GLuint TextureBase__<Type, ComponentType>::externalFormat() const
+  template <typename Type>
+  GLuint TextureBase__<Type>::externalFormat() const
   {
     switch(d_format)
     {
@@ -419,10 +419,10 @@ namespace dim
     return 0;
   }
 
-  template <typename Type, typename ComponentType>
-  GLuint TextureBase__<Type, ComponentType>::internalFormat() const
+  template <typename Type>
+  GLuint TextureBase__<Type>::internalFormat() const
   {
-    GLuint dataType = DataType<ComponentType>::value;
+    GLuint dataType = DataType<Type>::value;
 
     switch(d_format)
     {
@@ -571,8 +571,8 @@ namespace dim
   }
 
   /* shader */
-  template <typename Type, typename ComponentType>
-  void TextureBase__<Type, ComponentType>::send(uint unit, std::string const &variable) const
+  template <typename Type>
+  void TextureBase__<Type>::setAtShader(Shader const &shader, std::string const &variable, uint unit) const
   {
     //TODO logica
     if(unit > s_maxTextureUnits)
@@ -585,7 +585,7 @@ namespace dim
     uint textureUnit = GL_TEXTURE0 + unit;
 
     glActiveTexture(textureUnit);
-    Shader::active().send(static_cast<int>(unit), variable);
+    shader.set(variable, static_cast<int>(unit));
     glBindTexture(GL_TEXTURE_2D, *d_id);
   }
 }

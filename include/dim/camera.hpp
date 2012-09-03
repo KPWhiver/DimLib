@@ -20,7 +20,7 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "dim/dim.hpp"
+#include "dim/shader.hpp"
 
 namespace dim
 {
@@ -66,7 +66,7 @@ public:
 
   glm::vec3 mouse;
   
-  void send();
+  void setAtShader(Shader const &shader);
   void editmode();
   bool frustum(float ox, float oy);
 private:

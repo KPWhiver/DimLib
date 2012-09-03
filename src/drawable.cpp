@@ -69,19 +69,19 @@ namespace dim
     return d_rot;
   }
 
-  void Drawable::draw(const DrawState & state)
+  void Drawable::draw()
   {
     v_draw(state);
   }
 
-  void Drawable::v_draw(const DrawState & state)
+  void Drawable::v_draw()
   {
-    state.mesh().draw();
+    v_drawState().mesh().draw();
   }
 
-  std::vector<DrawState> const &Drawable::drawStates() const
+  DrawState const &Drawable::drawState() const
   {
-    return v_drawStates();
+    return v_drawState();
   }
 
   void Drawable::v_insert(ostream &out) const

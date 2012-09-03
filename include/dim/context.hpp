@@ -24,6 +24,7 @@
 
 #include "dim/mesh.hpp"
 #include "dim/font.hpp"
+#include "dim/shader.hpp"
 
 namespace dim
 {
@@ -35,15 +36,18 @@ namespace dim
 
     Font d_font;
 
+    Shader d_shader;
+
     static bool s_initialized;
 
   public:
-    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font);
+    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font, Shader const &shader);
 
     Texture<GLubyte> const &buttonTexture() const;
     Texture<GLubyte> const &buttonHoverTexture() const;
     Texture<GLubyte> const &buttonDisableTexture() const;
     Font &font();
+    Shader const &shader() const;
 
     Mesh const &mesh() const;
   };

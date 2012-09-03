@@ -22,7 +22,6 @@
 #include <glm/gtx/intersect.hpp>
 
 #include "dim/camera.hpp"
-#include "dim/shader.hpp"
 
 using namespace glm;
 
@@ -178,13 +177,13 @@ void Camera::setZrange(float zNear, float zFar)
   setProjection();
 }
 
-void Camera::send()
+void Camera::setAtShader(Shader const &shader)
 {
   if(d_changed == true)
     setView();
 
-  Shader::active().send(d_view, "in_mat_view");
-  Shader::active().send(d_projection, "in_mat_projection");
+  shader.set("in_mat_view", d_view);
+  shader.set("in_mat_projection", d_projection);
 }
 
 bool Camera::frustum(float ox, float oz)

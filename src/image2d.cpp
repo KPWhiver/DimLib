@@ -45,17 +45,17 @@ namespace dim
 	  x += d_x;
 	  y += d_y;
 	  
-	  d_image.send(0, "in_texture0");
+	  d_image.setAtShader(d_context->shader(), "in_texture0", 0);
 
     Shader::modelMatrix() = translate(Shader::modelMatrix(), vec3(x, y, 0));
 	  Shader::modelMatrix() = scale(Shader::modelMatrix(), vec3(d_width/10.0, d_height/10.0, 1.0));
-	  Shader::active().send(Shader::modelMatrix(), "in_mat_model");
+	  d_context->shader().set("in_mat_model", Shader::modelMatrix());
 	  
-    Shader::active().transformBegin();
+	  d_context->shader().transformBegin();
 
 	  d_context->mesh().draw();
 
-	  Shader::active().transformEnd();
+	  d_context->shader().transformEnd();
 	}
 
   void Image2D::setCoor(int x, int y)

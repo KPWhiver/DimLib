@@ -88,6 +88,9 @@ namespace dim
     
   public:
     Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
+    Surface(Surface const &other) = delete;
+
+    Surface& operator=(Surface const &other) = delete;
     
     template<uint Index>
     void addTarget(Format format, Filtering filter = Filtering::linear);

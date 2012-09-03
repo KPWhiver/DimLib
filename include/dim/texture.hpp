@@ -25,7 +25,7 @@
 #include <type_traits>
 #include <stdexcept>
 #include <sstream>
-#include <iostream>
+#include <vector>
 
 #include "dim/shader.hpp"
 
@@ -92,7 +92,7 @@ namespace dim
   };
 
 
-  template<typename Type, typename ComponentType = Type>
+  template<typename Type>
   class TextureBase__ : public TextureProperties__
   {
       /* texture properties */
@@ -129,7 +129,7 @@ namespace dim
       Type *buffer(uint level = 0);
 
       /* shader */
-      void send(uint unit, std::string const &variable) const;
+      void setAtShader(Shader const &shader, std::string const &variable, uint unit) const;
 
     protected:
       void init(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);
@@ -143,15 +143,15 @@ namespace dim
 
   /* Texture<Type> */
 
-  template<typename Type = GLubyte, typename ComponentType = Type>
-  class Texture: public TextureBase__<Type, ComponentType>
+  template<typename Type = GLubyte>
+  class Texture: public TextureBase__<Type>
   {
-      using TextureBase__<Type, ComponentType>::init;
-      using TextureBase__<Type, ComponentType>::externalFormat;
+      using TextureBase__<Type>::init;
+      using TextureBase__<Type>::externalFormat;
   
     public:
-      using TextureBase__<Type, ComponentType>::width;
-      using TextureBase__<Type, ComponentType>::height;
+      using TextureBase__<Type>::width;
+      using TextureBase__<Type>::height;
 
 
       Texture();
@@ -231,15 +231,15 @@ namespace dim
 
   /* ****************************** */
 
-  template<typename Type, typename ComponentType>
-  Texture<Type, ComponentType>::Texture()
+  template<typename Type>
+  Texture<Type>::Texture()
   {
     Type data(0);
     init(&data, Filtering::nearest, Format::R8, 1, 1, false, Wrapping::repeat);
   }
 
-  template<typename Type, typename ComponentType>
-  Texture<Type, ComponentType>::Texture(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  template<typename Type>
+  Texture<Type>::Texture(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
     init(data, filter, format, width, height, keepBuffered, wrap);
   }

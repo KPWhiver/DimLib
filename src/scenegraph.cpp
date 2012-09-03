@@ -19,7 +19,7 @@
 
 #include <fstream>
 
-#include "dim/drawmap.hpp"
+#include "dim/scenegraph.hpp"
 #include "dim/shader.hpp"
 
 #include <algorithm>
@@ -33,12 +33,12 @@ namespace dim
 
   /* constructors */
   
-  DrawMap::DrawMap(size_t gridSize)
+  SceneGraph::SceneGraph(size_t gridSize)
       : d_gridSize(gridSize), d_objSelect(end())
   {
   }
 
-  DrawMap::DrawMap(DrawMap const &other)
+  SceneGraph::SceneGraph(SceneGraph const &other)
   :
       d_drawStateList(other.d_drawStateList),
       d_drawableWrappers(other.d_drawableWrappers),
@@ -49,7 +49,7 @@ namespace dim
       element->copy(reinterpret_cast<size_t>(this));
   }
 
-  DrawMap::DrawMap(DrawMap &&tmp)
+  SceneGraph::SceneGraph(SceneGraph &&tmp)
   :
       d_drawStateList(move(tmp.d_drawStateList)),
       d_drawableWrappers(move(tmp.d_drawableWrappers)),
@@ -60,7 +60,7 @@ namespace dim
       element->move(reinterpret_cast<size_t>(this));
   }
 
-  DrawMap &DrawMap::operator=(DrawMap const &other)
+  SceneGraph &SceneGraph::operator=(SceneGraph const &other)
   {
     d_drawStateList = other.d_drawStateList;
     d_drawableWrappers = other.d_drawableWrappers;
@@ -73,7 +73,7 @@ namespace dim
     return *this;
   }
 
-  DrawMap &DrawMap::operator=(DrawMap &&tmp)
+  SceneGraph &SceneGraph::operator=(SceneGraph &&tmp)
   {
     d_drawStateList = move(tmp.d_drawStateList);
     d_drawableWrappers = move(tmp.d_drawableWrappers);
@@ -88,7 +88,7 @@ namespace dim
 
   /* iterators */
 
-  DrawMap::iterator DrawMap::begin()
+  SceneGraph::iterator SceneGraph::begin()
   {
     for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
     {
@@ -102,7 +102,7 @@ namespace dim
     return end();
   }
 
-  DrawMap::iterator DrawMap::end()
+  SceneGraph::iterator SceneGraph::end()
   {
     return iterator(
                make_pair(
@@ -113,7 +113,7 @@ namespace dim
                , 0);
   }
 
-  DrawMap::const_iterator DrawMap::begin() const
+  SceneGraph::const_iterator SceneGraph::begin() const
   {
     for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
     {
@@ -126,7 +126,7 @@ namespace dim
     return end();
   }
 
-  DrawMap::const_iterator DrawMap::end() const
+  SceneGraph::const_iterator SceneGraph::end() const
   {
     return const_iterator(
                make_pair(
@@ -137,7 +137,7 @@ namespace dim
                , 0);
   }
 
-  DrawMap::IdType DrawMap::nextId(IdType const &id) const
+  SceneGraph::IdType SceneGraph::nextId(IdType const &id) const
   {
     auto iter = id.second;
 
@@ -154,33 +154,33 @@ namespace dim
     return end().id();
   }
 
-  Drawable &DrawMap::getFromId(IdType const &id)
+  Drawable &SceneGraph::getFromId(IdType const &id)
   {
     return *id.second;
   }
 
-  Drawable const &DrawMap::getFromId(IdType const &id) const
+  Drawable const &SceneGraph::getFromId(IdType const &id) const
   {
     return *id.second;
   }
 
   /* regular functions */
 
-  void DrawMap::mark(DrawMap::iterator const &object)
+  void SceneGraph::mark(SceneGraph::iterator const &object)
   {
     d_objSelect = object;
   }
 
-  void DrawMap::add(DrawState const &state)
+  void SceneGraph::add(DrawState const &state)
   {
     d_drawStateList.insert(state);
   }
 
-  void DrawMap::draw(DrawMap::DrawMode mode)
+  void SceneGraph::draw(SceneGraph::DrawMode mode)
   {
     for(DrawState const &state: d_drawStateList)
     {
-      if(mode == DrawMap::normal)
+      if(mode == SceneGraph::normal)
         state.shader().use();
       else
       {
@@ -194,14 +194,14 @@ namespace dim
         glDisable(GL_CULL_FACE);
 
       for(size_t tex = 0; tex != state.textures().size(); ++tex)
-        state.textures()[tex].first.send(tex, state.textures()[tex].second);
+        state.textures()[tex].first.setAtShader(state.shader(), state.textures()[tex].second, tex);
 
       //TODO save the drawables at the states
 
       for(auto &element: d_drawableWrappers)
         element->draw(state, d_objSelect.id().second);
       
-      if(mode == DrawMap::shadow)
+      if(mode == SceneGraph::shadow)
       {
         glCullFace(GL_BACK);
 	      glDisable(GL_POLYGON_OFFSET_FILL);
@@ -213,7 +213,7 @@ namespace dim
     }
   }
 
-  void DrawMap::del(DrawMap::iterator object)
+  void SceneGraph::del(SceneGraph::iterator object)
   {
     //size_t id = object->id();
     //if(d_drawableWrappers.size() <= id%maxTypes)
@@ -231,7 +231,7 @@ namespace dim
     //oldId->d_id = 0;//TODO something
   }
 
-  DrawMap::iterator DrawMap::find(float x, float z)
+  SceneGraph::iterator SceneGraph::find(float x, float z)
   {
     for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
     {
@@ -243,19 +243,19 @@ namespace dim
     return end();
   }
 
-  void DrawMap::save()
+  void SceneGraph::save()
   {
     for(auto &element: d_drawableWrappers)
       element->save();
   }
 
-  void DrawMap::reset()
+  void SceneGraph::reset()
   {
     for(auto &element: d_drawableWrappers)
       element->reset();
   }
 
-  DrawMap::iterator DrawMap::get(float x, float z)
+  SceneGraph::iterator SceneGraph::get(float x, float z)
   {
     return find(x, z);
   }

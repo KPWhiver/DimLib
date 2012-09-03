@@ -243,11 +243,11 @@ namespace dim
     return typename DrawableWrapper__<RefType>::iterator(id, this);
   }
 
-  template<typename RefType>
+  /*template<typename RefType>
   void DrawableWrapper__<RefType>::load(std::string const &strFilename)
   {
     setFilename(strFilename);
-    /* open the file */
+
     std::ifstream file(filename().c_str());
     if(file.is_open() == false)
       throw std::runtime_error("Error opening " + filename());
@@ -264,7 +264,7 @@ namespace dim
       }
       file.close();
     }
-  }
+  }*/
 
   template<typename RefType>
   void DrawableWrapper__<RefType>::v_save()
@@ -323,12 +323,12 @@ namespace dim
       {
         /* The drawing */
         if(drawable.id().first == objSelect.id().first && drawable.id().second == objSelect.id().second)
-          Shader::active().send(0, "in_lighting");
+          Shader::active().set("in_lighting", 0);
 
         drawable.draw(state);
 
         if(drawable.id().first == objSelect.id().first && drawable.id().second == objSelect.id().second)
-          Shader::active().send(1, "in_lighting");
+          Shader::active().set("in_lighting", 1);
         /* ... */
       }
     }

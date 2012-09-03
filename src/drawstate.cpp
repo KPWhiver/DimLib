@@ -17,6 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
+#include <tuple>
+
 #include "dim/drawstate.hpp"
 
 using namespace std;
@@ -59,12 +61,17 @@ namespace dim
 
 	bool DrawState::operator==(DrawState const &other) const
 	{
-		return d_mesh.id() == other.d_mesh.id()	&& d_shader.id() == other.d_shader.id() && d_textures[0].first.id() == other.d_textures[0].first.id();
+	  return tie(d_shader.id(), d_textures[0].first.id(), d_mesh.id()) ==
+	         tie(other.d_shader.id(), other.d_textures[0].first.id(), other.d_mesh.id());
 	}
 
   bool DrawState::operator<(DrawState const &other) const
   {
-    if(d_shader.id() < other.d_shader.id())
+    return tie(d_shader.id(), d_textures[0].first.id(), d_mesh.id()) <
+           tie(other.d_shader.id(), other.d_textures[0].first.id(), other.d_mesh.id());
+
+
+    /*if(d_shader.id() < other.d_shader.id())
       return true;
     if(d_shader.id() == other.d_shader.id())
     {
@@ -76,6 +83,6 @@ namespace dim
           return true;
       }
     }
-    return false;
+    return false;*/
   }
 }

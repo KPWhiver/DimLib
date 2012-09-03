@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
 #include "dim/mesh.hpp"
 #include "dim/shader.hpp"
@@ -32,6 +33,59 @@ using namespace std;
 
 namespace dim
 {
+  // --- Attribute ---
+
+  Attribute::Attribute(GLuint id, Format size)
+      :
+          d_id(id),
+          d_format(size)
+  {
+  }
+
+  Attribute::Attribute(std::string const &name, Format size)
+      :
+          d_name(name),
+          d_id(unknown),
+          d_format(size)
+  {
+  }
+
+  Attribute::Attribute(Name id, Format size)
+      :
+          d_id(id),
+          d_format(size)
+  {
+  }
+
+  GLint Attribute::id() const
+  {
+    return d_id;
+  }
+
+  GLint Attribute::location() const
+  {
+    if(d_name != "")
+      return 0; //TODO implement
+    else if(d_id == unknown)
+      log(__FILE__, __LINE__, LogType::error, "Can't return unknown id");
+
+    return d_id;
+  }
+
+  Attribute::Format Attribute::format() const
+  {
+    return d_format;
+  }
+
+  uint Attribute::size() const
+  {
+    uint width = d_format % 10;
+    uint height = d_format / 10;
+
+    return width * height;
+  }
+
+  // --- Mesh ---
 
   bool Mesh::s_bindless = false;
   bool Mesh::s_instanced = false;
@@ -39,100 +93,151 @@ namespace dim
   GLuint Mesh::s_bound = 0;
   GLuint Mesh::s_boundElem = 0;
 
+  bool Mesh::s_initialized = false;
+
   void Mesh::initialize()
   {
+    s_initialized = true;
+
     s_bound = false;
     s_boundElem = false;
     s_bindless = false;
-    if (GLEW_NV_shader_buffer_load && GLEW_NV_vertex_buffer_unified_memory)
+    if(GLEW_NV_shader_buffer_load && GLEW_NV_vertex_buffer_unified_memory )
     {
       /* It is safe to use bindless drawing. */
       s_bindless = true;
     }
 
     s_instanced = false;
-    if (GLEW_ARB_draw_instanced && GLEW_ARB_instanced_arrays)
+    if(GLEW_ARB_draw_instanced && GLEW_ARB_instanced_arrays )
     {
       /* It is safe to use instancing. */
       s_instanced = true;
     }
   }
 
-  Mesh::Mesh(string filename)
-  :
-      d_attribSize{0},
-      d_interleavedVBO(Buffer<GLfloat>::data, 0, 0),
-      d_attribVBO{Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0)},
-      d_indexVBO(Buffer<GLushort>::element, 0, 0),
-      d_numVertices(0),
-      d_numTriangles(0),
-      d_instancingVBO(Buffer<GLfloat>::element, 0, 0),
-      d_instancingArray(0),
-      d_maxLocations(0)
+  namespace
   {
+    void addAttributeToBuffer(Attribute const &attrib, GLfloat *array, size_t offset, aiVector3D const &vector)
+    {
+      array[offset] = vector.x;
+
+      if(attrib.format() > Attribute::vec1)
+        array[offset + 1] = vector.y;
+
+      if(attrib.format() > Attribute::vec2)
+        array[offset + 2] = vector.z;
+    }
+  }
+
+  Mesh::Mesh(string filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord, Attribute const &binormal,
+             Attribute const &tangent)
+      :
+          d_interleavedVBO(0, 0),
+          d_indexVBO(0, 0),
+          d_numOfVertices(0),
+          d_numOfTriangles(0),
+          d_instancingVBO(0, 0),
+          d_maxLocations(0),
+          d_shape(triangle),
+          d_instanceAttribute(Attribute::instance, Attribute::vec1)
+  {
+    // static initialize
+    if(s_initialized == false)
+      initialize();
+
+    // set flags
+    uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices;
+
+    if(vertex.id() != Attribute::unknown)
+      d_attributes.push_back(vertex);
+    else
+      log(__FILE__, __LINE__, LogType::error, "No vertex array specified while loading " + filename);
+
+    if(normal.id() != Attribute::unknown)
+    {
+      flags |= aiProcess_GenSmoothNormals;
+      d_attributes.push_back(normal);
+    }
+
+    if(texCoord.id() != Attribute::unknown)
+      d_attributes.push_back(texCoord);
+
+    if(binormal.id() != Attribute::unknown)
+    {
+      flags |= aiProcess_CalcTangentSpace;
+      d_attributes.push_back(binormal);
+    }
+
+    if(tangent.id() != Attribute::unknown)
+    {
+      flags |= aiProcess_CalcTangentSpace;
+      d_attributes.push_back(tangent);
+    }
+
+    // load model
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+    const aiScene *scene = importer.ReadFile(filename, flags);
 
-    if (!scene)
-      throw runtime_error(importer.GetErrorString());
+    if(!scene)
+      log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
 
-    //size_t progress = 0;
+    if(texCoord.id() != Attribute::unknown && scene->mMeshes[0]->mTextureCoords[0] == 0)
+      log(filename, 0, LogType::error, "No texture coordinates present");
+
+    uint varNumOfElements = 0;
+
+    size_t mesh = 0;
+    for(Attribute attrib : d_attributes)
+    {
+      if(attrib.format() > Attribute::vec3)
+        log(__FILE__, __LINE__, LogType::error, "Can't extract more than 3 coordinates from a model file");
+
+      varNumOfElements += attrib.size();
+    }
 
     //for(size_t mesh = 0; mesh != scene->mNummeshes; ++mesh)
     //{
-    size_t mesh = 0;
-    string format("V3");
-    size_t elements = 3;
-    if (scene->mMeshes[mesh]->mNormals != 0)
+    // allocate buffer
+    d_numOfVertices = scene->mMeshes[mesh]->mNumVertices;
+
+    GLfloat *array = new GLfloat[d_numOfVertices * varNumOfElements];
+
+    // fill buffer
+    for(size_t vert = 0; vert != d_numOfVertices; ++vert)
     {
-      format += "N3";
-      elements += 3;
-    }
-    if (scene->mMeshes[mesh]->mTextureCoords[0] != 0)
-    {
-      format += "T2";
-      elements += 2;
-    }
+      uint arrayIdxOffset = 0;
+      size_t arrayIdxStart = vert * varNumOfElements;
 
-    GLfloat *array = new GLfloat[scene->mMeshes[mesh]->mNumVertices * elements];
-    d_numVertices = scene->mMeshes[mesh]->mNumVertices;
+      addAttributeToBuffer(vertex, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mVertices[vert]);
+      arrayIdxOffset += vertex.size();
 
-    //size_t numVert = scene->mMeshes[mesh]->mNumFaces * 3;
-    size_t normals = 0;
-    if (scene->mMeshes[mesh]->mNormals != 0)
-      normals = 3;
-
-    //for (size_t face = 0; face != scene->mMeshes[mesh]->mNumFaces; ++face)
-    //{
-
-      for (size_t idx = 0; idx != scene->mMeshes[mesh]->mNumVertices; ++idx)
+      if(normal.id() != Attribute::unknown)
       {
-        //size_t idx = scene->mMeshes[0]->mFaces[face].mIndices[vert];
-        size_t vertArrayIdx = idx * elements;
-
-        array[vertArrayIdx] = scene->mMeshes[mesh]->mVertices[idx].x;
-        array[vertArrayIdx + 1] = scene->mMeshes[mesh]->mVertices[idx].y;
-        array[vertArrayIdx + 2] = scene->mMeshes[mesh]->mVertices[idx].z;
-
-        if (scene->mMeshes[mesh]->mNormals != 0)
-        {
-          array[vertArrayIdx + 3] = scene->mMeshes[mesh]->mNormals[idx].x;
-          array[vertArrayIdx + 4] = scene->mMeshes[mesh]->mNormals[idx].y;
-          array[vertArrayIdx + 5] = scene->mMeshes[mesh]->mNormals[idx].z;
-        }
-
-        if (scene->mMeshes[mesh]->mTextureCoords[0] != 0)
-        {
-          array[vertArrayIdx + 3 + normals] = scene->mMeshes[mesh]->mTextureCoords[0][idx].x;
-          array[vertArrayIdx + 3 + normals + 1] = scene->mMeshes[mesh]->mTextureCoords[0][idx].y;
-        }
+        addAttributeToBuffer(normal, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mNormals[vert]);
+        arrayIdxOffset += normal.size();
       }
 
-    //}
-    //progress += numVert;
-    //}
-    //float *array = reinterpret_cast<float*>(scene->mMeshes[0]->mVertices);
-    add(array, format, scene->mMeshes[mesh]->mNumVertices);
+      if(texCoord.id() != Attribute::unknown)
+      {
+        addAttributeToBuffer(texCoord, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mTextureCoords[0][vert]);
+        arrayIdxOffset += texCoord.size();
+      }
+
+      if(binormal.id() != Attribute::unknown)
+      {
+        addAttributeToBuffer(binormal, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mBitangents[vert]);
+        arrayIdxOffset += binormal.size();
+      }
+
+      if(tangent.id() != Attribute::unknown)
+      {
+        addAttributeToBuffer(tangent, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mTangents[vert]);
+        arrayIdxOffset += tangent.size();
+      }
+    }
+
+    addBuffer(array, interleaved);
 
     delete[] array;
 
@@ -145,349 +250,307 @@ namespace dim
       indexArray[0 + idx * 3 + 2] = scene->mMeshes[mesh]->mFaces[idx].mIndices[2];
     }
 
-    addElem(indexArray, scene->mMeshes[mesh]->mNumFaces);
+    addElementBuffer(indexArray, scene->mMeshes[mesh]->mNumFaces);
 
     delete[] indexArray;
   }
 
-  size_t Mesh::readFormatString(string const &format)
+  Mesh::Mesh(GLfloat* buffer, vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx)
+      :
+          d_interleavedVBO(0, 0),
+          d_indexVBO(0, 0),
+          d_numOfVertices(numOfVertices),
+          d_numOfTriangles(0),
+          d_instancingVBO(0, 0),
+          d_maxLocations(0),
+          d_shape(shape),
+          d_attributes(attributes),
+          d_instanceAttribute(Attribute::instance, Attribute::vec1)
   {
-    size_t mode = 0;
+    // static initialize
+    if(s_initialized == false)
+      initialize();
 
-    if (format.length() > 6 || format.length() % 2 != 0)
-      log(__FILE__, __LINE__, LogType::error, "Failed to read Mesh format string: " + format);
+    addBuffer(buffer, idx);
+  }
 
-    for (size_t idx = 0; idx != format.length(); idx += 2)
+  void Mesh::addBuffer(GLfloat* buffer, size_t idx)
+  {
+    uint varNumOfElements = numOfElements();
+
+    if(idx == interleaved)
     {
-      size_t slot;
-      switch (format[idx])
+      if(d_interleavedVBO.id() == 0)
+        d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, buffer);
+      else
       {
-      case 'V':
-        slot = 0;
-        mode = 0;
-        break;
-      case 'N':
-        slot = 1;
-        mode = 1;
-        break;
-      case 'T':
-        slot = 2;
-        mode = 2;
-        break;
-      default:
-        log(__FILE__, __LINE__, LogType::error, "Failed to read Mesh format string: " + format);
+        log(__FILE__, __LINE__, LogType::error, "Interleaved arrays can only be added at the first call");
+        return;
       }
-      if (not isdigit(format[idx + 1]))
-        log(__FILE__, __LINE__, LogType::error, "Failed to read Mesh format string: " + format);
-
-      d_attribSize[slot] = format[idx + 1] - '0';
-    }
-
-    return mode;
-  }
-
-  Mesh::Mesh(GLfloat* buffer, string const &format, size_t vertices)
-  :
-      d_attribSize{0},
-      d_interleavedVBO(Buffer<GLfloat>::data, 0, 0),
-      d_attribVBO{Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0), Buffer<GLfloat>(Buffer<GLfloat>::data, 0, 0)},
-      d_indexVBO(Buffer<GLushort>::element, 0, 0),
-      d_numVertices(vertices),
-      d_numTriangles(0),
-      d_instancingVBO(Buffer<GLfloat>::element, 0, 0),
-      d_instancingArray(0),
-      d_maxLocations(0)
-  {
-    add(buffer, format, vertices);
-  }
-
-  void Mesh::add(GLfloat* buffer, string const &format, size_t vertices)
-  {
-    size_t mode = readFormatString(format);
-    size_t totalElements = d_attribSize[0] + d_attribSize[1] + d_attribSize[2];
-
-    if (format.length() > 2)
-    {
-      //glGenBuffers(1, &d_interleavedVBO);
-      //glBindBuffer(GL_ARRAY_BUFFER, d_interleavedVBO);
-      //glBufferData(GL_ARRAY_BUFFER, vertices * totalElements * sizeof(GLfloat), buffer,
-      //    GL_STATIC_DRAW);
-      d_interleavedVBO = Buffer<GLfloat>(Buffer<GLfloat>::data, vertices * totalElements, buffer);
     }
     else
     {
-      //glGenBuffers(1, &d_attribVBO[mode]);
-      //glBindBuffer(GL_ARRAY_BUFFER, d_attribVBO[mode]);
-      //glBufferData(GL_ARRAY_BUFFER, vertices * d_attribSize[mode] * sizeof(GLfloat), buffer,
-      //    GL_STATIC_DRAW);
-      d_attribVBO[mode] = Buffer<GLfloat>(Buffer<GLfloat>::data, vertices * d_attribSize[mode], buffer);
+      // Make a new buffer
+      if(d_interleavedVBO.id() == 0)
+      {
+        GLfloat *array = new GLfloat[d_numOfVertices * varNumOfElements];
+
+        updateBuffer(array, buffer, varNumOfElements, idx);
+
+        d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, array);
+        delete[] array;
+      }
+      // Paste into the old buffer
+      else
+      {
+        updateBuffer(buffer, idx);
+      }
     }
   }
 
-  void Mesh::addElem(GLushort* buffer, size_t triangles)
+  void Mesh::updateBuffer(GLfloat* buffer, size_t idx)
   {
-    d_numTriangles = triangles;
+    uint varNumOfElements = numOfElements();
 
-    if (d_indexVBO.id() != 0)
+    if(d_interleavedVBO.id() == 0)
+    {
+      log(__FILE__, __LINE__, LogType::error, "Can't update a Mesh if no buffers have been added yet");
       return;
+    }
 
-    //glGenBuffers(1, &d_indexVBO);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d_indexVBO);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, d_numTriangles * 3 * sizeof(GLushort), buffer,
-    //    GL_STATIC_DRAW);
-    d_indexVBO = Buffer<GLushort>(Buffer<GLushort>::element, d_numTriangles * 3, buffer);
+    if(idx == interleaved)
+      d_interleavedVBO.update(d_numOfVertices * varNumOfElements, buffer);
+    else
+    {
+      GLfloat* ptr = d_interleavedVBO.map(Buffer<GLfloat>::write);
+
+      if(ptr == 0)
+        return;
+
+      updateBuffer(ptr, buffer, varNumOfElements, idx);
+
+      d_interleavedVBO.unmap();
+    }
   }
 
-  void Mesh::addInst(GLfloat* buffer, size_t locations)
+  void Mesh::updateBuffer(GLfloat *target, GLfloat *source, uint varNumOfElements, size_t idx)
   {
-    if (d_instancingVBO.id() != 0 || d_instancingArray != 0)
-      return;
+    for(size_t vert = 0; vert != d_numOfVertices; ++vert)
+    {
+      uint arrayIdxOffset = 0;
+      size_t arrayIdxStart = vert * varNumOfElements;
 
+      for(size_t attrib = 0; attrib != d_attributes.size(); ++attrib)
+      {
+        uint size = d_attributes[attrib].size();
+
+        if(idx == attrib)
+        {
+          for(size_t coor = 0; coor != size; ++coor)
+          {
+            target[arrayIdxStart + arrayIdxOffset + coor] = source[vert * size + coor];
+          }
+        }
+        arrayIdxOffset += size;
+      }
+    }
+    cerr << "\n\n\n";
+  }
+
+  void Mesh::addElementBuffer(GLushort* buffer, size_t numOfTriangles)
+  {
+    d_numOfTriangles = numOfTriangles;
+
+    if(d_indexVBO.id() != 0)
+    {
+      log(__FILE__, __LINE__, LogType::error, "Can't add an element buffer, it's has already been added");
+      return;
+    }
+
+    d_indexVBO = Buffer<GLushort>(d_numOfTriangles * 3, buffer);
+  }
+
+  void Mesh::addInstanceBuffer(GLfloat* buffer, size_t locations, Attribute const &attrib)
+  {
+    if(d_instancingVBO.id() != 0)
+    {
+      log(__FILE__, __LINE__, LogType::error, "Can't add an instance buffer, it's has already been added");
+      return;
+    }
+
+    d_instanceAttribute = attrib;
 
     d_maxLocations = locations;
-    if (s_instanced == true)
-    {
-      //glGenBuffers(1, &d_instancingVBO);
-      //glBindBuffer(GL_ARRAY_BUFFER, d_instancingVBO);
-      //glBufferData(GL_ARRAY_BUFFER, d_maxLocations * 3 * sizeof(GLfloat), buffer, GL_DYNAMIC_DRAW);
-      d_instancingVBO = Buffer<GLfloat>(Buffer<GLfloat>::data, d_maxLocations * 3, buffer);
-    }
-    else
-    {
-      d_instancingArray = buffer;
-    }
+    d_instancingVBO = Buffer<GLfloat>(d_maxLocations * 3, buffer);
   }
 
-  Buffer<GLfloat> *Mesh::buffer()
+  void Mesh::updateElementBuffer(GLushort* buffer)
   {
-    if(d_interleavedVBO.id() == 0)
-      return &d_attribVBO[0];
+    if(d_indexVBO.id() != 0)
+    {
+      log(__FILE__, __LINE__, LogType::error, "Can't update a element buffer if no element buffers have been added yet");
+      return;
+    }
 
-    return &d_interleavedVBO;
+    d_indexVBO.update(d_numOfTriangles * 3, buffer);
   }
 
-  Buffer<GLushort> &Mesh::elementBuffer()
+  void Mesh::updateInstanceBuffer(GLfloat* buffer, size_t locations)
+  {
+    if(d_instancingVBO.id() != 0)
+    {
+      log(__FILE__, __LINE__, LogType::error, "Can't update a instance buffer if no instance buffers have been added yet");
+      return;
+    }
+
+    d_maxLocations = locations;
+    d_instancingVBO.update(d_maxLocations * 3, buffer);
+
+  }
+
+  Buffer<GLfloat> const &Mesh::buffer()
+  {
+    return d_interleavedVBO;
+  }
+
+  Buffer<GLushort> const &Mesh::elementBuffer()
   {
     return d_indexVBO;
   }
 
-  Buffer<GLfloat> &Mesh::instanceBuffer()
+  Buffer<GLfloat> const &Mesh::instanceBuffer()
   {
     return d_instancingVBO;
   }
 
+  uint Mesh::numOfElements() const
+  {
+    uint varNumOfElements = 0;
+    for(Attribute attrib : d_attributes)
+      varNumOfElements += attrib.size();
+
+    return varNumOfElements;
+  }
+
   void Mesh::bind() const
   {
-    if(d_interleavedVBO.id() != 0)
-    {
-      if(s_bound == d_interleavedVBO.id())
-        return;
+    if(s_bound == d_interleavedVBO.id())
+      return;
 
-      s_bound = d_interleavedVBO.id();
-    }
-    else /*d_attribVBO[0] != 0*/
-    {
-      if(s_bound == d_attribVBO[0].id())
-        return;
+    s_bound = d_interleavedVBO.id();
 
-      s_bound = d_attribVBO[0].id();
-    }
+    for(Attribute attrib : d_attributes)
+      glEnableVertexAttribArray(attrib.id());
 
-    /* Enabling and disabling the correct arrays */
-    if (d_attribSize[1] == 0)
-      glDisableVertexAttribArray(1);
+    size_t varNumOfElements = numOfElements();
 
-    if (d_attribSize[2] == 0)
-      glDisableVertexAttribArray(2);
-
-    size_t totalElements = d_attribSize[0] + d_attribSize[1] + d_attribSize[2];
-
-    /* Set pointers when we're dealing with an interleaved */
+    // set pointers when we're dealing with an interleaved
     size_t offset = 0;
-    if (d_interleavedVBO.id() != 0)
-    {
-      d_interleavedVBO.bind();
+    d_interleavedVBO.bind(Buffer<GLfloat>::data);
 
-      for(size_t idx = 0; idx != 3; ++idx)
-      {
-        if(d_attribSize[idx] != 0)
-        {
-          glVertexAttribPointer(idx, d_attribSize[idx], GL_FLOAT, GL_FALSE, totalElements * sizeof(GLfloat),
-                                reinterpret_cast<void*>(offset * sizeof(GLfloat)));
-          offset += d_attribSize[idx];
-        }
-      }
-    }
-    else
+    for(size_t idx = 0; idx != d_attributes.size(); ++idx)
     {
-      for(size_t idx = 0; idx != 3; ++idx)
-      {
-        if(d_attribSize[idx] != 0)
-        {
-          d_attribVBO[idx].bind();
-          //cout << d_attribVBO[idx].id() << ' ' << d_numVertices << '\n';
-          glVertexAttribPointer(idx, d_attribSize[idx], GL_FLOAT, GL_FALSE, 0, 0);
-        }
-      }
+      glVertexAttribPointer(d_attributes[idx].id(), d_attributes[idx].size(), GL_FLOAT, GL_FALSE, varNumOfElements * sizeof(GLfloat),
+                            reinterpret_cast<void*>(offset * sizeof(GLfloat)));
+      offset += d_attributes[idx].size();
     }
-    bindElem();
+
+    bindElement();
   }
 
   void Mesh::unbind() const
   {
     s_bound = 0;
-    if (d_attribSize[1] == 0)
-      glEnableVertexAttribArray(1);
+    for(Attribute attrib : d_attributes)
+      glDisableVertexAttribArray(attrib.id());
 
-    if (d_attribSize[2] == 0)
-      glEnableVertexAttribArray(2);
-
-    unbindElem();
+    unbindElement();
   }
 
-  void Mesh::bindElem() const
+  void Mesh::bindElement() const
   {
     if(d_indexVBO.id() == 0)
       return;
 
     s_boundElem = d_indexVBO.id();
 
-    d_indexVBO.bind();
+    d_indexVBO.bind(Buffer<GLushort>::element);
   }
 
-  void Mesh::unbindElem() const
+  void Mesh::unbindElement() const
   {
     s_boundElem = 0;
-  }
-
-  void Mesh::bindInst() const
-  {
-
   }
 
   void Mesh::draw() const
   {
 
-    if (s_bound == 0)
-    {
-      bind();
-      s_bound = 0;
-    }
-    else if (s_bound != d_interleavedVBO.id() && s_bound != d_attribVBO[0].id())
+    if(s_bound == 0 || s_bound != d_interleavedVBO.id())
     {
       bind();
       s_bound = 0;
     }
 
-    if (d_indexVBO.id() != 0)
+    if(d_indexVBO.id() != 0)
     {
-      if (s_boundElem == 0)
+      if(s_boundElem == 0)
       {
-        bindElem();
+        bindElement();
         s_boundElem = 0;
       }
-      glDrawElements(GL_TRIANGLES, d_numTriangles * 3, GL_UNSIGNED_SHORT, NULL);
+      glDrawElements(GL_TRIANGLES, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, 0);
     }
     else
     {
-      //cout << d_attribVBO[0].id() << ' ' << d_numVertices << '\n';
-      glDrawArrays(GL_TRIANGLES, 0, d_numVertices);
+      glDrawArrays(GL_TRIANGLES, 0, d_numOfVertices);
     }
 
-    if (s_bound == 0)
+    if(s_bound == 0)
     {
-      if (d_attribSize[1] == 0)
-        glEnableVertexAttribArray(1);
-
-      if (d_attribSize[2] == 0)
-        glEnableVertexAttribArray(2);
+      unbind();
     }
 
   }
 
-  void Mesh::drawInst(size_t amount) const
+  void Mesh::drawInstanced(size_t amount) const
   {
 
-    if (s_bound == 0)
-    {
-      bind();
-      s_bound = 0;
-    }
-    else if (s_bound != d_interleavedVBO.id() && s_bound != d_attribVBO[0].id())
+    if(s_bound == 0 || s_bound != d_interleavedVBO.id())
     {
       bind();
       s_bound = 0;
     }
 
-    if (s_instanced == true)
+    glEnableVertexAttribArray(d_instanceAttribute.id());
+
+    d_instancingVBO.bind(Buffer<GLfloat>::data);
+    glVertexAttribPointer(d_instanceAttribute.id(), 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribDivisor(d_instanceAttribute.id(), 1);
+    if(d_indexVBO.id() != 0)
     {
-      Shader::active().send(vec3(0.0f, -10000.0f, 0.0f), "in_placement");
-
-      glEnableVertexAttribArray(3);
-
-      d_instancingVBO.bind();
-      glVertexAttribPointer((GLuint) 3, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-      glVertexAttribDivisorARB((GLuint) 3, 1);
-      if (d_indexVBO.id() != 0)
+      if(s_boundElem == 0)
       {
-        if (s_boundElem == 0)
-        {
-          bindElem();
-          s_boundElem = 0;
-        }
-        glDrawElementsInstancedARB(GL_TRIANGLES, d_numTriangles * 3, GL_UNSIGNED_SHORT, NULL,
-            amount);
+        bindElement();
+        s_boundElem = 0;
       }
-      else
-      {
-        glDrawArraysInstancedARB(GL_TRIANGLES, 0, d_numVertices, amount);
-      }
-
-      glDisableVertexAttribArray(3);
+      glDrawElementsInstanced(GL_TRIANGLES, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, NULL, amount);
     }
     else
     {
-      for (size_t idx = 0; idx < amount; idx += 3)
-      {
-        Shader::active().send(
-            vec3(d_instancingArray[idx * 3], d_instancingArray[idx * 3 + 1],
-                d_instancingArray[idx * 3 + 2]), "in_placement");
-        if (d_indexVBO.id() != 0)
-        {
-          if (s_boundElem == 0)
-          {
-            bindElem();
-            s_boundElem = 0;
-          }
-          glDrawElements(GL_TRIANGLES, d_numTriangles * 3, GL_UNSIGNED_SHORT, NULL);
-        }
-        else
-        {
-          glDrawArrays(GL_TRIANGLES, 0, d_numVertices);
-        }
-      }
+      glDrawArraysInstanced(GL_TRIANGLES, 0, d_numOfVertices, amount);
     }
 
-    if (s_bound == 0)
-    {
-      if (d_attribSize[1] == false)
-        glEnableVertexAttribArray(1);
+    glDisableVertexAttribArray(d_instanceAttribute.id());
 
-      if (d_attribSize[2] == false)
-        glEnableVertexAttribArray(2);
+    if(s_bound == 0)
+    {
+      unbind();
     }
   }
 
   GLuint Mesh::id() const
   {
-    if(d_interleavedVBO.id() != 0)
-      return d_interleavedVBO.id();
-
-    if(d_attribVBO[0].id() != 0)
-      return d_attribVBO[0].id();
-
-    return 0;
+    return d_interleavedVBO.id();
   }
-
 
 }

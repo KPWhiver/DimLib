@@ -20,13 +20,11 @@
 #ifndef SHADERS_HPP
 #define SHADERS_HPP
 
-#include "dim/camera.hpp"
-#include "dim/light.hpp"
-
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <memory>
+
+#include "dim/dim.hpp"
 
 namespace dim
 {
@@ -46,28 +44,13 @@ class Shader
   std::shared_ptr<GLuint> d_tessEvalId;
   std::shared_ptr<GLuint> d_computeId;
   
-  static Shader *s_activeShader;
+  static Shader const *s_activeShader;
 
   static glm::mat4 s_modelMatrix;
   static glm::mat3 s_normalMatrix;
     
-  std::unordered_map<std::string, GLint> d_uniforms;
+  mutable std::unordered_map<std::string, GLint> d_uniforms;
   
-  std::vector<glm::mat4*> d_mat4List;
-  std::vector<GLint> d_mat4Names;
-  std::vector<glm::mat3*> d_mat3List;
-  std::vector<GLint> d_mat3Names;
-  std::vector<glm::vec4*> d_vec4List;
-  std::vector<GLint> d_vec4Names;
-  std::vector<glm::vec3*> d_vec3List;
-  std::vector<GLint> d_vec3Names;
-  std::vector<glm::vec2*> d_vec2List;
-  std::vector<GLint> d_vec2Names;
-  std::vector<int*> d_intList;
-  std::vector<GLint> d_intNames;
-  std::vector<Light*> d_lightList;
-  std::vector<Camera*> d_cameraList;
-
   std::string d_filename;
 
 public:
@@ -75,35 +58,26 @@ public:
 
   Shader(std::string const &filename);
 
-  void sendAtUse(glm::mat4* value, std::string const &variable);
-  void sendAtUse(glm::mat3* value, std::string const &variable);
-  void sendAtUse(glm::vec4* value, std::string const &variable);
-  void sendAtUse(glm::vec3* value, std::string const &variable);
-  void sendAtUse(glm::vec2* value, std::string const &variable);
-  void sendAtUse(int* value, std::string const &variable);
-  void sendAtUse(Light* light);
-  void sendAtUse(Camera* camera);
-
   template<typename Type>
-  void send(Type const &value, std::string const &variable);
+  void set(std::string const &variable, Type const &value) const;
 
-  void send(glm::mat4 const &value, GLint variable) const;
-  void send(glm::mat3 const &value, GLint variable) const;
-  void send(glm::vec4 const &value, GLint variable) const;
-  void send(glm::vec3 const &value, GLint variable) const;
-  void send(glm::vec2 const &value, GLint variable) const;
-  void send(float value, GLint variable) const;
-  void send(int value, GLint variable) const;
+  void set(GLint variable, glm::mat4 const &value) const;
+  void set(GLint variable, glm::mat3 const &value) const;
+  void set(GLint variable, glm::vec4 const &value) const;
+  void set(GLint variable, glm::vec3 const &value) const;
+  void set(GLint variable, glm::vec2 const &value) const;
+  void set(GLint variable, float value) const;
+  void set(GLint variable, int value) const;
 
   void use() const;
 
-  static Shader &active();
+  static Shader const &active();
 
   static glm::mat4 &modelMatrix();
   static glm::mat3 &normalMatrix();
 
-  void transformBegin();
-  void transformEnd();
+  void transformBegin() const;
+  void transformEnd() const;
 
   GLuint id() const;
 
@@ -114,7 +88,7 @@ private:
   void compileShader(std::string const &file, std::string const &stage, std::shared_ptr<GLuint> &shader, GLuint shaderType);
   void checkCompile(GLuint shader, std::string const &stage) const;
   void checkProgram(GLuint program) const;
-  GLint uniform(std::string const &variable);
+  GLint uniform(std::string const &variable) const;
 
   //bool instanced;
 
@@ -124,10 +98,10 @@ private:
 // Using string
 //
   template<typename Type>
-  void Shader::send(Type const &value, std::string const &variable)
+  void Shader::set(std::string const &variable, Type const &value) const
   {
     GLint loc = uniform(variable);
-    send(value, loc);
+    set(loc, value);
   }
 
 }

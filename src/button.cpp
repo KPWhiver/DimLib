@@ -130,23 +130,23 @@ namespace dim
 	  }
 	  
 		if(d_selected == true)
-		  d_context->buttonHoverTexture().send(0, "in_texture0");
+		  d_context->buttonHoverTexture().setAtShader(d_context->shader(), "in_texture0", 0);
 		else
-		  d_context->buttonTexture().send(0, "in_texture0");
+		  d_context->buttonTexture().setAtShader(d_context->shader(), "in_texture0", 0);
 
     Shader::modelMatrix() = translate(Shader::modelMatrix(), vec3(x, y, 0));
 	  Shader::modelMatrix() = scale(Shader::modelMatrix(), vec3(d_width/10.0, d_height/10.0, 1.0));
-	  Shader::active().send(Shader::modelMatrix(), "in_mat_model");
+	  d_context->shader().set("in_mat_model", Shader::modelMatrix());
 	  
-    Shader::active().transformBegin();
+	  d_context->shader().transformBegin();
 
 	  d_context->mesh().draw();
 
-	  d_text.send(0, "in_texture0");
+	  d_text.setAtShader(Shader::active(), "in_texture0", 0);
 
 	  d_context->mesh().draw();
 
-	  Shader::active().transformEnd();
+	  d_context->shader().transformEnd();
 	}
 
 	void Button::setListener(std::function<void()> const &listenerFunction)

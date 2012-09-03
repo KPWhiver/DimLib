@@ -39,6 +39,8 @@ namespace dim
     FT_Glyph d_glyphs[128];
     static FT_Library s_library;
 
+    static bool s_initialized;
+
   public:
     Font(std::string filename);
 
@@ -48,7 +50,7 @@ namespace dim
     //GLuint letter(size_t ch);
 
   private:
-    size_t nextPowerOf2(size_t number);
+    size_t nextPowerOf2(size_t number) const;
     void generateCharMap(size_t ch);
 
   };;

@@ -66,6 +66,7 @@ mat4 &Light::in_mat_light()
 
 void Light::setupShadowRender(vec3 const &origin, float dir)
 {
+  //TODO fix shadermess
 	vec3 from;
 	from.x = origin.x + ((100.0f / 2) * sin(dir));
 	from.y = origin.y;
@@ -79,21 +80,21 @@ void Light::setupShadowRender(vec3 const &origin, float dir)
 									 0.0, 0.0, 0.5, 0.0,
 									 0.5, 0.5, 0.5, 1.0);
 
-	Shader::active().send(mat4(1.0), "in_mat_model");
+	//Shader::active().send("in_mat_model", mat4(1.0));
 	d_in_mat_light = bias * cam.in_mat_projection() * cam.in_mat_view();// * lightprojection * lightview;
 
-	cam.send();
+	cam.setAtShader(Shader::active());
 }
 
-void Light::send() const
+void Light::setAtShader(Shader const &shader) const
 {
 	if(d_mode == Light::directional)
 	{
-		Shader::active().send(d_lightColor, "in_light[0].lightColor");
-		Shader::active().send(d_highlightColor, "in_light[0].highlightColor");
-		Shader::active().send(d_lightIntensity, "in_light[0].lightIntensity");
-		Shader::active().send(d_ambientIntensity, "in_light[0].ambientIntensity");
-		Shader::active().send(d_transformedPosition, "in_light[0].position");
+		shader.set("in_light[0].lightColor", d_lightColor);
+		shader.set("in_light[0].highlightColor", d_highlightColor);
+		shader.set("in_light[0].lightIntensity", d_lightIntensity);
+		shader.set("in_light[0].ambientIntensity", d_ambientIntensity);
+		shader.set("in_light[0].position", d_transformedPosition);
 	}
 }
 

@@ -52,8 +52,9 @@
   \n                          return Scanner::glslWhitespace;
 }
 
+//"//"[\\..]*\n                 return Scanner::glslWhitespace;//         
+//"//"(\\.|.)*\n                return Scanner::glslWhitespace;
 "//"                          begin(StartCondition__::comment2);
-
 <comment2>{
   \n                          {
                                 begin(StartCondition__::INITIAL);

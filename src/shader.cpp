@@ -34,18 +34,19 @@ using namespace glm;
 
 namespace dim
 {
+  // TODO put this in initialize function
   bool Shader::s_geometryShader(GLEW_ARB_geometry_shader4);
   bool Shader::s_tessellationShader(GLEW_ARB_tessellation_shader);
   bool Shader::s_computeShader(GLEW_ARB_compute_shader);
 
 
-  Shader *Shader::s_activeShader = 0;
+  Shader const *Shader::s_activeShader = 0;
 
   mat4 Shader::s_modelMatrix = mat4(1.0);
 
   mat3 Shader::s_normalMatrix = mat3(1.0);
 
-  GLint Shader::uniform(string const &variable)
+  GLint Shader::uniform(string const &variable) const
   {
     auto it = d_uniforms.find(variable);
 
@@ -65,11 +66,6 @@ namespace dim
 
   void Shader::parseShader(string &vertexShader, string &fragmentShader, string &geometryShader, string &tessControlShader, string &tessEvalShader, string &computeShader) const
   {
-    // open file
-    //ifstream file(d_filename.c_str());
-    //if(file.is_open() == 0)
-    //  log(__FILE__, __LINE__, LogType::error, "Failed to open" + d_filename);
-
     // set up scanner
     stringstream unmatched;
     int unmatchedPos = unmatched.tellp();
@@ -103,10 +99,15 @@ namespace dim
         {
           output = &shaders[token - Scanner::vertex];
 
+
           if(version != 0)
             *output << "#version " << version << '\n';
 
-          *output << "#line " << scanner.lineNr() + (version != 0) << ' ' << fileNumber;
+          if(token == Scanner::vertex)
+            *output << "#define dim_vertex 7\n" << "#define dim_normal 8\n" << "#define dim_texCoord 9\n"
+                    << "#define dim_instance 10\n" << "#define dim_binormal 11\n" << "#define dim_tangent 12\n";
+
+          *output << "#line " << scanner.lineNr() + (version != 0) + 6 << ' ' << fileNumber;
           continue;
         }
         else if(token == Scanner::include)
@@ -177,7 +178,7 @@ namespace dim
     }
     catch(runtime_error &exc)
     {
-      log(scanner.filename(), scanner.lineNr(), LogType::error, exc.what());
+      log(scanner.filename(), scanner.lineNr(), LogType::warning, exc.what());
     }
 
     vertexShader = shaders[0].str();
@@ -243,7 +244,7 @@ namespace dim
                }),
           d_filename(filename)
   {
-    string standardVertex("#version 120\n attribute vec2 in_position;void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
+    string standardVertex("#version 120\n #define dim_vertex 0\n layout (location = dim_vertex) attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
 
     string vertex;
     string fragment;
@@ -254,12 +255,14 @@ namespace dim
 
     parseShader(vertex, fragment, geometry, tessControl, tessEval, compute);
 
-    /*cout << vertex << "\n------\n";
+#if false
+    cout << vertex << "\n------\n";
     cout << fragment << "\n------\n";
     cout << geometry << "\n------\n";
     cout << tessControl << "\n------\n";
     cout << tessEval << "\n------\n";
-    cout << compute << "\n------------\n";*/
+    cout << compute << "\n------------\n";
+#endif
 
     if(vertex != "")
       compileShader(vertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
@@ -301,10 +304,10 @@ namespace dim
         log(d_filename, 0, LogType::warning, "Ignoring compute shader because they are not supported on this graphics card");
     }
 
-    glBindAttribLocation(*d_id, 0, "in_position");
-    glBindAttribLocation(*d_id, 1, "in_normal");
-    glBindAttribLocation(*d_id, 2, "in_texcoord0");
-    glBindAttribLocation(*d_id, 3, "in_inst_placement");
+    //glBindAttribLocation(*d_id, 0, "in_position");
+    //glBindAttribLocation(*d_id, 1, "in_normal");
+    //glBindAttribLocation(*d_id, 2, "in_texcoord0");
+    //glBindAttribLocation(*d_id, 3, "in_inst_placement");
 
     glLinkProgram(*d_id);
     checkProgram(*d_id);
@@ -323,34 +326,9 @@ namespace dim
       glUseProgram(*d_id);
       s_activeShader = const_cast<Shader*>(this);
     }
-
-    for(size_t idx = 0; idx != d_mat4List.size(); ++idx)
-      send(*d_mat4List[idx], d_mat4Names[idx]);
-
-    for(size_t idx = 0; idx != d_mat3List.size(); ++idx)
-      send(*d_mat3List[idx], d_mat3Names[idx]);
-
-    for(size_t idx = 0; idx != d_vec4List.size(); ++idx)
-      send(*d_vec4List[idx], d_vec4Names[idx]);
-
-    for(size_t idx = 0; idx != d_vec3List.size(); ++idx)
-      send(*d_vec3List[idx], d_vec3Names[idx]);
-
-    for(size_t idx = 0; idx != d_vec2List.size(); ++idx)
-      send(*d_vec2List[idx], d_vec2Names[idx]);
-
-    for(size_t idx = 0; idx != d_intList.size(); ++idx)
-      send(*d_intList[idx], d_intNames[idx]);
-
-    for(size_t idx = 0; idx != d_lightList.size(); ++idx)
-      d_lightList[idx]->send();
-
-    for(size_t idx = 0; idx != d_cameraList.size(); ++idx)
-      d_cameraList[idx]->send();
-
   }
 
-  Shader &Shader::active()
+  Shader const &Shader::active()
   {
     return *s_activeShader;
   }
@@ -365,105 +343,59 @@ namespace dim
     return s_normalMatrix;
   }
 
-  void Shader::transformBegin()
+  void Shader::transformBegin() const
   {
     //s_tmp_modelMatrix = s_modelMatrix;
     //s_tmp_normalMatrix = s_normalMatrix;
 
-    send(s_modelMatrix, "modelMatrix");
+    set("modelMatrix", s_modelMatrix);
     s_normalMatrix = inverseTranspose(mat3(s_modelMatrix));
-    send(s_normalMatrix, "normalMatrix");
+    set("normalMatrix", s_normalMatrix);
   }
 
-  void Shader::transformEnd()
+  void Shader::transformEnd() const
   {
     s_modelMatrix = mat4(1.0);
     s_normalMatrix = mat3(1.0);
 
-    send(s_modelMatrix, "modelMatrix");
-    send(s_normalMatrix, "normalMatrix");
-  }
-
-  void Shader::sendAtUse(glm::mat4* value, string const &variable)
-  {
-    d_mat4List.push_back(value);
-    d_mat4Names.push_back(uniform(variable));
-  }
-
-  void Shader::sendAtUse(glm::mat3* value, string const &variable)
-  {
-    d_mat3List.push_back(value);
-    d_mat3Names.push_back(uniform(variable));
-  }
-
-  void Shader::sendAtUse(glm::vec4* value, string const &variable)
-  {
-    d_vec4List.push_back(value);
-    d_vec4Names.push_back(uniform(variable));
-  }
-
-  void Shader::sendAtUse(glm::vec3* value, string const &variable)
-  {
-    d_vec3List.push_back(value);
-    d_vec3Names.push_back(uniform(variable));
-  }
-
-  void Shader::sendAtUse(glm::vec2* value, string const &variable)
-  {
-    d_vec2List.push_back(value);
-    d_vec2Names.push_back(uniform(variable));
-  }
-
-  void Shader::sendAtUse(int* value, string const &variable)
-  {
-    d_intList.push_back(value);
-    d_intNames.push_back(uniform(variable));
-  }
-
-  void Shader::sendAtUse(Light* light)
-  {
-    d_lightList.push_back(light);
-  }
-
-  void Shader::sendAtUse(Camera* camera)
-  {
-    d_cameraList.push_back(camera);
+    set("modelMatrix", s_modelMatrix);
+    set("normalMatrix", s_normalMatrix);
   }
 
 //
 // Using GLint
 //
-  void Shader::send(glm::mat4 const &value, GLint variable) const
+  void Shader::set(GLint variable, glm::mat4 const &value) const
   {
     glUniformMatrix4fv(variable, 1, GL_FALSE, &value[0][0]);
   }
 
-  void Shader::send(glm::mat3 const &value, GLint variable) const
+  void Shader::set(GLint variable, glm::mat3 const &value) const
   {
     glUniformMatrix3fv(variable, 1, GL_FALSE, &value[0][0]);
   }
 
-  void Shader::send(glm::vec3 const &value, GLint variable) const
+  void Shader::set(GLint variable, glm::vec3 const &value) const
   {
     glUniform3fv(variable, 1, &value[0]);
   }
 
-  void Shader::send(glm::vec2 const &value, GLint variable) const
+  void Shader::set(GLint variable, glm::vec2 const &value) const
   {
     glUniform2fv(variable, 1, &value[0]);
   }
 
-  void Shader::send(glm::vec4 const &value, GLint variable) const
+  void Shader::set(GLint variable, glm::vec4 const &value) const
   {
     glUniform4fv(variable, 1, &value[0]);
   }
 
-  void Shader::send(float value, GLint variable) const
+  void Shader::set(GLint variable, float value) const
   {
     glUniform1f(variable, value);
   }
 
-  void Shader::send(int value, GLint variable) const
+  void Shader::set(GLint variable, int value) const
   {
     glUniform1i(variable, value);
   }

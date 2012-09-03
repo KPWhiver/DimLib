@@ -52,7 +52,7 @@ namespace dim
 
 		~Window();
 
-		void operator=(Window const &other) = delete;
+		Window &operator=(Window const &other) = delete;
 
 		size_t height() const;
 		size_t width() const;

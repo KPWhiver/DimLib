@@ -22,7 +22,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <vector>
 
 #include "dim/drawstate.hpp"
 #include "dim/onepair.hpp"
@@ -32,7 +31,7 @@ namespace dim
 
   class Drawable
   {
-      friend class DrawMap;
+      friend class SceneGraph;
       template <typename... RefType>
       friend class DrawableWrapper__;
       friend std::ostream &operator<<(std::ostream &out, Drawable const &object);
@@ -57,9 +56,9 @@ namespace dim
 
       glm::vec3 const &rot() const;
 
-      std::vector<DrawState> const &drawStates() const;
+      DrawState const &drawState() const;
 
-      void draw(DrawState const &state);
+      void draw();
 
       virtual ~Drawable();
 
@@ -69,8 +68,8 @@ namespace dim
     private:
       Id d_id;
 
-      virtual void v_draw(DrawState const &state);
-      virtual std::vector<DrawState> const &v_drawStates() const = 0;
+      virtual void v_draw();
+      virtual DrawState const &v_drawState() const = 0;
       virtual void v_insert(std::ostream &out) const;
       virtual void v_extract(std::istream &out);
 

@@ -22,69 +22,127 @@
 
 //#include <vector>
 #include <string>
+#include <limits>
+#include <vector>
 
 #include "dim/buffer.hpp"
 
 namespace dim
 {
+  class Attribute
+  {
+      std::string d_name;
+      GLuint d_id;
 
-class Mesh
-{   
-  //GLuint d_interleavedVBO;
-  //GLuint d_attribVBO[3];
-  size_t d_attribSize[3];
-  //GLuint d_indexVBO;
-  Buffer<GLfloat> d_interleavedVBO;
-  Buffer<GLfloat> d_attribVBO[3];
-  Buffer<GLushort> d_indexVBO;
-  size_t d_numVertices;
-  size_t d_numTriangles;
+    public:
+      enum Name: GLint
+      {
+        vertex = 7,
+        normal = 8,
+        texCoord = 9,
+        binormal = 10,
+        tangent = 11,
+        instance = 12,
+        unknown = -1,
+      };
 
-  //GLuint d_instancingVBO;
-  Buffer<GLfloat> d_instancingVBO;
-  GLfloat* d_instancingArray;
-  size_t d_maxLocations;
-  
-  static bool s_bindless;
-  static bool s_instanced;
-  static GLuint s_bound;
-  static GLuint s_boundElem;
+      enum Format: uint
+      {
+        vec1 = 11,
+        vec2 = 12,
+        vec3 = 13,
+        vec4 = 14,
+        mat2 = 22,
+        mat2x3 = 23,
+        mat2x4 = 24,
+        mat3x2 = 32,
+        mat3 = 33,
+        mat3x4 = 34,
+        mat4x2 = 42,
+        mat4x3 = 43,
+        mat4 = 44,
+      };
 
-public:
-  Mesh(std::string filename);
-  
-  Mesh(GLfloat* buffer, std::string const &format, size_t vertices);
-  void add(GLfloat* buffer, std::string const &format, size_t vertices);
-  
-  void addElem(GLushort* buffer, size_t triangles);
-  void addInst(GLfloat* buffer, size_t locations);
+      Attribute(GLuint id, Format size);
+      Attribute(std::string const &name, Format size);
+      Attribute(Name name, Format size);
 
-  Buffer<GLfloat> *buffer();
-  Buffer<GLushort> &elementBuffer();
-  Buffer<GLfloat> &instanceBuffer();
+      GLint id() const;
+      GLint location() const;
+      Format format() const;
+      uint size() const;
 
-  //void update(GLfloat* buffer);
-  //void updateElem(GLushort* buffer);
-  //void updateInst(GLfloat* buffer, size_t locations);
+    private:
+      Format d_format;
 
-  //void* get();
+  };
 
-  void bind() const;
-  void unbind() const;
-  void bindElem() const;
-  void unbindElem() const;
-  void bindInst() const;
+  class Mesh
+  {
+      Buffer<GLfloat> d_interleavedVBO;
+      Buffer<GLushort> d_indexVBO;
+      size_t d_numOfVertices;
+      size_t d_numOfTriangles;
 
-  void draw() const;
-  void drawInst(size_t amount) const;
+      Buffer<GLfloat> d_instancingVBO;
+      size_t d_maxLocations;
 
-  static void initialize();
+      static bool s_bindless;
+      static bool s_instanced;
+      static GLuint s_bound;
+      static GLuint s_boundElem;
 
-  GLuint id() const;
+      static bool s_initialized;
 
-private:
-  size_t readFormatString(std::string const &format);
-};
+    public:
+      enum Shape: uint
+      {
+        triangle,
+        line,
+        point,
+      };
+      static size_t const interleaved = std::numeric_limits<size_t>::max();
+
+      Mesh(std::string filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
+           Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
+
+      Mesh(GLfloat* buffer, std::vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx);
+      void addBuffer(GLfloat* buffer, size_t idx);
+
+      void addElementBuffer(GLushort* buffer, size_t numOfPolygons);
+      void addInstanceBuffer(GLfloat* buffer, size_t numOfLocations, Attribute const &attrib);
+
+      Buffer<GLfloat> const &buffer();
+      Buffer<GLushort> const &elementBuffer();
+      Buffer<GLfloat> const &instanceBuffer();
+
+      void updateBuffer(GLfloat* buffer, size_t idx);
+      void updateElementBuffer(GLushort* buffer);
+      void updateInstanceBuffer(GLfloat* buffer, size_t locations);
+
+      void bind() const;
+      void unbind() const;
+      void bindElement() const;
+      void unbindElement() const;
+      //void bindInstance() const;
+
+      void draw() const;
+      void drawInstanced(size_t numOfPolygons) const;
+
+      GLuint id() const;
+
+    private:
+      Shape d_shape;
+      std::vector<Attribute> d_attributes;
+      Attribute d_instanceAttribute;
+
+      static void initialize();
+      void updateBuffer(GLfloat *target, GLfloat *source, GLuint varNumOfElements, size_t idx);
+
+      uint numOfElements() const;
+
+      //size_t readFormatString(std::string const &format);
+  };
 
 }
 

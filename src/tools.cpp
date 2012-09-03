@@ -25,7 +25,7 @@ namespace dim
   void drawFullscreenQuad()
   {
     static GLfloat data[6 * 2] {-1, -1, 1, -1, -1, 1, 1, 1, -1, 1, 1, -1};
-    static Mesh quad(data, "V2", 6);
+    static Mesh quad(data, {{Attribute::vertex, Attribute::vec2}}, 6, Mesh::triangle, 0);
     quad.draw();
   }
 }

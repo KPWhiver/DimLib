@@ -20,7 +20,6 @@
 #include <IL/il.h>
 
 #include "dim/texture.hpp"
-#include "dim/shader.hpp"
 
 using namespace glm;
 using namespace std;

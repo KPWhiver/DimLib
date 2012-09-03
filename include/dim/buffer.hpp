@@ -27,6 +27,17 @@
 
 namespace dim
 {
+  enum class BufferType
+  {
+    texture = GL_TEXTURE_BUFFER,
+    element = GL_ELEMENT_ARRAY_BUFFER,
+    data = GL_ARRAY_BUFFER,
+    uniform = GL_UNIFORM_BUFFER,
+    transformFeedback = GL_TRANSFORM_FEEDBACK_BUFFER,
+  //pixelRead
+  //pixelWrite
+  };
+
   template<typename Type>
   class Buffer
   {
@@ -35,32 +46,51 @@ namespace dim
 
     public:
 
-      enum Mode
+      enum Mode: GLuint
       {
         texture = GL_TEXTURE_BUFFER,
         element = GL_ELEMENT_ARRAY_BUFFER,
         data = GL_ARRAY_BUFFER,
         uniform = GL_UNIFORM_BUFFER,
+        transformFeedback = GL_TRANSFORM_FEEDBACK_BUFFER,
       //pixelRead
       //pixelWrite
       };
-      Buffer(Buffer::Mode mode, size_t size, Type* data);
 
-      void bind() const;
-      void update(size_t bytes, Type* data);
+      enum Access: GLuint
+      {
+        read = GL_READ_ONLY,
+        write = GL_WRITE_ONLY,
+        readWrite = GL_READ_WRITE,
+      };
+
+      enum Usage: GLuint
+      {
+        constant = GL_STATIC_DRAW,
+        dynamic = GL_DYNAMIC_DRAW,
+        stream = GL_STREAM_DRAW,
+      };
+
+      Buffer(size_t size, Type* buffer);
+
+      void bind(Mode mode) const;
+      void update(size_t bytes, Type* buffer);
+
+      Type* map(Access access);
+      bool unmap();
 
       GLuint id() const;
 
     private:
-      Mode d_bufferType;
+      Usage d_usage;
   };
 
   template<typename Type>
-  Buffer<Type>::Buffer(Buffer::Mode mode, size_t size, Type* data)
+  Buffer<Type>::Buffer(size_t size, Type* buffer)
       :
           d_id(new GLuint, [](GLuint *ptr)
           { glDeleteBuffers(1, ptr);}),
-          d_bufferType(mode)
+          d_usage(constant)
   {
     *d_id = 0;
 
@@ -68,8 +98,8 @@ namespace dim
       return;
 
     glGenBuffers(1, d_id.get());
-    glBindBuffer(d_bufferType, *d_id);
-    glBufferData(d_bufferType, size * sizeof(Type), data, GL_STATIC_DRAW);
+    glBindBuffer(data, id());
+    glBufferData(data, size * sizeof(Type), buffer, d_usage);
   }
 
   template<typename Type>
@@ -79,23 +109,47 @@ namespace dim
   }
 
   template<typename Type>
-  void Buffer<Type>::bind() const
+  void Buffer<Type>::bind(Mode mode) const
   {
-    if(*d_id == 0)
+    if(id() == 0)
       return;
 
-    glBindBuffer(d_bufferType, *d_id);
+    glBindBuffer(mode, id());
   }
 
   template<typename Type>
-  void Buffer<Type>::update(size_t size, Type *data)
+  void Buffer<Type>::update(size_t size, Type *buffer)
   {
-    if(*d_id == 0)
+    if(id() == 0)
       glGenBuffers(1, d_id.get());
 
-    glBindBuffer(d_bufferType, *d_id);
-    glBufferData(d_bufferType, size * sizeof(Type), 0, GL_DYNAMIC_DRAW);
-    glBufferSubData(d_bufferType, 0, size * sizeof(Type), data);
+    glBindBuffer(data, id());
+    glBufferData(data, size * sizeof(Type), 0, GL_DYNAMIC_DRAW);
+    glBufferSubData(data, 0, size * sizeof(Type), buffer);
+  }
+
+  template<typename Type>
+  Type* Buffer<Type>::map(Access access)
+  {
+    if(id() == 0)
+      return 0;
+
+    glBindBuffer(data, id());
+    Type* ptr = reinterpret_cast<GLfloat*>(glMapBuffer(data, access));
+    if(ptr == 0)
+      log(__FILE__, __LINE__, LogType::warning, "OpenGL failed to map buffer");
+
+    return ptr;
+  }
+
+  template<typename Type>
+  bool Buffer<Type>::unmap()
+  {
+    if(id() == 0)
+      return true;
+
+    glBindBuffer(data, id());
+    return glUnmapBuffer(data);
   }
 
 } /* namespace dim */

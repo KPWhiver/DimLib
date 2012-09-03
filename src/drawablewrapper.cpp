@@ -124,15 +124,15 @@ namespace dim
     return d_ownerId;
   }
 
-  std::string const &DrawableWrapper__<Drawable>::filename() const
+  /*std::string const &DrawableWrapper__<Drawable>::filename() const
   {
     return d_filename;
-  }
+  }*/
 
-  void DrawableWrapper__<Drawable>::setFilename(std::string const &filename)
+  /*void DrawableWrapper__<Drawable>::setFilename(std::string const &filename)
   {
     d_filename = filename;
-  }
+  }*/
 
   bool DrawableWrapper__<Drawable>::changed() const
   {
