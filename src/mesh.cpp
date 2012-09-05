@@ -278,9 +278,9 @@ namespace dim
   {
     uint varNumOfElements = numOfElements();
 
-    if(idx == interleaved)
+    if(idx == interleaved || (idx == 0 && d_attributes.size() == 1))
     {
-      if(d_interleavedVBO.id() == 0)
+      if(d_interleavedVBO.size() == 0)
         d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, buffer);
       else
       {
@@ -291,7 +291,7 @@ namespace dim
     else
     {
       // Make a new buffer
-      if(d_interleavedVBO.id() == 0)
+      if(d_interleavedVBO.size() == 0)
       {
         GLfloat *array = new GLfloat[d_numOfVertices * varNumOfElements];
 
@@ -312,7 +312,7 @@ namespace dim
   {
     uint varNumOfElements = numOfElements();
 
-    if(d_interleavedVBO.id() == 0)
+    if(d_interleavedVBO.size() == 0)
     {
       log(__FILE__, __LINE__, LogType::error, "Can't update a Mesh if no buffers have been added yet");
       return;
@@ -354,14 +354,13 @@ namespace dim
         arrayIdxOffset += size;
       }
     }
-    cerr << "\n\n\n";
   }
 
   void Mesh::addElementBuffer(GLushort* buffer, size_t numOfTriangles)
   {
     d_numOfTriangles = numOfTriangles;
 
-    if(d_indexVBO.id() != 0)
+    if(d_indexVBO.size() != 0)
     {
       log(__FILE__, __LINE__, LogType::error, "Can't add an element buffer, it's has already been added");
       return;
@@ -372,7 +371,7 @@ namespace dim
 
   void Mesh::addInstanceBuffer(GLfloat* buffer, size_t locations, Attribute const &attrib)
   {
-    if(d_instancingVBO.id() != 0)
+    if(d_instancingVBO.size() != 0)
     {
       log(__FILE__, __LINE__, LogType::error, "Can't add an instance buffer, it's has already been added");
       return;
@@ -386,7 +385,7 @@ namespace dim
 
   void Mesh::updateElementBuffer(GLushort* buffer)
   {
-    if(d_indexVBO.id() != 0)
+    if(d_indexVBO.size() == 0)
     {
       log(__FILE__, __LINE__, LogType::error, "Can't update a element buffer if no element buffers have been added yet");
       return;
@@ -397,7 +396,7 @@ namespace dim
 
   void Mesh::updateInstanceBuffer(GLfloat* buffer, size_t locations)
   {
-    if(d_instancingVBO.id() != 0)
+    if(d_instancingVBO.size() == 0)
     {
       log(__FILE__, __LINE__, LogType::error, "Can't update a instance buffer if no instance buffers have been added yet");
       return;
@@ -452,6 +451,8 @@ namespace dim
     {
       glVertexAttribPointer(d_attributes[idx].id(), d_attributes[idx].size(), GL_FLOAT, GL_FALSE, varNumOfElements * sizeof(GLfloat),
                             reinterpret_cast<void*>(offset * sizeof(GLfloat)));
+
+      cerr << d_attributes[idx].id() << ' ' << d_attributes[idx].size() << '\n';
       offset += d_attributes[idx].size();
     }
 
@@ -491,7 +492,7 @@ namespace dim
       s_bound = 0;
     }
 
-    if(d_indexVBO.id() != 0)
+    if(d_indexVBO.size() != 0)
     {
       if(s_boundElem == 0)
       {
@@ -526,7 +527,7 @@ namespace dim
     d_instancingVBO.bind(Buffer<GLfloat>::data);
     glVertexAttribPointer(d_instanceAttribute.id(), 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glVertexAttribDivisor(d_instanceAttribute.id(), 1);
-    if(d_indexVBO.id() != 0)
+    if(d_indexVBO.size() != 0)
     {
       if(s_boundElem == 0)
       {

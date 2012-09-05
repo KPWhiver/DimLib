@@ -19,181 +19,160 @@
 
 namespace dim
 {
+namespace internal
+{
+  /* constructors */
+
+  template<typename RefType>
+  DrawableWrapper<RefType>::DrawableWrapper(size_t gridSize, size_t key)
+      :
+        DrawableWrapper<Drawable>(gridSize, key)
+  {
+    s_map[key] = this;
+  }
+
+  template<typename RefType>
+  DrawableWrapper<RefType>::~DrawableWrapper()
+  {
+    s_map.remove(ownerId());
+  }
 
   /* static access */
   
   template <typename RefType>
-  DrawableWrapper__<RefType> &DrawableWrapper__<RefType>::get(size_t key)
+  DrawableWrapper<RefType> *DrawableWrapper<RefType>::get(size_t key)
   {
-    return s_map[key];
+    auto iter = s_map.find(key);
+    if(iter != s_map.end())
+      return iter.second;
+
+    return 0;
   }
-  
+
   template <typename RefType>
-  void DrawableWrapper__<RefType>::remove(size_t key)
+  bool DrawableWrapper<RefType>::isPresent(size_t key)
   {
-    s_map.remove(key);
-  }
-  
-  template <typename RefType>
-  void DrawableWrapper__<RefType>::copy(size_t source, size_t dest)
-  {
-    s_map[dest] = s_map[source];
-  }
- 
-  template <typename RefType>
-  void DrawableWrapper__<RefType>::move(size_t source, size_t dest)
-  {
-    s_map[dest] = std::move(s_map[source]);
-    s_map.remove(source);
-  }
- 
-  template <typename RefType>
-  bool DrawableWrapper__<RefType>::isPresent(size_t key)
-  {
-    if(s_map.get(key) != s_map.end())
+    if(s_map.find(key) != s_map.end())
       return true;
       
     return false;
   }
-
+  
   template <typename RefType>
-  void DrawableWrapper__<RefType>::v_remove() const
+  void DrawableWrapper<RefType>::v_copy(size_t dest) const
   {
-    remove(ownerId());
+    s_map[dest] = this;
   }
   
   template <typename RefType>
-  void DrawableWrapper__<RefType>::v_copy(size_t dest) const
+  DrawableWrapper<Drawable>* DrawableWrapper<RefType>::v_clone() const
   {
-    copy(ownerId(), dest);
-  }
- 
-  template <typename RefType>
-  void DrawableWrapper__<RefType>::v_move(size_t dest) const
-  {
-    move(ownerId(), dest);
-  }
-  
-  template <typename RefType>
-  DrawableWrapper__<Drawable>* DrawableWrapper__<RefType>::v_clone() const
-  {
-    return new DrawableWrapper__<RefType>(*this);
+    return new DrawableWrapper<RefType>(*this);
   }
 
   /* iterators */
 
   template <typename RefType>
-  typename DrawableWrapper__<RefType>::iterator DrawableWrapper__<RefType>::begin()
+  typename DrawableWrapper<RefType>::iterator DrawableWrapper<RefType>::begin()
   {
-    for(auto mapPart : d_map)
+    for(auto mapPart = d_map.begin(); mapPart != d_map.end(); ++mapPart)
     {
-      for(RefType &drawable : mapPart.second)
-      {
-        if(DrawableWrapper__<RefType>::iterator(drawable.d_id, this) != end())
-          return typename DrawableWrapper__<RefType>::iterator(drawable.d_id, this);
-      }
+      if(mapPart->second.size() != 0)
+        return typename DrawableWrapper<RefType>::iterator(std::make_pair(0, mapPart), this);
     }
 
     return end();
   }
 
   template <typename RefType>
-  typename DrawableWrapper__<RefType>::iterator DrawableWrapper__<RefType>::end()
+  typename DrawableWrapper<RefType>::iterator DrawableWrapper<RefType>::end()
   {
-    return typename DrawableWrapper__<RefType>::iterator(typename DrawableWrapper__<RefType>::IdType(std::numeric_limits<size_t>::max(), Drawable::Key()), 0);
+    return typename DrawableWrapper<RefType>::iterator(std::make_pair(std::numeric_limits<size_t>::max(), d_map.end()), this);
   }
 
   template <typename RefType>
-  typename DrawableWrapper__<RefType>::const_iterator DrawableWrapper__<RefType>::begin() const
+  typename DrawableWrapper<RefType>::const_iterator DrawableWrapper<RefType>::begin() const
   {
-   for(auto mapPart : d_map)
+    for(auto mapPart = d_map.begin(); mapPart != d_map.end(); ++mapPart)
     {
-      for(RefType &drawable : mapPart.second)
-      {
-        if(DrawableWrapper__<RefType>::const_iterator(drawable.d_id, this) != end())
-          return typename DrawableWrapper__<RefType>::const_iterator(drawable.d_id, this);
-      }
+      if(mapPart->second.size() != 0)
+        return typename DrawableWrapper<RefType>::const_iterator(std::make_pair(0, mapPart), this);
     }
 
     return end();
   }
 
   template <typename RefType>
-  typename DrawableWrapper__<RefType>::const_iterator DrawableWrapper__<RefType>::end() const
+  typename DrawableWrapper<RefType>::const_iterator DrawableWrapper<RefType>::end() const
   {
-    return typename DrawableWrapper__<RefType>::const_iterator(typename DrawableWrapper__<RefType>::IdType(std::numeric_limits<size_t>::max(), Drawable::Key()), 0);
-  }
-
-  template <typename RefType>
-  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<RefType>::v_begin()
-  {
-    return DrawableWrapper__<Drawable>::iterator(begin().id(), this);
-  }
-  template <typename RefType>
-  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<RefType>::v_end()
-  {
-    return DrawableWrapper__<Drawable>::iterator(end().id(), 0);
-  }
-  template <typename RefType>
-  DrawableWrapper__<Drawable>::const_iterator DrawableWrapper__<RefType>::v_begin() const
-  {
-    return DrawableWrapper__<Drawable>::const_iterator(begin().id(), this);
-  }
-  template <typename RefType>
-  DrawableWrapper__<Drawable>::const_iterator DrawableWrapper__<RefType>::v_end() const
-  {
-    return DrawableWrapper__<Drawable>::const_iterator(end().id(), 0);
+    return typename DrawableWrapper<RefType>::const_iterator(std::make_pair(std::numeric_limits<size_t>::max(), d_map.end()), this);
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::IdType DrawableWrapper__<RefType>::v_nextId(
-      typename DrawableWrapper__<RefType>::IdType const &id) const
+  typename DrawableWrapper<RefType>::IterType DrawableWrapper<RefType>::increment(typename DrawableWrapper<RefType>::IterType const &iter) const
   {
-    size_t start = id.first;
+    size_t next = iter.first + 1;
 
-    for(auto mapPart = d_map.find(id.second); mapPart != d_map.end(); ++mapPart)
+    for(auto mapPart = iter.second; mapPart != d_map.end(); ++mapPart)
     {
-      for(size_t idx = start; idx != mapPart->second.size(); ++idx)
-      {
-        if(mapPart->second[idx].d_id != end().id())
-          return std::make_pair(idx, mapPart->first);
-      }
-      start = 0;
+      if(next < mapPart->second.size())
+        return std::make_pair(next, mapPart);
+
+      next = 0;
     }
-    return end().id();
+
+    return end().iter();
   }
 
   template<typename RefType>
-  RefType &DrawableWrapper__<RefType>::getFromId(typename DrawableWrapper__<RefType>::IdType const &id)
+  RefType &DrawableWrapper<RefType>::dereference(typename DrawableWrapper<RefType>::IterType const &iter)
   {
-    auto mapPart = d_map.find(id.second);
-    return mapPart->second[id.first];
+    return iter.second->second[iter.first];
   }
 
   template<typename RefType>
-  RefType const &DrawableWrapper__<RefType>::getFromId(typename DrawableWrapper__<RefType>::IdType const &id) const
+  RefType const &DrawableWrapper<RefType>::dereference(typename DrawableWrapper<RefType>::IterType const &iter) const
   {
-    auto mapPart = d_map.find(id.second);
-    return mapPart->second[id.first];
+    return iter.second->second[iter.first];
+  }
+
+  template <typename RefType>
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<RefType>::v_begin()
+  {
+    IterType &ref = begin().iter();
+    return DrawableWrapper<Drawable>::iterator(std::make_pair(ref.first, ref.second->first), this);
+  }
+  template <typename RefType>
+  DrawableWrapper<Drawable>::const_iterator DrawableWrapper<RefType>::v_begin() const
+  {
+    IterType const &ref = begin().iter();
+    return DrawableWrapper<Drawable>::const_iterator(std::make_pair(ref.first, ref.second->first), this);
   }
 
   template<typename RefType>
-  Drawable &DrawableWrapper__<RefType>::v_getFromId(typename DrawableWrapper__<RefType>::IdType const &id)
+  DrawableWrapper<Drawable>::IterType DrawableWrapper<RefType>::v_increment(DrawableWrapper<Drawable>::IterType const &iter) const
   {
-    return getFromId(id);
+    IterType const val = increment(std::make_pair(iter.first, d_map.find(iter.second)));
+    return std::make_pair(val.first, val.second->first);
   }
 
   template<typename RefType>
-  Drawable const &DrawableWrapper__<RefType>::v_getFromId(typename DrawableWrapper__<RefType>::IdType const &id) const
+  Drawable &DrawableWrapper<RefType>::v_dereference(DrawableWrapper<Drawable>::IterType const &iter)
   {
-    return getFromId(id);
+    return dereference(std::make_pair(iter.first, d_map.find(iter.second)));
+  }
+
+  template<typename RefType>
+  Drawable const &DrawableWrapper<RefType>::v_dereference(DrawableWrapper<Drawable>::IterType const &iter) const
+  {
+    return dereference(std::make_pair(iter.first, d_map.find(iter.second)));
   }
 
   
   /* private functions */
 
   template <typename RefType>
-  size_t DrawableWrapper__<RefType>::count() const
+  size_t DrawableWrapper<RefType>::count() const
   {
     size_t count = 0;
     for(auto mapPart : d_map)
@@ -202,81 +181,55 @@ namespace dim
     return count;
   }
   
-  /* constructors */
-
-  template<typename RefType>
-  DrawableWrapper__<RefType>::DrawableWrapper__(size_t gridSize, size_t key)
-      :
-        DrawableWrapper__<Drawable>(gridSize, key)
-  {
-    //if(gridSize != 0)
-    //  instance() = *this;
-  }
-  
-  template<typename RefType>
-  DrawableWrapper__<RefType>::~DrawableWrapper__()
-  {
-    remove(ownerId());
-  }
-
   /* regular functions */
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::iterator DrawableWrapper__<RefType>::add(bool changing, RefType const &object)
+  typename DrawableWrapper<RefType>::iterator DrawableWrapper<RefType>::add(bool changing, RefType *object)
   {
     int xloc, zloc;
-    xloc = object.coor().x / gridSize();
-    zloc = object.coor().z / gridSize();
+    xloc = object->coor().x / gridSize();
+    zloc = object->coor().z / gridSize();
   
     if(changing)
       setChanged(true);
 
-    std::vector<RefType> &list = d_map[Drawable::Key(xloc, zloc)];
+    std::vector<CopyPtr<RefType*>> &list = d_map[Drawable::Key(xloc, zloc)];
 
-    std::pair<size_t, Drawable::Key> id(list.size(), Drawable::Key(xloc, zloc));
+    //std::pair<size_t, Drawable::Key> id(list.size(), Drawable::Key(xloc, zloc));
 
     //object.d_id = id;
-    RefType tmp(object);
-    tmp.d_id = id;
+    //RefType tmp(object);
+    //tmp.d_id = id;
 
-    list.push_back(tmp);
-    return typename DrawableWrapper__<RefType>::iterator(id, this);
+    auto iter = lower_bound(list.begin(), list.end(), object, [](Drawable const *lhs, Drawable const *rhs)
+                            {
+                              return lhs->drawState() < rhs->drawState();
+                            });
+
+    iter = list.insert(iter, object);
+
+    // TODO improve efficiency
+    size_t idx = 0;
+    for(auto iterate = list.begin(); iterate != list.end(); ++iterate, ++idx)
+    {
+      if(iterate == iter)
+        break;
+    }
+
+    return typename DrawableWrapper<RefType>::iterator(idx, d_map.find(Drawable::Key(xloc, zloc)));
   }
 
-  /*template<typename RefType>
-  void DrawableWrapper__<RefType>::load(std::string const &strFilename)
-  {
-    setFilename(strFilename);
-
-    std::ifstream file(filename().c_str());
-    if(file.is_open() == false)
-      throw std::runtime_error("Error opening " + filename());
-    else
-    {
-      size_t numItems;
-      file >> numItems;
-      for(size_t idx = 0; idx != numItems; ++idx)
-      {
-        RefType ref;
-        file >> ref;
-        file.ignore();
-        add(false, ref);
-      }
-      file.close();
-    }
-  }*/
-
   template<typename RefType>
-  void DrawableWrapper__<RefType>::v_save()
+  void DrawableWrapper<RefType>::v_save(std::string const &filename)
   {
     if(changed() == false)
       return;
 
-    std::ofstream file(filename().c_str(), std::fstream::trunc);
+    std::ofstream file(filename.c_str(), std::fstream::trunc);
     if(file.is_open() == false)
     {
       file.close();
-      throw std::runtime_error("Error opening " + filename());
+      log(__FILE__, __LINE__, LogType::error, "Failed to load " + filename);
     }
 
     file << count() << '\n';
@@ -290,68 +243,44 @@ namespace dim
   }
 
   template<typename RefType>
-  void DrawableWrapper__<RefType>::v_reset()
+  void DrawableWrapper<RefType>::v_clear()
   {
-    if(changed() == false)
-      return;
-
     d_map.clear();
-    load(filename());
   }
 
   template<typename RefType>
-  void DrawableWrapper__<RefType>::v_draw(DrawState const &state, DrawableWrapper__<Drawable>::iterator &objSelect)
+  void DrawableWrapper<RefType>::v_draw(DrawState const &state)
   {
-    bool found = false;
-
-    for(DrawState const &drawState : RefType().drawStates())
-    {
-      if(drawState == state)
-      {
-        found = true;
-        break;
-      }
-    }
-
-    if(found == false)
-      return;
-
     for(auto mapPart : d_map)
     {
+      auto drawable = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](Drawable const *lhs, DrawState const &rhs)
+                              {
+                                return lhs->drawState() < rhs;
+                              });
 
-      for(RefType &drawable : mapPart.second)
-      {
-        /* The drawing */
-        if(drawable.id().first == objSelect.id().first && drawable.id().second == objSelect.id().second)
-          Shader::active().set("in_lighting", 0);
-
-        drawable.draw(state);
-
-        if(drawable.id().first == objSelect.id().first && drawable.id().second == objSelect.id().second)
-          Shader::active().set("in_lighting", 1);
-        /* ... */
-      }
+      for(; drawable->drawState() == state; ++drawable)
+        drawable->draw();
     }
   }
 
   template<typename RefType>
-  void DrawableWrapper__<RefType>::v_del(DrawableWrapper__<Drawable>::iterator &object)
+  void DrawableWrapper<RefType>::v_del(DrawableWrapper<Drawable>::iterator &object)
   {
     setChanged(true);
-    object->d_id = end().id();
+    auto mapPart = d_map.find(object.iter().second);
+    mapPart->second.remove(mapPart->second.begin() + object.iter().first);
   }
 
   template<typename RefType>
-  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<RefType>::v_find(float x, float z)
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<RefType>::v_find(float x, float z)
   {
-    return DrawableWrapper__<Drawable>::iterator(find(x, z).id(), this);
+    auto iter = find(x, z);
+    return DrawableWrapper<Drawable>::iterator(std::make_pair(iter->first, iter->second->first), this);
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::iterator DrawableWrapper__<RefType>::find(float x, float z)
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<RefType>::v_find(DrawState const &state, float x, float z)
   {
-
-
     int xloc, zloc;
     xloc = x / gridSize();
     zloc = z / gridSize();
@@ -360,13 +289,40 @@ namespace dim
     if(mapPart == d_map.end())
       return end();
 
-    for(RefType &drawable : mapPart->second)
-    {
-      glm::vec3 coor = drawable.coor();
+    auto drawable = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](Drawable const *lhs, DrawState const &rhs)
+                            {
+                              return lhs->drawState() < rhs;
+                            });
 
-      if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < drawable.d_radius)
-        return typename DrawableWrapper__<RefType>::iterator(drawable.d_id, this);
+    for(size_t idx = 0; drawable->drawState() == state; ++drawable, ++idx)
+    {
+      glm::vec3 coor = mapPart->second[idx].coor();
+
+      if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < mapPart->second[idx].d_radius * mapPart->second[idx].d_radius)
+        return typename DrawableWrapper<RefType>::iterator(make_pair(idx, mapPart->first), this);
     }
     return end();
   }
+
+  template<typename RefType>
+  typename DrawableWrapper<RefType>::iterator DrawableWrapper<RefType>::find(float x, float z)
+  {
+    int xloc, zloc;
+    xloc = x / gridSize();
+    zloc = z / gridSize();
+
+    auto mapPart = d_map.find(Drawable::Key(xloc, zloc));
+    if(mapPart == d_map.end())
+      return end();
+
+    for(size_t idx = 0; idx != mapPart->second.size(); ++idx)
+    {
+      glm::vec3 coor = mapPart->second[idx].coor();
+
+      if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < mapPart->second[idx].d_radius * mapPart->second[idx].d_radius)
+        return typename DrawableWrapper<RefType>::iterator(make_pair(idx, mapPart), this);
+    }
+    return end();
+  }
+}
 }

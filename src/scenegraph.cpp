@@ -30,11 +30,11 @@ using namespace glm;
 
 namespace dim
 {
-
+  using namespace internal;
   /* constructors */
   
   SceneGraph::SceneGraph(size_t gridSize)
-      : d_gridSize(gridSize), d_objSelect(end())
+      : d_gridSize(gridSize)
   {
   }
 
@@ -42,22 +42,20 @@ namespace dim
   :
       d_drawStateList(other.d_drawStateList),
       d_drawableWrappers(other.d_drawableWrappers),
-      d_gridSize(other.d_gridSize),
-      d_objSelect(other.d_objSelect)
+      d_gridSize(other.d_gridSize)
   {
     for(auto const &element: d_drawableWrappers)
-      element->copy(reinterpret_cast<size_t>(this));
+      element->copy(key());
   }
 
   SceneGraph::SceneGraph(SceneGraph &&tmp)
   :
       d_drawStateList(move(tmp.d_drawStateList)),
       d_drawableWrappers(move(tmp.d_drawableWrappers)),
-      d_gridSize(move(tmp.d_gridSize)),
-      d_objSelect(move(tmp.d_objSelect))
+      d_gridSize(move(tmp.d_gridSize))
   {
     for(auto const &element: d_drawableWrappers)
-      element->move(reinterpret_cast<size_t>(this));
+      element->copy(key());
   }
 
   SceneGraph &SceneGraph::operator=(SceneGraph const &other)
@@ -65,10 +63,9 @@ namespace dim
     d_drawStateList = other.d_drawStateList;
     d_drawableWrappers = other.d_drawableWrappers;
     d_gridSize = other.d_gridSize;
-    d_objSelect = other.d_objSelect;
 
     for(auto const &element: d_drawableWrappers)
-      element->copy(reinterpret_cast<size_t>(this));
+      element->copy(key());
 
     return *this;
   }
@@ -78,10 +75,9 @@ namespace dim
     d_drawStateList = move(tmp.d_drawStateList);
     d_drawableWrappers = move(tmp.d_drawableWrappers);
     d_gridSize = move(tmp.d_gridSize);
-    d_objSelect = move(tmp.d_objSelect);
 
     for(auto const &element: d_drawableWrappers)
-      element->move(reinterpret_cast<size_t>(this));
+      element->copy(key());
 
     return *this;
   }
@@ -92,11 +88,10 @@ namespace dim
   {
     for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
     {
-      DrawableWrapper__<Drawable>::iterator iter = d_drawableWrappers[idx]->begin();
+      DrawableWrapper<Drawable>::iterator iter = d_drawableWrappers[idx]->begin();
 
       if(iter != d_drawableWrappers[idx]->end())
-        return iterator(make_pair(idx, iter), this);
-
+        return iterator(IterType(iter, idx), this);
     }
 
     return end();
@@ -104,23 +99,20 @@ namespace dim
 
   SceneGraph::iterator SceneGraph::end()
   {
-    return iterator(
-               make_pair(
-                   0,
-                   DrawableWrapper__<Drawable>::iterator(
-                       DrawableWrapper__<Drawable>::IdType(std::numeric_limits<size_t>::max(), Drawable::Key())
-                       , 0))
-               , 0);
+    if(d_drawableWrappers.size() > 0)
+      return iterator(IterType(d_drawableWrappers.back()->end(), d_drawableWrappers.size()), this);
+
+    return iterator(IterType(DrawableWrapper<Drawable>::endIterator(), d_drawableWrappers.size()), this);
   }
 
   SceneGraph::const_iterator SceneGraph::begin() const
   {
     for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
     {
-      DrawableWrapper__<Drawable>::iterator iter = d_drawableWrappers[idx]->begin();
+      DrawableWrapper<Drawable>::iterator iter = d_drawableWrappers[idx]->begin();
 
       if(iter != d_drawableWrappers[idx]->end())
-        return const_iterator(make_pair(idx, iter), this);
+        return const_iterator(make_pair(iter, idx), this);
     }
 
     return end();
@@ -128,66 +120,70 @@ namespace dim
 
   SceneGraph::const_iterator SceneGraph::end() const
   {
-    return const_iterator(
-               make_pair(
-                   0,
-                   DrawableWrapper__<Drawable>::iterator(
-                       DrawableWrapper__<Drawable>::IdType(std::numeric_limits<size_t>::max(), Drawable::Key())
-                       , 0))
-               , 0);
+    if(d_drawableWrappers.size() > 0)
+      return const_iterator(IterType(d_drawableWrappers.back()->end(), d_drawableWrappers.size()), this);
+
+    return const_iterator(IterType(DrawableWrapper<Drawable>::endIterator(), d_drawableWrappers.size()), this);
   }
 
-  SceneGraph::IdType SceneGraph::nextId(IdType const &id) const
+  SceneGraph::IterType SceneGraph::increment(IterType const &iter) const
   {
-    auto iter = id.second;
+    DrawableWrapper<Drawable>::iterator iterate = iter.first;
+    ++iterate;
 
-    for(size_t idx = id.first; idx != d_drawableWrappers.size(); ++idx)
+    if(iterate == d_drawableWrappers[iter.second]->end())
     {
-      ++iter;
+      for(size_t idx = iter.second; idx != d_drawableWrappers.size(); ++idx)
+      {
+        iterate = d_drawableWrappers[idx]->begin();
 
-      if(iter != d_drawableWrappers[idx]->end())
-        return std::make_pair(idx, iter);
+        if(iterate != d_drawableWrappers[idx]->end())
+          return make_pair(iterate, idx);
+      }
 
-      if(idx + 1 != d_drawableWrappers.size())
-        iter = d_drawableWrappers[idx + 1]->begin();
+      return make_pair(iterate, d_drawableWrappers.size());
     }
-    return end().id();
+    else
+      return make_pair(iterate, iter.second);
   }
 
-  Drawable &SceneGraph::getFromId(IdType const &id)
+  Drawable &SceneGraph::dereference(IterType const &iter)
   {
-    return *id.second;
+    return *iter.first;
   }
 
-  Drawable const &SceneGraph::getFromId(IdType const &id) const
+  Drawable const &SceneGraph::dereference(IterType const &iter) const
   {
-    return *id.second;
+    return *iter.first;
   }
 
   /* regular functions */
 
-  void SceneGraph::mark(SceneGraph::iterator const &object)
+  void SceneGraph::add(DrawState const &state, DrawableWrapper<Drawable> *ptr)
   {
-    d_objSelect = object;
-  }
-
-  void SceneGraph::add(DrawState const &state)
-  {
-    d_drawStateList.insert(state);
-  }
-
-  void SceneGraph::draw(SceneGraph::DrawMode mode)
-  {
-    for(DrawState const &state: d_drawStateList)
+    for(auto iter = d_drawStateList.find(state); iter->first == state; ++iter)
     {
-      if(mode == SceneGraph::normal)
+      if(iter->second == ptr)
+        return;
+    }
+
+    d_drawStateList.insert(make_pair(state, ptr));
+  }
+
+  void SceneGraph::draw()
+  {
+    for(auto const &element: d_drawStateList)
+    {
+      DrawState const &state = element.first;
+
+      //if(mode == SceneGraph::normal)
         state.shader().use();
-      else
-      {
-        glCullFace(GL_FRONT);
-	      glEnable(GL_POLYGON_OFFSET_FILL);
-	      glPolygonOffset(1.1f, 4.0f);
-      }
+      //else
+      //{
+      //  glCullFace(GL_FRONT);
+	    //  glEnable(GL_POLYGON_OFFSET_FILL);
+	    //  glPolygonOffset(1.1f, 4.0f);
+      //}
       
       state.mesh().bind();
       if(state.culling() == false)
@@ -196,16 +192,13 @@ namespace dim
       for(size_t tex = 0; tex != state.textures().size(); ++tex)
         state.textures()[tex].first.setAtShader(state.shader(), state.textures()[tex].second, tex);
 
-      //TODO save the drawables at the states
-
-      for(auto &element: d_drawableWrappers)
-        element->draw(state, d_objSelect.id().second);
+      element.second->draw(state);
       
-      if(mode == SceneGraph::shadow)
-      {
-        glCullFace(GL_BACK);
-	      glDisable(GL_POLYGON_OFFSET_FILL);
-      }
+      //if(mode == SceneGraph::shadow)
+      //{
+      //  glCullFace(GL_BACK);
+	    //  glDisable(GL_POLYGON_OFFSET_FILL);
+      //}
 
       state.mesh().unbind();
       if(state.culling() == false)
@@ -215,20 +208,10 @@ namespace dim
 
   void SceneGraph::del(SceneGraph::iterator object)
   {
-    //size_t id = object->id();
-    //if(d_drawableWrappers.size() <= id%maxTypes)
-    //  return;
+    if(object == end())
+      return;
 
-    object.id().second.container()->del(object.id().second);
-
-    //d_drawableWrappers[id%maxTypes]->del(object, id/maxTypes);
-
-    //Drawable *oldId = d_drawableWrappers[id%maxTypes]->get(object, id/maxTypes);
-
-    //if(oldId == 0)
-    //  return;
-
-    //oldId->d_id = 0;//TODO something
+    d_drawableWrappers[object.iter().second]->del(object.iter().first);
   }
 
   SceneGraph::iterator SceneGraph::find(float x, float z)
@@ -237,27 +220,46 @@ namespace dim
     {
       auto iter = d_drawableWrappers[idx]->find(x, z);
       if(iter != d_drawableWrappers[idx]->end())
-        return iterator(make_pair(idx, iter), this);
+        return iterator(make_pair(iter, idx), this);
     }
 
     return end();
   }
 
-  void SceneGraph::save()
+  void SceneGraph::save(string const &filename)
   {
     for(auto &element: d_drawableWrappers)
-      element->save();
+      element->save(filename);
   }
 
-  void SceneGraph::reset()
+  void SceneGraph::clear()
   {
     for(auto &element: d_drawableWrappers)
-      element->reset();
+      element->clear();
   }
 
   SceneGraph::iterator SceneGraph::get(float x, float z)
   {
     return find(x, z);
+  }
+
+  SceneGraph::iterator SceneGraph::get(DrawState const &state, float x, float z)
+  {
+    size_t idx = 0;
+
+    for(auto drawState = d_drawStateList.find(state); drawState->first == state; ++drawState, ++idx)
+    {
+      auto iter = drawState->second->find(state, x, z);
+      if(iter != drawState->second->end())
+        return iterator(IterType(iter, idx), this);
+    }
+
+    return end();
+  }
+
+  size_t SceneGraph::key() const
+  {
+    return reinterpret_cast<size_t>(this);
   }
 }
 

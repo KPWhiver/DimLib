@@ -19,10 +19,14 @@
 
 #include "dim/drawablewrapper.hpp"
 
+using namespace std;
+
 namespace dim
 {
+namespace internal
+{
   /* constructors */
-  DrawableWrapper__<Drawable>::DrawableWrapper__(size_t gridSize, size_t ownerId)
+  DrawableWrapper<Drawable>::DrawableWrapper(size_t gridSize, size_t ownerId)
       :
           d_changed(false),
           d_gridSize(gridSize),
@@ -30,117 +34,120 @@ namespace dim
   {
   }  
   
-  DrawableWrapper__<Drawable>::~DrawableWrapper__()
+  DrawableWrapper<Drawable>::~DrawableWrapper()
   {
   }
   
-  /* static access */
-  
-  void DrawableWrapper__<Drawable>::copy(size_t dest) const
+  void DrawableWrapper<Drawable>::copy(size_t dest)
   {
     v_copy(dest);
+    d_ownerId = dest;
   }
   
-  void DrawableWrapper__<Drawable>::move(size_t dest) const
-  {
-    v_move(dest);
-  }
-  
-  DrawableWrapper__<Drawable>* DrawableWrapper__<Drawable>::clone() const
+  DrawableWrapper<Drawable>* DrawableWrapper<Drawable>::clone() const
   {
     return v_clone();
   }
   
   /* general functions */
-  void DrawableWrapper__<Drawable>::save()
+  void DrawableWrapper<Drawable>::save(string const &filename)
   {
-    v_save();
+    v_save(filename);
   }
 
-  void DrawableWrapper__<Drawable>::reset()
+  void DrawableWrapper<Drawable>::clear()
   {
-    v_reset();
+    v_clear();
   }
 
-  void DrawableWrapper__<Drawable>::draw(DrawState const &state, iterator &object)
+  void DrawableWrapper<Drawable>::draw(DrawState const &state)
   {
-    v_draw(state, object);
+    v_draw(state);
   }  
   
-  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<Drawable>::find(float x, float z)
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::find(float x, float z)
   {
     return v_find(x, z);
   }
 
-  void DrawableWrapper__<Drawable>::del(iterator &object)
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::find(DrawState const &state, float x, float z)
+  {
+    return v_find(state, x, z);
+  }
+
+  void DrawableWrapper<Drawable>::del(iterator &object)
   {
     v_del(object);
   }
 
   /* iterators */
-  DrawableWrapper__<Drawable>::IdType DrawableWrapper__<Drawable>::nextId(IdType const &id) const
+  DrawableWrapper<Drawable>::IterType DrawableWrapper<Drawable>::increment(IterType const &iter) const
   {
-    return v_nextId(id);
+    if(iter != end().iter())
+      return v_increment(iter);
+
+    return iter;
   }
 
-  Drawable &DrawableWrapper__<Drawable>::getFromId(IdType const &id)
+  Drawable &DrawableWrapper<Drawable>::dereference(IterType const &iter)
   {
-    return v_getFromId(id);
+    return v_dereference(iter);
   }
 
-  Drawable const &DrawableWrapper__<Drawable>::getFromId(IdType const &id) const
+  Drawable const &DrawableWrapper<Drawable>::dereference(IterType const &iter) const
   {
-    return v_getFromId(id);
+    return v_dereference(iter);
   }
 
-  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<Drawable>::begin()
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::begin()
   {
     return v_begin();
   }
 
-  DrawableWrapper__<Drawable>::iterator DrawableWrapper__<Drawable>::end()
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::end()
   {
-    return v_end();
+    return iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), this);
   }
 
-  DrawableWrapper__<Drawable>::const_iterator DrawableWrapper__<Drawable>::begin() const
+  DrawableWrapper<Drawable>::const_iterator DrawableWrapper<Drawable>::begin() const
   {
     return v_begin();
   }
 
-  DrawableWrapper__<Drawable>::const_iterator DrawableWrapper__<Drawable>::end() const
+  DrawableWrapper<Drawable>::const_iterator DrawableWrapper<Drawable>::end() const
   {
-    return v_end();
+    return const_iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), this);
+  }
+
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::endIterator()
+  {
+    return iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), 0);
+  }
+
+  DrawableWrapper<Drawable>::const_iterator DrawableWrapper<Drawable>::cendIterator()
+  {
+    return const_iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), 0);
   }
 
   /* private functions */
-  size_t DrawableWrapper__<Drawable>::gridSize() const
+  size_t DrawableWrapper<Drawable>::gridSize() const
   {
     return d_gridSize;
   }
   
-  size_t DrawableWrapper__<Drawable>::ownerId() const
+  size_t DrawableWrapper<Drawable>::ownerId() const
   {
     return d_ownerId;
   }
 
-  /*std::string const &DrawableWrapper__<Drawable>::filename() const
-  {
-    return d_filename;
-  }*/
-
-  /*void DrawableWrapper__<Drawable>::setFilename(std::string const &filename)
-  {
-    d_filename = filename;
-  }*/
-
-  bool DrawableWrapper__<Drawable>::changed() const
+  bool DrawableWrapper<Drawable>::changed() const
   {
     return d_changed;
   }
 
-  void DrawableWrapper__<Drawable>::setChanged(bool changed)
+  void DrawableWrapper<Drawable>::setChanged(bool changed)
   {
     d_changed = changed;
   }
+}
 }

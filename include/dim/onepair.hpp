@@ -29,6 +29,9 @@ class Onepair
   Type d_data;
   
   public:
+    typedef Type StorageType;
+    static size_t const maxFirst = Maxfirst;
+
     enum Parameter
     {
       half,

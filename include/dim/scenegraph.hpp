@@ -35,50 +35,45 @@ namespace dim
 
   class SceneGraph
   {
-      std::multimap<DrawState, DrawableWrapper__<Drawable>*> d_drawStateList;
+      std::multimap<DrawState, internal::DrawableWrapper<Drawable>*> d_drawStateList;
 
-      std::vector<ClonePtr<DrawableWrapper__<Drawable>>> d_drawableWrappers;
+      std::vector<ClonePtr<internal::DrawableWrapper<Drawable>>> d_drawableWrappers;
 
       size_t d_gridSize;
 
     public:
       //typedefs + iterators
       //template <typename RefType>
-      //using iterator = typename DrawableWrapper__<RefType>::iterator;
+      //using iterator = typename internal::DrawableWrapper<RefType>::iterator;
       //template <typename RefType>
-      //using const_iterator = typename DrawableWrapper__<RefType>::const_iterator;
+      //using const_iterator = typename internal::DrawableWrapper<RefType>::const_iterator;
 
     // iterators
-      typedef DrawableWrapper__<Drawable>::iterator IdType;
+      typedef std::pair<internal::DrawableWrapper<Drawable>::iterator, size_t> IterType;
 
-      typedef base_iterator__<Drawable, SceneGraph, IdType> iterator;
-      typedef base_iterator__<Drawable const, SceneGraph const, IdType> const_iterator;
+      typedef internal::IteratorBase<Drawable, SceneGraph, IterType> iterator;
+      typedef internal::IteratorBase<Drawable const, SceneGraph const, IterType> const_iterator;
 
       template<typename RefType>
-      typename DrawableWrapper__<RefType>::iterator begin();
+      typename internal::DrawableWrapper<RefType>::iterator begin();
       template<typename RefType>
-      typename DrawableWrapper__<RefType>::iterator end();
+      typename internal::DrawableWrapper<RefType>::iterator end();
       template<typename RefType>
-      typename DrawableWrapper__<RefType>::const_iterator begin() const;
+      typename internal::DrawableWrapper<RefType>::const_iterator begin() const;
       template<typename RefType>
-      typename DrawableWrapper__<RefType>::const_iterator end() const;
+      typename internal::DrawableWrapper<RefType>::const_iterator end() const;
 
       iterator begin();
       iterator end();
       const_iterator begin() const;
       const_iterator end() const;
 
-      IdType nextId(IdType const &id) const;
-      //IdType const &previousId(IdType const &id) const;
-      Drawable &getFromId(IdType const &id);
-      Drawable const &getFromId(IdType const &id) const;
+      IterType increment(IterType const &iter) const;
+      //IdType const &decrement(IdType const &id) const;
+      Drawable &dereference(IterType const &iter);
+      Drawable const &dereference(IterType const &iter) const;
 
     // constructors
-      enum DrawMode
-      {
-        normal, shadow,
-      };
-
       explicit SceneGraph(size_t gridSize = 64);
       
       SceneGraph(SceneGraph const &other);
@@ -92,116 +87,141 @@ namespace dim
 
     // regular functions
       template<typename RefType>
-      typename DrawableWrapper__<RefType>::iterator add(bool saved, RefType *object);
+      typename internal::DrawableWrapper<RefType>::iterator add(bool saved, RefType *object);
 
       template<typename RefType>
       void load(std::string const &filename);
 
-      void save();
-      void reset();
+      void save(std::string const &filename);
+      void clear();
 
       void del(SceneGraph::iterator object);
       SceneGraph::iterator get(float x, float z);
 
+      SceneGraph::iterator get(DrawState const &state, float x, float z);
+
       template<typename RefType>
-      typename DrawableWrapper__<RefType>::iterator get(float x, float z);
+      typename internal::DrawableWrapper<RefType>::iterator get(float x, float z);
 
-      void draw(DrawMode mode);
-
-      //void mark(SceneGraph::iterator const &object);
+      void draw();
 
       //void change(Drawable const &object);
 
     private:
       //SceneGraph::iterator d_objSelect;
-      void add(DrawState const &state, DrawableWrapper<Drawable>* ptr);
+      void add(DrawState const &state, internal::DrawableWrapper<Drawable>* ptr);
       SceneGraph::iterator find(float x, float z);
+
+      size_t key() const;
   };
 
   template<typename RefType>
   void SceneGraph::load(std::string const &filename)
   {
-    if(not DrawableWrapper__<RefType>::isPresent(this))
-      d_drawableWrappers.push_back(new DrawableWrapper__<RefType>(d_gridSize, this));
-
-    /* open the file */
-    std::ifstream file(filename().c_str());
-    if(file.is_open() == false)
-      throw std::runtime_error("Error opening " + filename());
+    // open the file
+    std::ifstream file(filename.c_str());
+    if(not file.is_open())
+    {
+      log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename);
+      return;
+    }
     else
     {
+      //TODO change to till EOF
       size_t numItems;
       file >> numItems;
       for(size_t idx = 0; idx != numItems; ++idx)
       {
-        RefType ref;
-        file >> ref;
-        file.ignore();
-        add(false, ref);
+        RefType ref = new RefType;
+        file >> *ref;
+        //file.ignore();
+
+        //TODO room for optimization
+        add(true, ref);
       }
       file.close();
     }
-
-    // Add the drawstates
-    for(size_t idx = 0; idx != RefType().drawState().size(); ++idx)
-      add(RefType().drawState()[idx], d_drawableWrappers.back());
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::iterator SceneGraph::add(bool saved, RefType *object)
+  typename internal::DrawableWrapper<RefType>::iterator SceneGraph::add(bool saved, RefType *object)
   {
-    DrawableWrapper__<RefType>* ptr = 0;
+    internal::DrawableWrapper<RefType>* ptr = internal::DrawableWrapper<RefType>::get(key());
 
     // Add the object
-    if(not DrawableWrapper__<RefType>::isPresent(this))
+    if(ptr == 0)
     {
-      ptr = new DrawableWrapper__<RefType>(d_gridSize, this);
+      ptr = new internal::DrawableWrapper<RefType>(d_gridSize, key());
       d_drawableWrappers.push_back(ptr);
     }
-    else
-    {
-      ptr = &DrawableWrapper__<RefType>::get(this);
-    }
 
-    typename DrawableWrapper__<RefType>::iterator iter = ptr->add(!saved, object);
+    typename internal::DrawableWrapper<RefType>::iterator iter = ptr->add(!saved, object);
         
-    // Add the drawstates
-    for(size_t idx = 0; idx != object.drawStates().size(); ++idx)
-      add(object.drawStates()[idx]);
+    // Add the drawstate
+    add(object->drawState(), ptr);
 
     return iter;
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::iterator SceneGraph::get(float x, float z)
-  { if(DrawableWrapper__<RefType>::instance().gridSize() == 0)
-      return end();
+  typename internal::DrawableWrapper<RefType>::iterator SceneGraph::get(float x, float z)
+  {
+    auto ptr = internal::DrawableWrapper<RefType>::get(key());
 
-    return DrawableWrapper__<RefType>::instance().find(x, z);
+    if(ptr == 0)
+      return end<RefType>();
+
+    return ptr->find(x, z);
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::iterator SceneGraph::begin()
+  typename internal::DrawableWrapper<RefType>::iterator SceneGraph::begin()
   {
-    return DrawableWrapper__<RefType>::instance().begin();
+    auto ptr = internal::DrawableWrapper<RefType>::get(key());
+
+    if(ptr == 0)
+      return end<RefType>();
+
+    return ptr->begin();
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::iterator SceneGraph::end()
+  typename internal::DrawableWrapper<RefType>::iterator SceneGraph::end()
   {
-    return DrawableWrapper__<RefType>::instance().end();
+    auto ptr = internal::DrawableWrapper<RefType>::get(key());
+
+    if(ptr == 0)
+    {
+      ptr = new internal::DrawableWrapper<RefType>(d_gridSize, key());
+      d_drawableWrappers.push_back(ptr);
+    }
+
+    return ptr->end();
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::const_iterator SceneGraph::begin() const
+  typename internal::DrawableWrapper<RefType>::const_iterator SceneGraph::begin() const
   {
-    return DrawableWrapper__<RefType>::instance().begin();
+    auto ptr = internal::DrawableWrapper<RefType>::get(key());
+
+    if(ptr == 0)
+      return end<RefType>();
+
+    return ptr->begin();
   }
 
   template<typename RefType>
-  typename DrawableWrapper__<RefType>::const_iterator SceneGraph::end() const
+  typename internal::DrawableWrapper<RefType>::const_iterator SceneGraph::end() const
   {
-    return DrawableWrapper__<RefType>::instance().end();
+    auto ptr = internal::DrawableWrapper<RefType>::get(key());
+
+    if(ptr == 0)
+    {
+      ptr = new internal::DrawableWrapper<RefType>(d_gridSize, key());
+      d_drawableWrappers.push_back(ptr);
+    }
+
+    return ptr->end();
   }
 
 }

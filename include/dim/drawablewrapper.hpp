@@ -27,175 +27,163 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "dim/drawable.hpp"
-#include "dim/base_iterator__.hpp"
+#include "dim/iteratorbase.hpp"
 #include "dim/onepair.hpp"
+#include "dim/copyptr.hpp"
 
 namespace dim
 {
-  class Drawable;
+namespace internal
+{
 
-  template <typename... RefTypes>
-  class DrawableWrapper__;
+  //class Drawable;
+
+  template <typename...>
+  class DrawableWrapper;
 
   template <>
-  class DrawableWrapper__<Drawable>
+  class DrawableWrapper<Drawable>
   {
       bool d_changed;
-      //std::string d_filename;
       size_t d_gridSize;
       size_t d_ownerId;
       
       
     public:
     // constructors
-      virtual ~DrawableWrapper__();
-      DrawableWrapper__(size_t gridSize, size_t ownerId);
-      
-      DrawableWrapper__(DrawableWrapper__ const &other);
-      
-    // static access
+      virtual ~DrawableWrapper();
+      DrawableWrapper(size_t gridSize, size_t ownerId);
 
-      void copy(size_t dest) const;
-      void move(size_t dest) const;
-      DrawableWrapper__<Drawable>* clone() const;
-    // typedefs
-      typedef std::pair<size_t, Drawable::Key> IdType;
+      DrawableWrapper<Drawable>* clone() const;
+
+      void copy(size_t dest);
 
     // iterators
-      typedef base_iterator__<Drawable, DrawableWrapper__<Drawable>, IdType>  iterator;
-      typedef base_iterator__<Drawable const, DrawableWrapper__<Drawable> const, IdType> const_iterator;
+      typedef std::pair<size_t, Drawable::Key> IterType;
+
+      typedef IteratorBase<Drawable, DrawableWrapper<Drawable>, IterType>  iterator;
+      typedef IteratorBase<Drawable const, DrawableWrapper<Drawable> const, IterType> const_iterator;
 
       iterator begin();
       iterator end();
       const_iterator begin() const;
       const_iterator end() const;
-      
-      std::pair<size_t, Drawable::Key> nextId(std::pair<size_t, Drawable::Key> const &id) const;
-      //std::pair<size_t, Drawable::Key> const &previousId(std::pair<size_t, Drawable::Key> const &id) const;
-      Drawable &getFromId(std::pair<size_t, Drawable::Key> const &id);
-      Drawable const &getFromId(std::pair<size_t, Drawable::Key> const &id) const;
+
+      static iterator endIterator();
+      static const_iterator cendIterator();
+
+      IterType increment(IterType const &iter) const;
+      //std::pair<size_t, Drawable::Key> const &decrement(std::pair<size_t, Drawable::Key> const &iter) const;
+      Drawable &dereference(IterType const &iter);
+      Drawable const &dereference(IterType const &iter) const;
 
     // regular functions
-      void save();
-      void reset();
-      void draw(DrawState const &state, iterator &objSelect);
+      void save(std::string const &filename);
+      void clear();
+      void draw(DrawState const &state);
+      iterator find(DrawState const &state, float x, float z);
       iterator find(float x, float z);
       void del(iterator &object);
 
       size_t gridSize() const;
       
-    protected:
-      size_t ownerId() const;
-      
     private:
     // static access
-      virtual void v_remove() const = 0;
       virtual void v_copy(size_t dest) const = 0;
-      virtual void v_move(size_t dest) const = 0;
-      virtual DrawableWrapper__<Drawable>* v_clone() const = 0;
+      virtual DrawableWrapper<Drawable>* v_clone() const = 0;
     
     // iterators
-      virtual IdType v_nextId(IdType const &id) const = 0;
-      //virtual IdType const &v_previousId(IdType const &id) const = 0;
-      virtual Drawable &v_getFromId(IdType const &id) = 0;
-      virtual Drawable const &v_getFromId(IdType const &id) const = 0;
+      virtual IterType v_increment(IterType const &iter) const = 0;
+      //virtual IterType const &v_decrement(IterType const &iter) const = 0;
+      virtual Drawable &v_dereference(IterType const &iter) = 0;
+      virtual Drawable const &v_dereference(IterType const &iter) const = 0;
 
       virtual iterator v_begin() = 0;
-      virtual iterator v_end() = 0;
       virtual const_iterator v_begin() const = 0;
-      virtual const_iterator v_end() const = 0;
       
     // regular functions
-      virtual void v_save() = 0;
-      virtual void v_reset() = 0;
-      virtual void v_draw(DrawState const &state, iterator &objSelect) = 0;
+      virtual void v_save(std::string const &filename) = 0;
+      virtual void v_clear() = 0;
+      virtual void v_draw(DrawState const &state) = 0;
       virtual iterator v_find(float x, float z) = 0;
+      virtual iterator v_find(DrawState const &state, float x, float z) = 0;
       virtual void v_del(iterator &object) = 0;
 
     protected:
     // private functions
-      std::string const &filename() const;
-      //void setFilename(std::string const &filename);
-
       bool changed() const;
       void setChanged(bool changed);
+
+      size_t ownerId() const;
   };
 
   template<typename RefType>
-  class DrawableWrapper__<RefType> : public DrawableWrapper__<Drawable>
+  class DrawableWrapper<RefType> : public DrawableWrapper<Drawable>
   {
-      typedef std::unordered_map<Drawable::Key, std::vector<RefType*>, std::hash<long>, std::equal_to<long>> Storage;
+      typedef std::unordered_map<Drawable::Key, std::vector<CopyPtr<RefType>>, std::hash<long>, std::equal_to<long>> Storage;
       
       Storage d_map;
-      
-      static std::unordered_map<size_t, DrawableWrapper__<RefType>> s_map;
+
+      static std::unordered_map<size_t, DrawableWrapper<RefType>*> s_map;
 
     public:
     // constuctors
-      DrawableWrapper__(size_t gridSize, size_t key);
-      virtual ~DrawableWrapper__();
+      DrawableWrapper(size_t gridSize, size_t key);
+      ~DrawableWrapper();
       
     // static access
-      static DrawableWrapper__<RefType> &get(size_t key);
-      
-      static void remove(size_t key);
-      static void copy(size_t source, size_t dest);
-      static void move(size_t source, size_t dest);
-      
+      static DrawableWrapper<RefType> *get(size_t key);
       static bool isPresent(size_t key);
 
-    // typedefs
-      typedef std::pair<size_t, Drawable::Key> IdType;
-
     // iterators
-      typedef base_iterator__<RefType, DrawableWrapper__<RefType>, IdType> iterator;
-      typedef base_iterator__<RefType const, DrawableWrapper__<RefType> const, IdType> const_iterator;
+      typedef std::pair<size_t, typename Storage::iterator> IterType;
+
+      typedef IteratorBase<RefType, DrawableWrapper<RefType>, IterType> iterator;
+      typedef IteratorBase<RefType const, DrawableWrapper<RefType> const, IterType> const_iterator;
 
       iterator begin();
       iterator end();
       const_iterator begin() const;
       const_iterator end() const;
       
-      RefType &getFromId(IdType const &id);
-      RefType const &getFromId(IdType const &id) const;
+      RefType &dereference(IterType const &iter);
+      RefType const &dereference(IterType const &iter) const;
+      IterType increment(IterType const &iter) const;
 
     // regular functions
-      iterator add(bool changing, RefType const &object);
-      //void load(std::string const &strFilename);
+      iterator add(bool changing, RefType *object);
       iterator find(float x, float z);
 
     private:
     // static access
-      virtual void v_remove() const;
       virtual void v_copy(size_t dest) const;
-      virtual void v_move(size_t dest) const;
-      virtual DrawableWrapper__<Drawable>* v_clone() const;
+      virtual DrawableWrapper<Drawable>* v_clone() const;
 
     // regular functions
-      virtual void v_save();
-      virtual void v_reset();
-      virtual void v_draw(DrawState const &state, DrawableWrapper__<Drawable>::iterator &objSelect);
-      virtual DrawableWrapper__<Drawable>::iterator v_find(float x, float z);
-      virtual void v_del(DrawableWrapper__<Drawable>::iterator &object);
+      virtual void v_save(std::string const &filename);
+      virtual void v_clear();
+      virtual void v_draw(DrawState const &state);
+      virtual DrawableWrapper<Drawable>::iterator v_find(float x, float z);
+      virtual DrawableWrapper<Drawable>::iterator v_find(DrawState const &state, float x, float z);
+      virtual void v_del(DrawableWrapper<Drawable>::iterator &object);
 
     // iterators
-      virtual IdType v_nextId(IdType const &id) const;
-      //virtual IdType const &v_previousId(IdType const &id) const;
-      virtual Drawable &v_getFromId(IdType const &id);
-      virtual Drawable const &v_getFromId(IdType const &id) const;
+      virtual DrawableWrapper<Drawable>::IterType v_increment(DrawableWrapper<Drawable>::IterType const &iter) const;
+      //virtual IterType const &v_decrement(IterType const &iter) const;
+      virtual Drawable &v_dereference(DrawableWrapper<Drawable>::IterType const &iter);
+      virtual Drawable const &v_dereference(DrawableWrapper<Drawable>::IterType const &iter) const;
 
-      DrawableWrapper__<Drawable>::iterator v_begin();
-      DrawableWrapper__<Drawable>::iterator v_end();
-      DrawableWrapper__<Drawable>::const_iterator v_begin() const;
-      DrawableWrapper__<Drawable>::const_iterator v_end() const;
+      DrawableWrapper<Drawable>::iterator v_begin();
+      DrawableWrapper<Drawable>::const_iterator v_begin() const;
 
     // private functions
       size_t count() const;
   };
   
-
+}
 }
 #include "drawablewrapper.inl"
   

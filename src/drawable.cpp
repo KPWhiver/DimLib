@@ -49,11 +49,6 @@ namespace dim
   {
   }
 
-  Drawable::Id Drawable::id() const
-  {
-    return d_id;
-  }
-
   glm::vec3 Drawable::coor() const
   {
     return d_coor;
@@ -71,7 +66,7 @@ namespace dim
 
   void Drawable::draw()
   {
-    v_draw(state);
+    v_draw();
   }
 
   void Drawable::v_draw()

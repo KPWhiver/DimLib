@@ -75,7 +75,7 @@ namespace dim
       if(d_size > 1)
       {
         d_ptr = new Type[d_size];
-        std::memcpy(other.d_ptr, d_ptr, d_size);
+        std::memcpy(other.d_ptr, d_ptr, d_size * sizeof(Type));
       }
       else
         d_ptr = new Type(*other.d_ptr);

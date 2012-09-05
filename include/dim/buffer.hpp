@@ -43,6 +43,7 @@ namespace dim
   {
 
       std::shared_ptr<GLuint> d_id;
+      size_t d_size;
 
     public:
 
@@ -80,6 +81,7 @@ namespace dim
       bool unmap();
 
       GLuint id() const;
+      size_t size() const;
 
     private:
       Usage d_usage;
@@ -90,13 +92,9 @@ namespace dim
       :
           d_id(new GLuint, [](GLuint *ptr)
           { glDeleteBuffers(1, ptr);}),
+          d_size(size),
           d_usage(constant)
   {
-    *d_id = 0;
-
-    if(data == 0 && size == 0)
-      return;
-
     glGenBuffers(1, d_id.get());
     glBindBuffer(data, id());
     glBufferData(data, size * sizeof(Type), buffer, d_usage);
@@ -109,20 +107,21 @@ namespace dim
   }
 
   template<typename Type>
+  size_t Buffer<Type>::size() const
+  {
+    return d_size;
+  }
+
+  template<typename Type>
   void Buffer<Type>::bind(Mode mode) const
   {
-    if(id() == 0)
-      return;
-
     glBindBuffer(mode, id());
   }
 
   template<typename Type>
   void Buffer<Type>::update(size_t size, Type *buffer)
   {
-    if(id() == 0)
-      glGenBuffers(1, d_id.get());
-
+    d_size = size;
     glBindBuffer(data, id());
     glBufferData(data, size * sizeof(Type), 0, GL_DYNAMIC_DRAW);
     glBufferSubData(data, 0, size * sizeof(Type), buffer);
@@ -131,9 +130,6 @@ namespace dim
   template<typename Type>
   Type* Buffer<Type>::map(Access access)
   {
-    if(id() == 0)
-      return 0;
-
     glBindBuffer(data, id());
     Type* ptr = reinterpret_cast<GLfloat*>(glMapBuffer(data, access));
     if(ptr == 0)
@@ -145,9 +141,6 @@ namespace dim
   template<typename Type>
   bool Buffer<Type>::unmap()
   {
-    if(id() == 0)
-      return true;
-
     glBindBuffer(data, id());
     return glUnmapBuffer(data);
   }

@@ -61,14 +61,14 @@ namespace dim
 
 	bool DrawState::operator==(DrawState const &other) const
 	{
-	  return tie(d_shader.id(), d_textures[0].first.id(), d_mesh.id()) ==
-	         tie(other.d_shader.id(), other.d_textures[0].first.id(), other.d_mesh.id());
+	  return forward_as_tuple(d_shader.id(), d_textures[0].first.id(), d_mesh.id()) ==
+	         forward_as_tuple(other.d_shader.id(), other.d_textures[0].first.id(), other.d_mesh.id());
 	}
 
   bool DrawState::operator<(DrawState const &other) const
   {
-    return tie(d_shader.id(), d_textures[0].first.id(), d_mesh.id()) <
-           tie(other.d_shader.id(), other.d_textures[0].first.id(), other.d_mesh.id());
+    return forward_as_tuple(d_shader.id(), d_textures[0].first.id(), d_mesh.id()) <
+           forward_as_tuple(other.d_shader.id(), other.d_textures[0].first.id(), other.d_mesh.id());
 
 
     /*if(d_shader.id() < other.d_shader.id())
