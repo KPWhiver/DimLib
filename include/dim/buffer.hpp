@@ -91,7 +91,8 @@ namespace dim
   Buffer<Type>::Buffer(size_t size, Type* buffer)
       :
           d_id(new GLuint, [](GLuint *ptr)
-          { glDeleteBuffers(1, ptr);}),
+          { glDeleteBuffers(1, ptr);
+            delete ptr;}),
           d_size(size),
           d_usage(constant)
   {

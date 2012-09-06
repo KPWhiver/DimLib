@@ -37,12 +37,12 @@ namespace dim
     public:
       enum Name: GLint
       {
-        vertex = 7,
-        normal = 8,
-        texCoord = 9,
-        binormal = 10,
-        tangent = 11,
-        instance = 12,
+        vertex = 0,
+        normal = 1,
+        texCoord = 2,
+        binormal = 3,
+        tangent = 4,
+        instance = 5,
         unknown = -1,
       };
 

@@ -281,7 +281,9 @@ namespace dim
     if(idx == interleaved || (idx == 0 && d_attributes.size() == 1))
     {
       if(d_interleavedVBO.size() == 0)
+      {
         d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, buffer);
+      }
       else
       {
         log(__FILE__, __LINE__, LogType::error, "Interleaved arrays can only be added at the first call");
@@ -441,22 +443,20 @@ namespace dim
     for(Attribute attrib : d_attributes)
       glEnableVertexAttribArray(attrib.id());
 
-    size_t varNumOfElements = numOfElements();
+    uint varNumOfElements = numOfElements();
 
     // set pointers when we're dealing with an interleaved
     size_t offset = 0;
     d_interleavedVBO.bind(Buffer<GLfloat>::data);
 
-    for(size_t idx = 0; idx != d_attributes.size(); ++idx)
+    for(Attribute attrib : d_attributes)
     {
-      glVertexAttribPointer(d_attributes[idx].id(), d_attributes[idx].size(), GL_FLOAT, GL_FALSE, varNumOfElements * sizeof(GLfloat),
+      glVertexAttribPointer(attrib.id(), attrib.size(), GL_FLOAT, GL_FALSE, varNumOfElements * sizeof(GLfloat),
                             reinterpret_cast<void*>(offset * sizeof(GLfloat)));
-
-      cerr << d_attributes[idx].id() << ' ' << d_attributes[idx].size() << '\n';
-      offset += d_attributes[idx].size();
+      offset += attrib.size();
     }
 
-    bindElement();
+    //bindElement();
   }
 
   void Mesh::unbind() const
@@ -465,12 +465,12 @@ namespace dim
     for(Attribute attrib : d_attributes)
       glDisableVertexAttribArray(attrib.id());
 
-    unbindElement();
+    //unbindElement();
   }
 
   void Mesh::bindElement() const
   {
-    if(d_indexVBO.id() == 0)
+    if(d_indexVBO.size() == 0)
       return;
 
     s_boundElem = d_indexVBO.id();

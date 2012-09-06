@@ -104,8 +104,8 @@ namespace dim
             *output << "#version " << version << '\n';
 
           if(token == Scanner::vertex)
-            *output << "#define dim_vertex 7\n" << "#define dim_normal 8\n" << "#define dim_texCoord 9\n"
-                    << "#define dim_instance 10\n" << "#define dim_binormal 11\n" << "#define dim_tangent 12\n";
+            *output << "#define dim_vertex 0\n" << "#define dim_normal 1\n" << "#define dim_texCoord 2\n"
+                    << "#define dim_instance 3\n" << "#define dim_binormal 4\n" << "#define dim_tangent 5\n";
 
           *output << "#line " << scanner.lineNr() + (version != 0) + 6 << ' ' << fileNumber;
           continue;
@@ -244,9 +244,9 @@ namespace dim
                }),
           d_filename(filename)
   {
-    string standardVertex("#version 120\n #define dim_vertex 0\n layout (location = dim_vertex) attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
+    string standardVertex("#version 330\n #define dim_vertex 0\n layout(location = 0)  attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
 
-    string vertex;
+    string vertex;//layout (location = 0)
     string fragment;
     string geometry;
     string tessControl;
@@ -304,10 +304,10 @@ namespace dim
         log(d_filename, 0, LogType::warning, "Ignoring compute shader because they are not supported on this graphics card");
     }
 
-    //glBindAttribLocation(*d_id, 0, "in_position");
-    //glBindAttribLocation(*d_id, 1, "in_normal");
-    //glBindAttribLocation(*d_id, 2, "in_texcoord0");
-    //glBindAttribLocation(*d_id, 3, "in_inst_placement");
+    //glBindAttribLocation(*d_id, 7, "in_position");
+    //glBindAttribLocation(*d_id, 2, "in_normal");
+    //glBindAttribLocation(*d_id, 3, "in_texcoord0");
+    //glBindAttribLocation(*d_id, 4, "in_inst_placement");
 
     glLinkProgram(*d_id);
     checkProgram(*d_id);
