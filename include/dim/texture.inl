@@ -181,7 +181,7 @@ namespace dim
       {
         std::stringstream ss;
         ss << "Texture size: " << d_width << "x" << d_height << " exceeds maximum texture size: " << s_maxTextureSize << "x" << s_maxTextureSize;
-        throw std::runtime_error(ss.str());
+        log(__FILE__, __LINE__, LogType::warning, ss.str());
       }
 
       glGenTextures(1, d_id.get());

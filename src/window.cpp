@@ -172,9 +172,6 @@ namespace dim
     if(GLEW_OK != err)
       log(__FILE__, __LINE__, LogType::error, string("Failed to open a window: ") + reinterpret_cast<char const *>(glewGetErrorString(err)));
 
-    //initialize DevIL
-    ilInit();
-
     //initialize opengl stuff
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
