@@ -24,16 +24,8 @@ namespace dim
 {
   void drawFullscreenQuad()
   {
-    static bool initialized(false);
-
     static GLfloat data[6 * 2] {-1, -1, 1, -1, -1, 1, 1, 1, -1, 1, 1, -1};
     static Mesh quad(data, {{Attribute::vertex, Attribute::vec2}}, 6, Mesh::triangle, 0);
     quad.draw();
-
-    /*glEnableVertexAttribArray(0);
-    quad.buffer().bind(Buffer<GLfloat>::data);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);*/
   }
 }

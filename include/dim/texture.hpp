@@ -74,8 +74,10 @@ namespace dim
     R11G11B10,
   };
 
-  /* TextureBase__ */
-  class TextureProperties__
+  namespace internal
+  {
+  /* internal::TextureBase */
+  class TextureProperties
   {
     protected:
       /* static texture properties */
@@ -93,7 +95,7 @@ namespace dim
 
 
   template<typename Type>
-  class TextureBase__ : public TextureProperties__
+  class TextureBase : public TextureProperties
   {
       /* texture properties */
       std::shared_ptr<GLuint> d_id;
@@ -109,7 +111,7 @@ namespace dim
       uint d_bufferLevel;
 
     public:
-      TextureBase__();
+      TextureBase();
 
       /* texture properties */
       void setBorderColor(glm::vec4 const &color) const;
@@ -141,17 +143,18 @@ namespace dim
       GLuint depth() const;
   };
 
+  }
   /* Texture<Type> */
 
   template<typename Type = GLubyte>
-  class Texture: public TextureBase__<Type>
+  class Texture: public internal::TextureBase<Type>
   {
-      using TextureBase__<Type>::init;
-      using TextureBase__<Type>::externalFormat;
+      using internal::TextureBase<Type>::init;
+      using internal::TextureBase<Type>::externalFormat;
   
     public:
-      using TextureBase__<Type>::width;
-      using TextureBase__<Type>::height;
+      using internal::TextureBase<Type>::width;
+      using internal::TextureBase<Type>::height;
 
 
       Texture();
@@ -161,11 +164,14 @@ namespace dim
   /* Texture<GLubyte> */
 
   template<>
-  class Texture<GLubyte>: public TextureBase__<GLubyte>
+  class Texture<GLubyte>: public internal::TextureBase<GLubyte>
   {
+      using internal::TextureBase<GLubyte>::externalFormat;
       //unsigned int d_source;//
       std::string d_filename;
     public:
+      using internal::TextureBase<GLubyte>::width;
+      using internal::TextureBase<GLubyte>::height;
 
       Texture();
       Texture(std::string const &filename, Filtering filter, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
@@ -173,9 +179,15 @@ namespace dim
 
       void reset();
       void save(std::string filename = "");
+
+    private:
+      GLubyte* loadPNG(std::istream &input, Format &format, uint &width, uint &height);
+      void savePNG(std::string const &filename, std::ostream &output, GLubyte* data);
   };
 
   /* Some template meta-programming */
+  namespace internal
+  {
 
   template<typename Type>
   struct DataType;
@@ -228,7 +240,7 @@ namespace dim
     enum
     { value = GL_FLOAT};
   };
-
+  }
   /* ****************************** */
 
   template<typename Type>

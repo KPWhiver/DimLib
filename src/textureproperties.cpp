@@ -21,20 +21,22 @@
 
 namespace dim
 {
+  namespace internal
+  {
   /* static texture properties */
-  bool TextureProperties__::s_anisotropic(false);
+  bool TextureProperties::s_anisotropic(false);
 
-  float TextureProperties__::s_maxAnisotropy(0);
+  float TextureProperties::s_maxAnisotropy(0);
 
-  float TextureProperties__::s_maxTextureSize(0);
+  float TextureProperties::s_maxTextureSize(0);
 
-  float TextureProperties__::s_maxTextureUnits(0);
+  float TextureProperties::s_maxTextureUnits(0);
 
-  bool TextureProperties__::s_integerFormats(false);
+  bool TextureProperties::s_integerFormats(false);
 
-  bool TextureProperties__::s_floatFormats(false);
+  bool TextureProperties::s_floatFormats(false);
 
-  void TextureProperties__::initialize()
+  void TextureProperties::initialize()
   {
     if(GLEW_EXT_texture_filter_anisotropic)
     {
@@ -49,5 +51,5 @@ namespace dim
     s_integerFormats = (GLEW_EXT_texture_integer ? true : false);
     s_floatFormats = (GLEW_ARB_texture_float ? true : false);
   }
-
+  }
 }

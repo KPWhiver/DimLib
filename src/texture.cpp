@@ -17,7 +17,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include <IL/il.h>
+#include <png.h>
+#include <fstream>
+#include <iostream>
 
 #include "dim/texture.hpp"
 
@@ -30,6 +32,188 @@ using namespace std;
 //}
 namespace dim
 {
+  namespace
+  {
+    void readFromStream(png_structp pngPtr, png_bytep data, png_size_t length)
+    {
+      png_voidp ptr = png_get_io_ptr(pngPtr);
+      reinterpret_cast<std::istream*>(ptr)->read(reinterpret_cast<char*>(data), length);
+    }
+
+    void writeToStream(png_structp pngPtr, png_bytep data, png_size_t length)
+    {
+      png_voidp ptr = png_get_io_ptr(pngPtr);
+      reinterpret_cast<std::ostream*>(ptr)->write(reinterpret_cast<char*>(data), length);
+    }
+
+    void flushStream(png_structp pngPtr)
+    {
+      png_voidp ptr = png_get_io_ptr(pngPtr);
+      reinterpret_cast<std::ostream*>(ptr)->flush();
+    }
+  }
+
+  GLubyte* Texture<GLubyte>::loadPNG(istream &input, Format &format, uint &width, uint &height)
+  {
+    png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+
+    if(!pngPtr)
+      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+
+    png_infop infoPtr = png_create_info_struct(pngPtr);
+    if(!infoPtr)
+      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+
+    if(setjmp(png_jmpbuf(pngPtr)))
+      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+
+    png_set_read_fn(pngPtr, reinterpret_cast<png_voidp>(&input), readFromStream);
+
+    png_set_sig_bytes(pngPtr, 8);
+
+    png_read_info(pngPtr, infoPtr);
+
+    width = png_get_image_width(pngPtr, infoPtr);
+    height = png_get_image_height(pngPtr, infoPtr);
+    png_uint_32 color = png_get_color_type(pngPtr, infoPtr);
+    png_uint_32 channels = png_get_channels(pngPtr, infoPtr);
+    png_uint_32 depth = png_get_bit_depth(pngPtr, infoPtr);
+
+    switch (color)
+    {
+      case PNG_COLOR_TYPE_GRAY:
+        if (depth < 8)
+          png_set_expand_gray_1_2_4_to_8(pngPtr);
+        depth = 8;
+        format = Format::R8;
+        break;
+      case PNG_COLOR_TYPE_GRAY_ALPHA:
+        format = Format::RG8;
+        break;
+      case PNG_COLOR_TYPE_PALETTE:
+        png_set_palette_to_rgb(pngPtr);
+        channels = 3;
+      case PNG_COLOR_TYPE_RGB:
+        format = Format::RGB8;
+        break;
+      case PNG_COLOR_TYPE_RGB_ALPHA:
+        format = Format::RGBA8;
+        break;
+    }
+
+    if (png_get_valid(pngPtr, infoPtr, PNG_INFO_tRNS))
+    {
+      png_set_tRNS_to_alpha(pngPtr);
+      channels+=1;
+    }
+
+    if(depth == 16)
+    {
+      png_set_strip_16(pngPtr);
+      depth = 8;
+    }
+    else if(depth < 8)
+    {
+      png_set_packing(pngPtr);
+      depth = 8;
+    }
+
+    /* read file */
+    if(setjmp(png_jmpbuf(pngPtr)))
+      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+
+    png_bytep* rowPtrs = new png_bytep[height];
+
+    GLubyte* data = new GLubyte[height * width * channels];
+
+    for(uint y = 0; y != height; ++y)
+    {
+      png_uint_32 offset = (height - y - 1) * (width * channels);
+      rowPtrs[y] = static_cast<png_bytep>(data) + offset;
+    }
+
+    png_read_image(pngPtr, rowPtrs);
+
+    delete[] rowPtrs;
+
+    png_destroy_read_struct(&pngPtr, &infoPtr, 0);
+
+    return data;
+  }
+
+  void Texture<GLubyte>::savePNG(string const &filename, ostream &output, GLubyte* data)
+  {
+    png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    if(!pngPtr)
+      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+
+    png_infop infoPtr = png_create_info_struct(pngPtr);
+    if(!infoPtr)
+      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+
+    if(setjmp(png_jmpbuf(pngPtr)))
+      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+
+    png_set_write_fn(pngPtr, reinterpret_cast<png_voidp>(&output), writeToStream, flushStream);
+
+    if(setjmp(png_jmpbuf(pngPtr)))
+      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+
+    png_uint_32 color;
+    uint channels = 0;
+
+    switch(externalFormat())
+    {
+      case GL_RED:
+        color = PNG_COLOR_TYPE_GRAY;
+        channels = 1;
+        break;
+      case GL_RG:
+        color = PNG_COLOR_TYPE_GRAY_ALPHA;
+        channels = 2;
+        break;
+      case GL_RGB:
+        color = PNG_COLOR_TYPE_RGB;
+        channels = 3;
+        break;
+      case GL_RGBA:
+        color = PNG_COLOR_TYPE_RGB_ALPHA;
+        channels = 4;
+        break;
+      default:
+        log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+        break;
+    }
+
+    png_set_IHDR(pngPtr, infoPtr, width(), height(),
+                 8, color, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    png_write_info(pngPtr, infoPtr);
+
+    png_bytep* rowPtrs = new png_bytep[height()];
+
+    for(uint y = 0; y != height(); ++y)
+    {
+      png_uint_32 offset = (height() - y - 1) * (width() * channels);
+      rowPtrs[y] = static_cast<png_bytep>(data) + offset;
+    }
+
+    if(setjmp(png_jmpbuf(pngPtr)))
+      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+
+    png_write_image(pngPtr, rowPtrs);
+
+    if(setjmp(png_jmpbuf(pngPtr)))
+      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+
+    png_write_end(pngPtr, 0);
+
+    delete[] rowPtrs;
+    png_destroy_write_struct(&pngPtr, &infoPtr);
+  }
+
+
   Texture<GLubyte>::Texture()
   {
     GLubyte data(0);
@@ -42,110 +226,79 @@ namespace dim
   }
 
   Texture<GLubyte>::Texture(string const &filename, Filtering filter, bool keepBuffered, Wrapping wrap)
+      :
+          d_filename(filename)
   {
-    ILuint source;
+    // open file
+    std::ifstream file(filename.c_str());
 
-    ilGenImages(1, &source);
-    ilBindImage (source);
+    if(not file.is_open())
+      log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
 
-    if(ilLoadImage(filename.c_str()) == false)
-    {
-      ilDeleteImages(1, &source);
-      log(__FILE__, __LINE__, LogType::error, "Unable to load: " + filename + ", unknown file format");
-    }
+    // read header
+    png_byte header[8];
 
-    int format = ilGetInteger(IL_IMAGE_FORMAT);
-    uint pixelDepth = ilGetInteger(IL_IMAGE_BYTES_PER_PIXEL);
+    file.read(reinterpret_cast<char*>(header), 8);
 
-    if(format == IL_BGR)
-      ilConvertImage(IL_RGB, IL_UNSIGNED_BYTE);
+    GLubyte *data = 0;
+    Format format = Format::R8;
+    uint width = 0;
+    uint height = 0;
 
-    if(format == IL_BGRA)
-      ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+    if(not png_sig_cmp(header, 0, 8))
+      data = loadPNG(file, format, width, height);
+    else
+      log(__FILE__, __LINE__, LogType::error, filename + " is not a valid .png file");
 
-    Format form;
+    init(data, filter, format, width, height, keepBuffered, wrap);
 
-    switch(pixelDepth)
-    {
-      case 1:
-        form = Format::R8;
-        break;
-      case 3:
-        form = Format::RGB8;
-        break;
-      case 4:
-        form = Format::RGBA8;
-        break;
-      default:
-        log(__FILE__, __LINE__, LogType::error, "Unable to load: " + filename + ", depth is not loadable");
-    }
-
-    init(ilGetData(), filter, form, ilGetInteger(IL_IMAGE_WIDTH),
-                            ilGetInteger(IL_IMAGE_HEIGHT), keepBuffered, wrap);
-
-    d_filename = filename;
-
-    ilDeleteImages(1, &source);
+    delete[] data;
   }
 
   void Texture<GLubyte>::reset()
   {
-    ILuint source;
-
     if(d_filename == "")
       return;
 
-    ilGenImages(1, &source);
+    // open file
+    std::ifstream file(d_filename.c_str());
 
-    ilBindImage(source);
-    ilLoadImage(d_filename.c_str());
+    if(not file.is_open())
+      log(__FILE__, __LINE__, LogType::error, "Failed to open " + d_filename + " for reading");
 
-    int format = ilGetInteger(IL_IMAGE_FORMAT);
-    if(format == IL_BGR)
-      ilConvertImage(IL_RGB, IL_UNSIGNED_BYTE);
+    // read header
+    char header[8];
 
-    if(format == IL_BGRA)
-      ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+    file.read(header, 8);
 
-    update(ilGetData());
+    GLubyte *data = 0;
+    Format format = Format::R8;
+    uint width = 0;
+    uint height = 0;
 
-    ilDeleteImages(1, &source);
+    if(png_sig_cmp(reinterpret_cast<png_bytep>(header), 0, 8))
+      data = loadPNG(file, format, width, height);
+    else
+      log(__FILE__, __LINE__, LogType::error, d_filename + " is not a valid .png file");
+
+    update(data);
+
+    delete[] data;
   }
 
   void Texture<GLubyte>::save(string filename)
   {
-    ILuint source;
-
     if(filename == "")
       filename = d_filename;
 
-    uint bbp = 0;
-    int format = IL_ALPHA;
-    switch(externalFormat())
-    {
-      case GL_R:
-        bbp = 1;
-        break;
-      case GL_RGB:
-        bbp = 3;
-        format = IL_RGB;
-        break;
-      case GL_RGBA:
-        bbp = 4;
-        format = IL_RGBA;
-        break;
-      default:
-        std::stringstream ss;
-        ss << "Unable to save texture with format: " << externalFormat();
-        log(__FILE__, __LINE__, LogType::error, ss.str());
-    }
+    // open file
+    std::ofstream file(filename.c_str());
 
-    GLubyte *dataSource = buffer();
+    if(not file.is_open())
+      log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
 
-    ilGenImages(1, &source);
-    ilBindImage(source);
-    ilTexImage(width(), height(), 1, bbp, format, IL_UNSIGNED_BYTE, dataSource);
-    ilSaveImage(filename.c_str());
-    ilDeleteImages(1, &source);
+    GLubyte *data = buffer();
+
+    savePNG(filename, file, data);
   }
 }

@@ -19,7 +19,7 @@ vpath %.hpp include/dim
 vpath %.o obj
 vpath %.d obj
 
-CXXSOURCES = textureproperties__.cpp dim.cpp drawstate.cpp light.cpp scenegraph.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp texture.cpp surface.cpp lex.cpp
+CXXSOURCES = textureproperties.cpp dim.cpp drawstate.cpp light.cpp scenegraph.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp texture.cpp surface.cpp lex.cpp
 
 CXXHEADERS = iteratorbase.hpp buffer.hpp button.hpp camera.hpp component.hpp context.hpp dim.hpp drawable.hpp drawablewrapper.hpp drawablewrapper.inl scenegraph.hpp drawstate.hpp font.hpp frame.hpp image2d.hpp light.hpp listenarea.hpp menu.hpp menuitem.hpp mesh.hpp mouse.hpp onepair.hpp shader.hpp surface.hpp surface.inl texture.hpp texture.inl tools.hpp window.hpp copyptr.hpp cloneptr.hpp
 
