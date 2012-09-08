@@ -36,8 +36,12 @@ namespace dim
 
   bool TextureProperties::s_floatFormats(false);
 
+  bool TextureProperties::s_initialized(false);
+
   void TextureProperties::initialize()
   {
+    s_initialized = true;
+
     if(GLEW_EXT_texture_filter_anisotropic)
     {
       // it is safe to use anisotropic filtering

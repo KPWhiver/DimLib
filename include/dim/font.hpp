@@ -44,8 +44,6 @@ namespace dim
   public:
     Font(std::string filename);
 
-    static void initialize();
-
     Texture<GLubyte> generateTexture(std::string const &text, size_t width, size_t height) const;
     //GLuint letter(size_t ch);
 
@@ -53,7 +51,8 @@ namespace dim
     size_t nextPowerOf2(size_t number) const;
     void generateCharMap(size_t ch);
 
-  };;
+    static void initialize();
+  };
 
 
 }

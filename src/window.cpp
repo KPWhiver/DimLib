@@ -187,9 +187,6 @@ namespace dim
     //glEnableVertexAttribArray(1);
     //glEnableVertexAttribArray(2);
 
-    Font::initialize();
-    internal::TextureProperties::initialize();
-
     swapBuffers();
   }
 

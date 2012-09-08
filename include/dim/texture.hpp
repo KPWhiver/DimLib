@@ -89,7 +89,7 @@ namespace dim
       static bool s_integerFormats;
       static bool s_floatFormats;
 
-    public:
+      static bool s_initialized;
       static void initialize();
   };
 

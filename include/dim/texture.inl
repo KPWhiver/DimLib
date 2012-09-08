@@ -26,8 +26,15 @@ namespace dim
         :
             d_id(new GLuint(0), [](GLuint *ptr)
             { glDeleteTextures(1, ptr); delete ptr;}),
+            d_width(0),
+            d_height(0),
+            d_format(Format::R8),
+            d_outdatedBuffer(false),
+            d_keepBuffered(false),
             d_bufferLevel(0)
     {
+      if(s_initialized == false)
+        initialize();
     }
 
     inline std::string internalFormatName(GLuint format)
