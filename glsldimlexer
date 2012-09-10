@@ -19,8 +19,6 @@
 // preprocessor directives
 ^[ \t]*#version[ \t]*         return Scanner::version;
 
-[0-9]*                        return Scanner::number;
-
 ^[ \t]*#include               begin(StartCondition__::include);          
 
 <include>{
@@ -72,7 +70,17 @@
                               }
 			 
 // regular GLSL               
-[^ \t\n]                      return Scanner::glslToken;
-[ \t\n]                       return Scanner::glslWhitespace;
+layout                        return Scanner::layout;
+location                      return Scanner::location;
+
+in                            |
+attribute                     return Scanner::in;
+out                           return Scanner::out;
+
+[a-zA-Z_][a-zA-Z0-9_]*        return Scanner::identifier;
+[0-9]*                        return Scanner::number;
+
+[^ \t\n]                      return matched()[0];
+[ \t\n]                       return Scanner::whitespace;
 
                               
