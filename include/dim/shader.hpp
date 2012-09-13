@@ -35,6 +35,12 @@ class Shader
   static bool s_geometryShader;
   static bool s_tessellationShader;
   static bool s_computeShader;
+  static bool s_layout;
+  static bool s_separate;
+  
+  static bool s_initialized;
+  
+  static void initialize();
 
   std::shared_ptr<GLuint> d_id;
   std::shared_ptr<GLuint> d_fragmentId;

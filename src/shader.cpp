@@ -34,17 +34,90 @@ using namespace glm;
 
 namespace dim
 {
-  // TODO put this in initialize function
-  bool Shader::s_geometryShader(GLEW_ARB_geometry_shader4);
-  bool Shader::s_tessellationShader(GLEW_ARB_tessellation_shader);
-  bool Shader::s_computeShader(GLEW_ARB_compute_shader);
+namespace
+{
+  pair<uint, string> processLayout(Scanner &scanner, ostream &output)
+  {
+    int nextToken = '(';
+    bool nextIdentIsType = true;
+    
+    stringstream ss(scanner.matched());
+    
+    uint location = 0;
+    
+    while(int token = scanner.lex())
+    {
+      if(token != nextToken && token != Token::whitespace)
+        log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
+        
+      // layout ( location = 0 ) attribute vec3 in_vertex  
+      // Token::layout '(' Token::location '=' Token::number ')' Token::in
+        
+      switch(token)
+      {
+        case '(':
+          nextToken = Token::location;
+          break;
+        case ')':
+          nextToken = Token::in;
+          break;
+        case Token::location:
+          nextToken = '=';
+          break;
+        case '=':
+          nextToken = Token::number;
+          break;
+        case Token::number:
+          ss >> location;
+          nextToken = ')';
+          break;
+        case Token::in:
+          nextToken = Token::identifier;
+          output << scanner.matched();
+          break;
+        case Token::identifier:
+          output << scanner.matched();
+          if(nextIdentIsType == true)
+            nextIdentIsType = false;
+          else
+            return make_pair(location, scanner.matched());
+          break;
+        case Token::whitespace:
+          output << scanner.matched();
+          break;
+        default:
+          log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
+          return make_pair(0, "unknown");
+      }
+    }
+    return make_pair(0, "unknown");
+  }
+}
 
+  bool Shader::s_geometryShader(false);
+  bool Shader::s_tessellationShader(false);
+  bool Shader::s_computeShader(false);
+  bool Shader::s_layout(false);
+  bool Shader::s_separate(false);
+
+  bool Shader::s_initialized(false);   
 
   Shader const *Shader::s_activeShader = 0;
 
   mat4 Shader::s_modelMatrix = mat4(1.0);
 
   mat3 Shader::s_normalMatrix = mat3(1.0);
+  
+  void Shader::initialize()
+  {
+    s_initialized = true;
+  
+    s_geometryShader = GLEW_ARB_geometry_shader4;
+    s_tessellationShader = GLEW_ARB_tessellation_shader;
+    s_computeShader = GLEW_ARB_compute_shader;
+    s_separate = GLEW_ARB_separate_shader_objects;    
+    s_layout = GLEW_ARB_explicit_attrib_location || s_separate;
+  }
 
   GLint Shader::uniform(string const &variable) const
   {
@@ -77,11 +150,15 @@ namespace dim
     // set up stages
     int const numStages = 6;
     stringstream shaders[numStages];
+    
+    vector<pair<uint, string>> attributes;
 
     stringstream *output = 0;
 
     int fileNumber = 0;
     uint version = 0;
+    
+    bool parseLayout = s_layout;
 
     try
     {
@@ -95,29 +172,36 @@ namespace dim
           log(scanner.filename(), scanner.lineNr(), LogType::warning, "Unexpected symbol(s): " + unmatched.str());
 
         // shader stage switch
-        if(token >= Scanner::vertex && token < Scanner::vertex + 6)
+        if(token >= Token::vertex && token < Token::vertex + 6)
         {
-          output = &shaders[token - Scanner::vertex];
-
+          output = &shaders[token - Token::vertex];
 
           if(version != 0)
             *output << "#version " << version << '\n';
 
-          if(token == Scanner::vertex)
-            *output << "#define dim_vertex 0\n" << "#define dim_normal 1\n" << "#define dim_texCoord 2\n"
-                    << "#define dim_instance 3\n" << "#define dim_binormal 4\n" << "#define dim_tangent 5\n";
+          if(token == Token::vertex)
+          {
+            //*output << "#define dim_vertex 0\n" << "#define dim_normal 1\n" << "#define dim_texCoord 2\n"
+            //        << "#define dim_instance 3\n" << "#define dim_binormal 4\n" << "#define dim_tangent 5\n";
+                     
+            if(s_layout)
+              *output << "#extension GL_ARB_explicit_attrib_location : enable\n"; 
+              
+            if(s_separate)
+              *output << "#extension GL_ARB_separate_shader_objects : enable\n"; 
+          }
 
-          *output << "#line " << scanner.lineNr() + (version != 0) + 6 << ' ' << fileNumber;
+          *output << "#line " << scanner.lineNr() + (version != 0) + 6 + s_layout + s_separate << ' ' << fileNumber;
           continue;
         }
-        else if(token == Scanner::include)
+        else if(token == Token::include)
         {
           ++fileNumber;
           if(output != 0)
             *output << "#line " << 0 << ' ' << fileNumber << '\n';
           continue;
         }
-        else if(token == Scanner::endOfFile)
+        else if(token == Token::endOfFile)
         {
           --fileNumber;
           if(output != 0)
@@ -125,26 +209,35 @@ namespace dim
           continue;
         }
         // check for #version
-        else if(token == Scanner::version)
+        else if(token == Token::version)
         {
           if(version == 0)
           {
             token = scanner.lex();
-            if(token == Scanner::number)
+            if(token == Token::number)
             {
+              uint localVersion = 0;
+              stringstream ss(scanner.matched());
+              ss >> localVersion;
+              
               if(output == 0)
               {
-                stringstream ss(scanner.matched());
-                ss >> version;
-              }
+                version = localVersion;
+                if(version < 140)
+                  parseLayout = false;
+              } 
               else
+              {
                 *output << "#version " << scanner.matched();
+                if(version < 140 && output == &shaders[0])
+                  parseLayout = false; 
+              }
             }
             else
-              log(scanner.filename(), scanner.lineNr(), LogType::warning, "Expected a number after #version instead of: " + scanner.matched());
+              log(scanner.filename(), scanner.lineNr(), LogType::error, "Expected a number after #version instead of: " + scanner.matched());
           }
           else
-            log(scanner.filename(), scanner.lineNr(), LogType::warning, "Ignoring #version since it has already been set");
+            log(scanner.filename(), scanner.lineNr(), LogType::note, "Ignoring #version since it has already been set");
 
           continue;
         }
@@ -153,24 +246,41 @@ namespace dim
         if(output == 0)
         {
           // inside header
-          if(token == Scanner::glslWhitespace)
+          if(token == Token::whitespace)
             continue;
 
-          log(scanner.filename(), scanner.lineNr(), LogType::warning, "Can't parse: " + scanner.matched() + " shader stage has not yet been set");
+          log(scanner.filename(), scanner.lineNr(), LogType::error, "Can't parse: " + scanner.matched() + " shader stage has not yet been set");
         }
         // --- III. things outside the header ---
         else
         {
-          // outside header
+          if(token < 256)
+          {
+            *output << static_cast<unsigned char>(token);
+            continue;    
+          }
+           
           switch(token)
           {
-            case Scanner::number:
-            case Scanner::glslToken:
-            case Scanner::glslWhitespace:
+            case Token::layout:
+              if((not parseLayout || version == 0) && output == &shaders[0])
+              {
+                pair<uint, string> attrib = processLayout(scanner, *output);
+                glBindAttribLocation(*d_id, attrib.first, attrib.second.c_str()); 
+              }
+              else
+                *output << scanner.matched();
+              break;
+            case Token::number:
+            case Token::whitespace:
+            case Token::location:
+            case Token::in:
+            case Token::out:
+            case Token::identifier:
               *output << scanner.matched();
               break;
             default:
-              log(scanner.filename(), scanner.lineNr(), LogType::warning, "Unexpected symbol(s): " + scanner.matched());
+              log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
           }
         }
       }
@@ -178,7 +288,7 @@ namespace dim
     }
     catch(runtime_error &exc)
     {
-      log(scanner.filename(), scanner.lineNr(), LogType::warning, exc.what());
+      log(scanner.filename(), scanner.lineNr(), LogType::error, exc.what());
     }
 
     vertexShader = shaders[0].str();
@@ -188,7 +298,7 @@ namespace dim
     tessEvalShader = shaders[4].str();
     computeShader = shaders[5].str();
   }
-
+ 
   void Shader::checkCompile(GLuint shader, string const &stage) const
   {
     int const buffer_size = 512;
@@ -215,7 +325,7 @@ namespace dim
     GLint status;
     glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
     if(status == GL_FALSE)
-      log(d_filename, 0, LogType::warning, string("Building failed: ") + buffer);
+      log(d_filename, 0, LogType::error, string("Building failed: ") + buffer);
   }
 
   void Shader::compileShader(string const &file, string const &stage, shared_ptr<GLuint> &shader, GLuint shaderType)
@@ -244,9 +354,12 @@ namespace dim
                }),
           d_filename(filename)
   {
-    string standardVertex("#version 330\n #define dim_vertex 0\n layout(location = 0)  attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
-
-    string vertex;//layout (location = 0)
+    if(s_initialized == false)
+      initialize();
+  
+    string standardVertex("#version 120\n attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
+    
+    string vertex;
     string fragment;
     string geometry;
     string tessControl;
@@ -255,7 +368,7 @@ namespace dim
 
     parseShader(vertex, fragment, geometry, tessControl, tessEval, compute);
 
-#if false
+#if 0
     cout << vertex << "\n------\n";
     cout << fragment << "\n------\n";
     cout << geometry << "\n------\n";
@@ -267,7 +380,10 @@ namespace dim
     if(vertex != "")
       compileShader(vertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
     else
+    {
       compileShader(standardVertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
+      glBindAttribLocation(*d_id, 0, "in_position");
+    }
 
     if(fragment != "")
       compileShader(fragment, "fragment shader", d_fragmentId, GL_FRAGMENT_SHADER);

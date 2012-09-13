@@ -9,15 +9,15 @@
 %%
 
 // shader stages
-^[ \t]*%-vertex-shader        return Scanner::vertex;
-^[ \t]*%-fragment-shader      return Scanner::fragment;
-^[ \t]*%-geometry-shader      return Scanner::geometry;
-^[ \t]*%-tess-control-shader  return Scanner::tessControl;
-^[ \t]*%-tess-eval-shader     return Scanner::tessEval;
-^[ \t]*%-compute-shader       return Scanner::compute;
+^[ \t]*%-vertex-shader        return Token::vertex;
+^[ \t]*%-fragment-shader      return Token::fragment;
+^[ \t]*%-geometry-shader      return Token::geometry;
+^[ \t]*%-tess-control-shader  return Token::tessControl;
+^[ \t]*%-tess-eval-shader     return Token::tessEval;
+^[ \t]*%-compute-shader       return Token::compute;
 
 // preprocessor directives
-^[ \t]*#version[ \t]*         return Scanner::version;
+^[ \t]*#version[ \t]*         return Token::version;
 
 ^[ \t]*#include               begin(StartCondition__::include);          
 
@@ -35,7 +35,7 @@
                                 std::string path = filename().substr(0, filename().find_last_of('/') + 1);
 
                                 pushStream(path + matched());
-                                return Scanner::include;
+                                return Token::include;
                               }
                   
   \\.|.                       more();
@@ -47,16 +47,16 @@
 <comment1>{
   "*/"                        begin(StartCondition__::INITIAL);
   \\.|.                       //more();
-  \n                          return Scanner::glslWhitespace;
+  \n                          return Token::whitespace;
 }
 
-//"//"[\\..]*\n                 return Scanner::glslWhitespace;//         
-//"//"(\\.|.)*\n                return Scanner::glslWhitespace;
+//"//"[\\..]*\n                 return Token::whitespace;//         
+//"//"(\\.|.)*\n                return Token::whitespace;
 "//"                          begin(StartCondition__::comment2);
 <comment2>{
   \n                          {
                                 begin(StartCondition__::INITIAL);
-                                return Scanner::glslWhitespace;
+                                return Token::whitespace;
                               }
   \\.|.                       
 }                 
@@ -64,23 +64,30 @@
 // end of file
 <INITIAL,string,comment1,comment2><<EOF>>    	  {
                                 if(popStream())
-                                  return Scanner::endOfFile;
+                                  return Token::endOfFile;
                                 else
                                   return 0;
                               }
 			 
 // regular GLSL               
-layout                        return Scanner::layout;
-location                      return Scanner::location;
+layout                        return Token::layout;
+location                      return Token::location;
 
 in                            |
-attribute                     return Scanner::in;
-out                           return Scanner::out;
+attribute                     return Token::in;
+out                           return Token::out;
 
-[a-zA-Z_][a-zA-Z0-9_]*        return Scanner::identifier;
-[0-9]*                        return Scanner::number;
+[0-9]*                        return Token::number;
+dim_vertex                    {setMatched("0"); return Token::number;}
+dim_normal                    {setMatched("1"); return Token::number;}
+dim_texCoord                  {setMatched("2"); return Token::number;}
+dim_binormal                  {setMatched("3"); return Token::number;}
+dim_tangent                   {setMatched("4"); return Token::number;}
+dim_instance                  {setMatched("5"); return Token::number;}
+
+[a-zA-Z_][a-zA-Z0-9_]*        return Token::identifier;
 
 [^ \t\n]                      return matched()[0];
-[ \t\n]                       return Scanner::whitespace;
+[ \t\n]                       return Token::whitespace;
 
                               
