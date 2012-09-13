@@ -7,7 +7,33 @@
 #include "dim/scannerbase.hpp"
 
 namespace dim
+{        
+
+namespace Token
 {
+enum Token : int
+{
+  vertex = 256,
+  fragment,
+  geometry,
+  tessControl,
+  tessEval,
+  compute,
+  
+  version,
+  include,
+  endOfFile,
+  
+  whitespace,
+  number,
+  identifier,
+  in,
+  out,
+  location,
+  layout,
+};
+}
+
 // $insert classHead
 class Scanner: public ScannerBase
 {
@@ -22,22 +48,6 @@ class Scanner: public ScannerBase
 
 
 
-        enum Token : int
-        {
-          vertex = 256,
-          fragment,
-          geometry,
-          tessControl,
-          tessEval,
-          compute,
-          
-          version,
-          number,
-          include,
-          endOfFile,
-          glslToken,
-          glslWhitespace,
-        };
 
     private:
         int lex__();
