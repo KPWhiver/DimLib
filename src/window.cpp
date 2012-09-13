@@ -17,7 +17,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include <IL/il.h>
 #include <GL/glew.h> 
 #include "GL/glfw.h"
 
@@ -115,9 +114,7 @@ namespace dim
       : d_mode(mode)
   {
     if(s_set == true)
-    {
       return;
-    }
 
     s_set = true;
 

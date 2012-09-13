@@ -496,6 +496,7 @@ namespace dim
     {
       if(s_boundElem == 0)
       {
+
         bindElement();
         s_boundElem = 0;
       }
