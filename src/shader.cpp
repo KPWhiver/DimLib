@@ -41,7 +41,7 @@ namespace
     int nextToken = '(';
     bool nextIdentIsType = true;
     
-    stringstream ss(scanner.matched());
+    stringstream ss;
     
     uint location = 0;
     
@@ -68,6 +68,7 @@ namespace
           nextToken = Token::number;
           break;
         case Token::number:
+          ss << scanner.matched();
           ss >> location;
           nextToken = ')';
           break;
