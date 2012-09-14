@@ -27,7 +27,7 @@
 #include <sstream>
 #include <vector>
 
-#include "dim/shader.hpp"
+#include "dim/dim.hpp"
 
 namespace dim
 {
@@ -84,7 +84,6 @@ namespace dim
       static bool s_anisotropic;
       static float s_maxAnisotropy;
       static float s_maxTextureSize;
-      static float s_maxTextureUnits;
 
       static bool s_integerFormats;
       static bool s_floatFormats;
@@ -129,9 +128,6 @@ namespace dim
       
       Type value(uint x, uint y, uint channel, uint level = 0);
       Type *buffer(uint level = 0);
-
-      /* shader */
-      void setAtShader(Shader const &shader, std::string const &variable, uint unit) const;
 
     protected:
       void init(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);

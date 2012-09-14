@@ -45,7 +45,7 @@ namespace dim
 	  x += d_x;
 	  y += d_y;
 	  
-	  d_image.setAtShader(d_context->shader(), "in_texture0", 0);
+	  d_context->shader().set("in_texture0", d_image, 0);
 
     Shader::modelMatrix() = translate(Shader::modelMatrix(), vec3(x, y, 0));
 	  Shader::modelMatrix() = scale(Shader::modelMatrix(), vec3(d_width/10.0, d_height/10.0, 1.0));

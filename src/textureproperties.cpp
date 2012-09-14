@@ -30,8 +30,6 @@ namespace dim
 
   float TextureProperties::s_maxTextureSize(0);
 
-  float TextureProperties::s_maxTextureUnits(0);
-
   bool TextureProperties::s_integerFormats(false);
 
   bool TextureProperties::s_floatFormats(false);
@@ -50,7 +48,6 @@ namespace dim
     }
 
     glGetFloatv(GL_MAX_TEXTURE_SIZE, &s_maxTextureSize);
-    glGetFloatv(GL_MAX_TEXTURE_UNITS, &s_maxTextureUnits);
 
     s_integerFormats = (GLEW_EXT_texture_integer ? true : false);
     s_floatFormats = (GLEW_ARB_texture_float ? true : false);

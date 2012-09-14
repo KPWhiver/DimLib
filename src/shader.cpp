@@ -99,6 +99,8 @@ namespace
   bool Shader::s_computeShader(false);
   bool Shader::s_layout(false);
   bool Shader::s_separate(false);
+  
+  float Shader::s_maxTextureUnits(0);
 
   bool Shader::s_initialized(false);   
 
@@ -117,6 +119,8 @@ namespace
     s_computeShader = GLEW_ARB_compute_shader;
     s_separate = GLEW_ARB_separate_shader_objects;    
     s_layout = GLEW_ARB_explicit_attrib_location || s_separate;
+    
+    glGetFloatv(GL_MAX_TEXTURE_UNITS, &s_maxTextureUnits);
   }
 
   GLint Shader::uniform(string const &variable) const
@@ -478,42 +482,113 @@ namespace
     set("normalMatrix", s_normalMatrix);
   }
 
-//
-// Using GLint
-//
+// matrices
+
   void Shader::set(GLint variable, glm::mat4 const &value) const
   {
     glUniformMatrix4fv(variable, 1, GL_FALSE, &value[0][0]);
   }
 
+  void Shader::set(GLint variable, glm::mat4x3 const &value) const
+  {
+    glUniformMatrix4x3fv(variable, 1, GL_FALSE, &value[0][0]);
+  }
+  
+  void Shader::set(GLint variable, glm::mat4x2 const &value) const
+  {
+    glUniformMatrix4x2fv(variable, 1, GL_FALSE, &value[0][0]);
+  }
+
+  void Shader::set(GLint variable, glm::mat3x4 const &value) const
+  {
+    glUniformMatrix3x4fv(variable, 1, GL_FALSE, &value[0][0]);
+  }
+  
   void Shader::set(GLint variable, glm::mat3 const &value) const
   {
     glUniformMatrix3fv(variable, 1, GL_FALSE, &value[0][0]);
   }
 
-  void Shader::set(GLint variable, glm::vec3 const &value) const
+  void Shader::set(GLint variable, glm::mat3x2 const &value) const
   {
-    glUniform3fv(variable, 1, &value[0]);
+    glUniformMatrix3x2fv(variable, 1, GL_FALSE, &value[0][0]);
+  }
+  
+  void Shader::set(GLint variable, glm::mat2x4 const &value) const
+  {
+    glUniformMatrix2x4fv(variable, 1, GL_FALSE, &value[0][0]);
   }
 
-  void Shader::set(GLint variable, glm::vec2 const &value) const
+  void Shader::set(GLint variable, glm::mat2x3 const &value) const
   {
-    glUniform2fv(variable, 1, &value[0]);
+    glUniformMatrix2x3fv(variable, 1, GL_FALSE, &value[0][0]);
+  }
+  
+  void Shader::set(GLint variable, glm::mat2 const &value) const
+  {
+    glUniformMatrix2fv(variable, 1, GL_FALSE, &value[0][0]);
+  }
+  
+// arrays
+
+  void Shader::set(GLint variable, glm::vec3 const *values, size_t size) const
+  {
+    glUniform3fv(variable, size, reinterpret_cast<GLfloat const *>(values));
   }
 
-  void Shader::set(GLint variable, glm::vec4 const &value) const
+  void Shader::set(GLint variable, glm::vec2 const *values, size_t size) const
   {
-    glUniform4fv(variable, 1, &value[0]);
+    glUniform2fv(variable, size, reinterpret_cast<GLfloat const *>(values));
   }
 
-  void Shader::set(GLint variable, float value) const
+  void Shader::set(GLint variable, glm::vec4 const *values, size_t size) const
   {
-    glUniform1f(variable, value);
+    glUniform4fv(variable, size, reinterpret_cast<GLfloat const *>(values));
+  }
+  
+  void Shader::set(GLint variable, glm::ivec3 const *values, size_t size) const
+  {
+    glUniform3iv(variable, size, reinterpret_cast<GLint const *>(values));
   }
 
-  void Shader::set(GLint variable, int value) const
+  void Shader::set(GLint variable, glm::ivec2 const *values, size_t size) const
   {
-    glUniform1i(variable, value);
+    glUniform2iv(variable, size, reinterpret_cast<GLint const *>(values));
+  }
+
+  void Shader::set(GLint variable, glm::ivec4 const *values, size_t size) const
+  {
+    glUniform4iv(variable, size, reinterpret_cast<GLint const *>(values));
+  }
+  
+  void Shader::set(GLint variable, glm::uvec3 const *values, size_t size) const
+  {
+    glUniform3uiv(variable, size, reinterpret_cast<GLuint const *>(values));
+  }
+
+  void Shader::set(GLint variable, glm::uvec2 const *values, size_t size) const
+  {
+    glUniform2uiv(variable, size, reinterpret_cast<GLuint const *>(values));
+  }
+
+  void Shader::set(GLint variable, glm::uvec4 const *values, size_t size) const
+  {
+    glUniform4uiv(variable, size, reinterpret_cast<GLuint const *>(values));
+  }
+
+  void Shader::set(GLint variable,GLfloat const *values, size_t size) const
+  {
+    glUniform1fv(variable, size, values);
+  }
+
+  void Shader::set(GLint variable, GLint const *values, size_t size) const
+  {
+    glUniform1iv(variable, size, values);
+  }
+  
+    void Shader::set(GLint variable, GLuint const *values, size_t size) const
+  {
+    glUniform1uiv(variable, size, values);
   }
 
   GLuint Shader::id() const

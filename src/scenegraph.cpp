@@ -190,7 +190,7 @@ namespace dim
         glDisable(GL_CULL_FACE);
 
       for(size_t tex = 0; tex != state.textures().size(); ++tex)
-        state.textures()[tex].first.setAtShader(state.shader(), state.textures()[tex].second, tex);
+        state.shader().set(state.textures()[tex].second, state.textures()[tex].first, tex);
 
       element.second->draw(state);
       

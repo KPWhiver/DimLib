@@ -89,9 +89,9 @@ namespace dim
 	    return;
 
 		if(d_selected == true)
-		  d_context->buttonHoverTexture().setAtShader(d_context->shader(), "in_texture0", 0);
+		  d_context->shader().set("in_texture0", d_context->buttonHoverTexture(), 0);
 		else
-		  d_context->buttonTexture().setAtShader(d_context->shader(), "in_texture0", 0);
+		  d_context->shader().set("in_texture0", d_context->buttonTexture(), 0);
 
     Shader::modelMatrix() = translate(Shader::modelMatrix(), vec3(x, y, 0));
 	  Shader::modelMatrix() = scale(Shader::modelMatrix(), vec3(d_width/10.0, d_height/10.0, 1.0));
@@ -101,7 +101,7 @@ namespace dim
 	  //mesh.draw();
 	  d_context->mesh().draw();
 
-	  d_text.setAtShader(d_context->shader(), "in_texture0", 0);
+	  d_context->shader().set("in_texture0", d_text, 0);
 
 	  d_context->mesh().draw();
 

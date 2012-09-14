@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include "dim/dim.hpp"
+#include "dim/texture.hpp"
 
 namespace dim
 {
@@ -37,6 +37,7 @@ class Shader
   static bool s_computeShader;
   static bool s_layout;
   static bool s_separate;
+  static float s_maxTextureUnits;
   
   static bool s_initialized;
   
@@ -65,16 +66,37 @@ public:
   Shader(std::string const &filename);
 
   template<typename Type>
-  void set(std::string const &variable, Type const &value) const;
+  GLint set(std::string const &variable, Type const &value) const;  
+  
+  template<typename Type>
+  void set(std::string variable, Texture<Type> const &value, uint unit) const;
+  
+  template<typename Type>
+  void set(GLint variable, Type const &value) const;
 
   void set(GLint variable, glm::mat4 const &value) const;
+  void set(GLint variable, glm::mat4x3 const &value) const;
+  void set(GLint variable, glm::mat4x2 const &value) const;
+  void set(GLint variable, glm::mat3x4 const &value) const;
   void set(GLint variable, glm::mat3 const &value) const;
-  void set(GLint variable, glm::vec4 const &value) const;
-  void set(GLint variable, glm::vec3 const &value) const;
-  void set(GLint variable, glm::vec2 const &value) const;
-  void set(GLint variable, float value) const;
-  void set(GLint variable, int value) const;
-
+  void set(GLint variable, glm::mat3x2 const &value) const;
+  void set(GLint variable, glm::mat2x4 const &value) const;
+  void set(GLint variable, glm::mat2x3 const &value) const;
+  void set(GLint variable, glm::mat2 const &value) const;
+  
+  void set(GLint variable, glm::vec4 const *values, size_t size) const;
+  void set(GLint variable, glm::vec3 const *values, size_t size) const;
+  void set(GLint variable, glm::vec2 const *values, size_t size) const;
+  void set(GLint variable, glm::ivec4 const *values, size_t size) const;
+  void set(GLint variable, glm::ivec3 const *values, size_t size) const;
+  void set(GLint variable, glm::ivec2 const *values, size_t size) const;
+  void set(GLint variable, glm::uvec4 const *values, size_t size) const;
+  void set(GLint variable, glm::uvec3 const *values, size_t size) const;
+  void set(GLint variable, glm::uvec2 const *values, size_t size) const;
+  void set(GLint variable, GLfloat const *values, size_t size) const;
+  void set(GLint variable, GLint const *values, size_t size) const;
+  void set(GLint variable, GLuint const *values, size_t size) const;
+  
   void use() const;
 
   static Shader const &active();
@@ -104,12 +126,36 @@ private:
 // Using string
 //
   template<typename Type>
-  void Shader::set(std::string const &variable, Type const &value) const
+  void Shader::set(GLint variable, Type const &value) const
+  {
+    set(variable, &value, 1);
+  }
+
+  template<typename Type>
+  GLint Shader::set(std::string const &variable, Type const &value) const
   {
     GLint loc = uniform(variable);
     set(loc, value);
+    return loc;
   }
+  
+  template<typename Type>
+  void Shader::set(std::string variable, Texture<Type> const &texture, uint unit) const
+  { 
+    //TODO logica
+    if(unit > s_maxTextureUnits)
+    {
+      std::stringstream ss;
+      ss << "This graphics card does not support " << unit << " texture units";
+      log(__FILE__, __LINE__, LogType::warning, ss.str());
+    }
 
+    uint textureUnit = GL_TEXTURE0 + unit;
+
+    glActiveTexture(textureUnit);
+    set(variable, static_cast<int>(unit));
+    glBindTexture(GL_TEXTURE_2D, texture.id());
+  }
 }
 
 #endif

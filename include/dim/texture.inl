@@ -576,24 +576,5 @@ namespace dim
       }
       return 0;
     }
-
-    /* shader */
-    template<typename Type>
-    void TextureBase<Type>::setAtShader(Shader const &shader, std::string const &variable, uint unit) const
-    {
-      //TODO logica
-      if(unit > s_maxTextureUnits)
-      {
-        std::stringstream ss;
-        ss << "This graphics card does not support " << unit << " texture units";
-        log(__FILE__, __LINE__, LogType::warning, ss.str());
-      }
-
-      uint textureUnit = GL_TEXTURE0 + unit;
-
-      glActiveTexture(textureUnit);
-      shader.set(variable, static_cast<int>(unit));
-      glBindTexture(GL_TEXTURE_2D, *d_id);
-    }
   }
 }
