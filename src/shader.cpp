@@ -92,6 +92,42 @@ namespace
     }
     return make_pair(0, "unknown");
   }
+
+  int processVersion(Scanner &scanner, stringstream *output, uint *globalVersion)
+  {
+    while(int token = scanner.lex())
+    {
+      if(token == Token::whitespace)
+      {
+        if(output != 0)
+          *output << scanner.matched();
+      }
+      else if(token == Token::version)
+      {
+        token = scanner.lex();
+        if(*globalVersion == 0)
+        {
+          if(token == Token::number)
+          {
+            if(output == 0)
+            {
+              stringstream ss(scanner.matched());
+              ss >> *globalVersion;
+            }
+            else
+              *output << "#version " << scanner.matched();
+          }
+          else
+            log(scanner.filename(), scanner.lineNr(), LogType::error, "Expected a number after #version instead of: " + scanner.matched());
+        }
+        else
+          log(scanner.filename(), scanner.lineNr(), LogType::note, "Ignoring #version since it has already been set");
+      }
+      else
+        return token;
+    }
+    return 0;
+  }
 }
 
   bool Shader::s_geometryShader(false);
@@ -160,15 +196,29 @@ namespace
     stringstream *output = 0;
 
     int fileNumber = 0;
-    uint version = 0;
+    uint globalVersion = 0;
     
     bool parseLayout = s_layout;
+    bool parseVersion = true;
 
     try
     {
+      int token = 0;
+
       // parse tokens
-      while(int token = scanner.lex())
+      while(true)
       {
+        // either get a token or use a already found one
+        if(parseVersion == true && output == 0)
+          token = processVersion(scanner, 0, &globalVersion);
+        else if(parseVersion == false)
+          token = scanner.lex();
+
+        if(token == 0)
+          break;
+
+        parseVersion = false;
+
         // --- I. things either inside or outside the header ---
 
         // check for things we couldn't match
@@ -180,22 +230,19 @@ namespace
         {
           output = &shaders[token - Token::vertex];
 
-          if(version != 0)
-            *output << "#version " << version << '\n';
+          if(globalVersion != 0)
+            *output << "#version " << globalVersion << '\n';
 
-          if(token == Token::vertex)
-          {
-            //*output << "#define dim_vertex 0\n" << "#define dim_normal 1\n" << "#define dim_texCoord 2\n"
-            //        << "#define dim_instance 3\n" << "#define dim_binormal 4\n" << "#define dim_tangent 5\n";
-                     
-            if(s_layout)
-              *output << "#extension GL_ARB_explicit_attrib_location : enable\n"; 
-              
-            if(s_separate)
-              *output << "#extension GL_ARB_separate_shader_objects : enable\n"; 
-          }
+          token = processVersion(scanner, output, &globalVersion);
+          parseVersion = true;
 
-          *output << "#line " << scanner.lineNr() + (version != 0) + 6 + s_layout + s_separate << ' ' << fileNumber;
+          if(s_layout)
+            *output << "#extension GL_ARB_explicit_attrib_location : enable\n";
+
+          if(s_separate)
+            *output << "#extension GL_ARB_separate_shader_objects : enable\n";
+
+          *output << "#line " << scanner.lineNr() + (globalVersion != 0) + s_layout + s_separate << ' ' << fileNumber << '\n';
           continue;
         }
         else if(token == Token::include)
@@ -212,39 +259,6 @@ namespace
             *output << "#line " << scanner.lineNr() + 1 << ' ' << fileNumber;
           continue;
         }
-        // check for #version
-        else if(token == Token::version)
-        {
-          if(version == 0)
-          {
-            token = scanner.lex();
-            if(token == Token::number)
-            {
-              uint localVersion = 0;
-              stringstream ss(scanner.matched());
-              ss >> localVersion;
-              
-              if(output == 0)
-              {
-                version = localVersion;
-                if(version < 140)
-                  parseLayout = false;
-              } 
-              else
-              {
-                *output << "#version " << scanner.matched();
-                if(version < 140 && output == &shaders[0])
-                  parseLayout = false; 
-              }
-            }
-            else
-              log(scanner.filename(), scanner.lineNr(), LogType::error, "Expected a number after #version instead of: " + scanner.matched());
-          }
-          else
-            log(scanner.filename(), scanner.lineNr(), LogType::note, "Ignoring #version since it has already been set");
-
-          continue;
-        }
 
         // --- II. things inside the header ---
         if(output == 0)
@@ -253,7 +267,7 @@ namespace
           if(token == Token::whitespace)
             continue;
 
-          log(scanner.filename(), scanner.lineNr(), LogType::error, "Can't parse: " + scanner.matched() + " shader stage has not yet been set");
+          log(scanner.filename(), scanner.lineNr(), LogType::error, "Can't parse: " + scanner.matched() + ", shader stage has not yet been set");
         }
         // --- III. things outside the header ---
         else
@@ -267,7 +281,7 @@ namespace
           switch(token)
           {
             case Token::layout:
-              if((not parseLayout || version == 0) && output == &shaders[0])
+              if((not parseLayout || globalVersion < 140) && output == &shaders[0])
               {
                 pair<uint, string> attrib = processLayout(scanner, *output);
                 glBindAttribLocation(*d_id, attrib.first, attrib.second.c_str()); 
@@ -275,6 +289,7 @@ namespace
               else
                 *output << scanner.matched();
               break;
+            case Token::version:
             case Token::number:
             case Token::whitespace:
             case Token::location:
@@ -311,7 +326,7 @@ namespace
 
     glGetShaderInfoLog(shader, buffer_size, &length, buffer);
     if(length > 0)
-      log(d_filename, 0, LogType::note, "Compiling " + stage + ": " + buffer);
+      log(d_filename, 0, LogType::note, buffer);
   }
 
   void Shader::checkProgram(GLuint program) const
@@ -322,14 +337,14 @@ namespace
 
     glGetProgramInfoLog(program, buffer_size, &length, buffer);
     if(length > 0)
-      log(d_filename, 0, LogType::note, string("Linking: ") + buffer);
+      log(d_filename, 0, LogType::note, buffer);
 
     glValidateProgram(program);
     glGetProgramInfoLog(program, buffer_size, &length, buffer);
     GLint status;
     glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
     if(status == GL_FALSE)
-      log(d_filename, 0, LogType::error, string("Building failed: ") + buffer);
+      log(d_filename, 0, LogType::error, buffer);
   }
 
   void Shader::compileShader(string const &file, string const &stage, shared_ptr<GLuint> &shader, GLuint shaderType)

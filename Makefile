@@ -19,6 +19,8 @@ vpath %.hpp include/dim
 vpath %.o obj
 vpath %.d obj
 
+LIBS = -lglfw -lX11 -lpthread -lGL -lpng -lfreetype -lassimp -lGLEW
+
 CXXSOURCES = textureproperties.cpp dim.cpp drawstate.cpp light.cpp scenegraph.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp texture.cpp surface.cpp lex.cpp
 
 CXXHEADERS = iteratorbase.hpp buffer.hpp button.hpp camera.hpp component.hpp context.hpp dim.hpp drawable.hpp drawablewrapper.hpp drawablewrapper.inl scenegraph.hpp drawstate.hpp font.hpp frame.hpp image2d.hpp light.hpp listenarea.hpp menu.hpp menuitem.hpp mesh.hpp mouse.hpp onepair.hpp shader.hpp surface.hpp surface.inl texture.hpp texture.inl tools.hpp window.hpp copyptr.hpp cloneptr.hpp
@@ -45,7 +47,7 @@ build = $(CXX) $(CXXFLAGS) -c $(SRCDIR)/$(1).cpp -o $(OBJDIR)/$(1).o
 
 $(DYNAMICPROGRAM): CXXFLAGS += -fPIC
 $(DYNAMICPROGRAM): $(CXXOBJECTS)
-	$(CXX) -shared -Wl,-soname,$(DYNAMICPROGRAM) -o $(DYNAMICPROGRAM) $(addprefix $(OBJDIR)/, $(CXXOBJECTS)) -lc -lGLEW
+	$(CXX) -shared -Wl,-soname,$(DYNAMICPROGRAM) -o $(DYNAMICPROGRAM) $(addprefix $(OBJDIR)/, $(CXXOBJECTS)) $(LIBS)
 
 -include $(addprefix $(OBJDIR)/, $(CXXDEPS))
 

@@ -114,9 +114,7 @@ namespace dim
       : d_mode(mode)
   {
     if(s_set == true)
-    {
       return;
-    }
 
     s_set = true;
 

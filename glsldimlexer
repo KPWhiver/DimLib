@@ -4,7 +4,7 @@
 %implementation-header="src/scanner.ih"
 %namespace=dim
 
-%x string include comment1 comment2
+%x string include comment
 
 %%
 
@@ -42,27 +42,18 @@
 }
 
 // comments
-"/*"                          begin(StartCondition__::comment1);
+"/*"                          begin(StartCondition__::comment);
 
-<comment1>{
+<comment>{
   "*/"                        begin(StartCondition__::INITIAL);
-  \\.|.                       //more();
+  \\.|.                       
   \n                          return Token::whitespace;
 }
-
-//"//"[\\..]*\n                 return Token::whitespace;//         
-//"//"(\\.|.)*\n                return Token::whitespace;
-"//"                          begin(StartCondition__::comment2);
-<comment2>{
-  \n                          {
-                                begin(StartCondition__::INITIAL);
-                                return Token::whitespace;
-                              }
-  \\.|.                       
-}                 
+       
+"//"(\\.|.)*\n                return Token::whitespace;
 
 // end of file
-<INITIAL,string,comment1,comment2><<EOF>>    	  {
+<INITIAL,string,comment><<EOF>> {
                                 if(popStream())
                                   return Token::endOfFile;
                                 else
@@ -87,7 +78,5 @@ dim_instance                  {setMatched("5"); return Token::number;}
 
 [a-zA-Z_][a-zA-Z0-9_]*        return Token::identifier;
 
-[^ \t\n]                      return matched()[0];
-[ \t\n]                       return Token::whitespace;
-
-                              
+[[:space:]]                   return Token::whitespace;
+[[:^space:]]                  return matched()[0];

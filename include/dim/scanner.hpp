@@ -47,8 +47,6 @@ class Scanner: public ScannerBase
         int lex();
 
 
-
-
     private:
         int lex__();
         int executeAction__(size_t ruleNr);
