@@ -24,9 +24,14 @@
 
 using namespace std;
 
-namespace dim {
+namespace dim
+{
+namespace
+{
+  //this is here to avoid freetype inclusion in the font.hpp
+  FT_Library g_library;
+}
 
-FT_Library Font::s_library;
 
 bool Font::s_initialized(false);
 
@@ -34,7 +39,7 @@ void Font::initialize()
 {
   s_initialized = true;
 
-  int error = FT_Init_FreeType(&s_library);
+  int error = FT_Init_FreeType(&g_library);
 
   if(error)
     log(__FILE__, __LINE__, LogType::error, "Failed to initialize FreeType2");
@@ -45,7 +50,7 @@ Font::Font(string filename)
   if(s_initialized == false)
     initialize();
 
-	int error = FT_New_Face(s_library, filename.c_str(), 0, &d_face);
+	int error = FT_New_Face(g_library, filename.c_str(), 0, &d_face);
 
 	if(error == FT_Err_Unknown_File_Format)
 	  log(__FILE__, __LINE__, LogType::error, "File: " + filename + " has a unsupported file format");

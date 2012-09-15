@@ -71,7 +71,7 @@ namespace dim
 	
 	void Button::setMenu(Menu *menu)
 	{
-	  d_menu.reset(menu);
+	  d_menu = menu;
 	}
 	
 	bool Button::listen(int x, int y, dim::Mouse const &mouse)
@@ -153,5 +153,10 @@ namespace dim
 	{
 		d_listenerFunction = listenerFunction;
 	}
+
+  Component *Button::v_clone() const
+  {
+    return new Button(*this);
+  }
 
 }

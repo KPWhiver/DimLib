@@ -50,6 +50,9 @@ namespace dim
     void setListener(std::function<void(void)> const &listenerFunction);
     void setSize(size_t width, size_t height);
     virtual void setContext(Context *context);
+
+  private:
+    virtual Component *v_clone() const;
   };
 }
 

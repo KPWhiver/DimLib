@@ -23,6 +23,7 @@
 
 #include "dim/camera.hpp"
 
+using namespace std;
 using namespace glm;
 
 namespace dim
@@ -57,12 +58,9 @@ void Camera::init(Camera::projection mode, float width, float height, vec3 coorF
 
   d_mode = mode;
 
-  
-
   setView();
 
   setProjection();
-
 }
 
 void Camera::setView()
@@ -133,12 +131,12 @@ float Camera::width() const
   return d_width;
 }
 
-mat4 const &Camera::in_mat_view() const
+mat4 const &Camera::viewMatrix() const
 {
 	return d_view;
 }
 
-mat4 const &Camera::in_mat_projection() const
+mat4 const &Camera::projectionMatrix() const
 {
 	return d_projection;
 }
@@ -177,13 +175,13 @@ void Camera::setZrange(float zNear, float zFar)
   setProjection();
 }
 
-void Camera::setAtShader(Shader const &shader)
+void Camera::setAtShader(Shader const &shader, string const &viewMatrix, string const &projectionMatrix)
 {
   if(d_changed == true)
     setView();
 
-  shader.set("in_mat_view", d_view);
-  shader.set("in_mat_projection", d_projection);
+  shader.set(viewMatrix, d_view);
+  shader.set(projectionMatrix, d_projection);
 }
 
 bool Camera::frustum(float ox, float oz)

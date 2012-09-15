@@ -61,12 +61,12 @@ public:
   float height() const;
   float width() const;
 
-  glm::mat4 const &in_mat_view() const;
-  glm::mat4 const &in_mat_projection() const;
+  glm::mat4 const &viewMatrix() const;
+  glm::mat4 const &projectionMatrix() const;
 
   glm::vec3 mouse;
   
-  void setAtShader(Shader const &shader);
+  void setAtShader(Shader const &shader, std::string const &viewMatrix = "viewMatrix", std::string const &projectionMatrix = "projectionMatrix");
   void editmode();
   bool frustum(float ox, float oy);
 private:

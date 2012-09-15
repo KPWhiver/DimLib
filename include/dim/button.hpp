@@ -23,6 +23,7 @@
 #include "dim/texture.hpp"
 #include "dim/menu.hpp"
 #include "dim/component.hpp"
+#include "dim/copyptr.hpp"
 
 #include <functional>
 #include <string>
@@ -33,7 +34,7 @@ namespace dim
   class Button : public Component
   {
     std::function<void(void)> d_listenerFunction;
-    std::shared_ptr<Menu> d_menu;
+    CopyPtr<Menu> d_menu;
 
     int d_x, d_y;
     size_t d_width, d_height;
@@ -52,6 +53,9 @@ namespace dim
     void setListener(std::function<void(void)> const &listenerFunction);
     void setMenu(Menu *menu);
     virtual void setContext(Context *context);
+
+  private:
+    virtual Component *v_clone() const;
   };
 
 }

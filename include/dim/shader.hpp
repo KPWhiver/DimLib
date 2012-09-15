@@ -64,6 +64,7 @@ public:
   ~Shader();
 
   Shader(std::string const &filename);
+  Shader(std::string const &input, std::string const &name);
 
   template<typename Type>
   GLint set(std::string const &variable, Type const &value) const;  
@@ -112,11 +113,13 @@ public:
   //static void initialize();
 
 private:
-  void parseShader(std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
+  void parseShader(std::istream &input, std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
   void compileShader(std::string const &file, std::string const &stage, std::shared_ptr<GLuint> &shader, GLuint shaderType);
   void checkCompile(GLuint shader, std::string const &stage) const;
   void checkProgram(GLuint program) const;
   GLint uniform(std::string const &variable) const;
+
+  void init(std::istream &input);
 
   //bool instanced;
 

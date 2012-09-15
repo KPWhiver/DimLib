@@ -42,6 +42,8 @@ namespace dim
     virtual void draw(int x, int y);
     void setCoor(int x, int y);
 
+  private:
+    virtual Component *v_clone() const;
 	};
 
 }

@@ -25,6 +25,8 @@
 
 #include "dim/component.hpp"
 #include "dim/mouse.hpp"
+#include "dim/cloneptr.hpp"
+#include "dim/camera.hpp"
 #include <memory>
 
 namespace dim
@@ -35,12 +37,14 @@ namespace dim
 		size_t d_width;
 		size_t d_height;
 		
-		std::vector<std::shared_ptr<Component>> d_components;
+		Camera d_cam;
+
+		std::vector<ClonePtr<Component>> d_components;
 
     std::shared_ptr<Context> d_context;
     
 	public:
-		Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, size_t width, size_t height, Font const &font, Shader const &shader);
+		Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, size_t width, size_t height, Font const &font);
 
     //template <typename RefType>
 		void add(Component *component);

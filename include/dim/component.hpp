@@ -52,6 +52,11 @@ namespace dim
 
 		  virtual void setContext(Context *context);
 		  
+		  Component *clone() const;
+
+		private:
+		  virtual Component *v_clone() const = 0;
+
 		  
 	};
 

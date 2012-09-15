@@ -127,34 +127,19 @@ namespace dim
     int screen = GLFW_WINDOW;
 
     if(mode == Window::fullscreen)
-    {
       screen = GLFW_FULLSCREEN;
-      if(height == 0 || width == 0)
-      {
-        GLFWvidmode resolution;
-        glfwGetDesktopMode(&resolution);
-        d_height = resolution.Height;
-        d_width = resolution.Width;
-      }
-      else
-      {
-        d_height = height;
-        d_width = width;
-      }
+
+    if(height == 0 || width == 0)
+    {
+      GLFWvidmode resolution;
+      glfwGetDesktopMode(&resolution);
+      d_height = resolution.Height;
+      d_width = resolution.Width;
     }
     else
     {
-      screen = GLFW_WINDOW;
-      if(height == 0 || width == 0)
-      {
-        d_height = 600;
-        d_width = 800;
-      }
-      else
-      {
-        d_height = height;
-        d_width = width;
-      }
+      d_height = height;
+      d_width = width;
     }
 
     //create new window
@@ -173,13 +158,9 @@ namespace dim
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
-    //glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LEQUAL);
-
-    //glEnableVertexAttribArray(0);
-    //glEnableVertexAttribArray(1);
-    //glEnableVertexAttribArray(2);
 
     swapBuffers();
   }

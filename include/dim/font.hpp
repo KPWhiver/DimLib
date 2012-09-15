@@ -20,12 +20,12 @@
 #ifndef FONT_HPP
 #define FONT_HPP
 
+#include <string>
+#include <memory>
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
-
-#include <string>
-#include <memory>
 
 #include "dim/texture.hpp"
 
@@ -37,7 +37,6 @@ namespace dim
     FT_Face d_face;
 
     FT_Glyph d_glyphs[128];
-    static FT_Library s_library;
 
     static bool s_initialized;
 

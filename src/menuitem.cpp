@@ -112,4 +112,10 @@ namespace dim
   {
   	d_listenerFunction = listenerFunction;
   }
+
+  Component *MenuItem::v_clone() const
+  {
+    return new MenuItem(*this);
+  }
+
 }

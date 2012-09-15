@@ -42,7 +42,7 @@ namespace dim
 		glm::vec4 d_clearColor;
 
 	public:
-		enum Mode
+		enum Mode : int
 		{
 			fullscreen, windowed,
 		};

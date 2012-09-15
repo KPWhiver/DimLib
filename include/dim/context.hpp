@@ -36,12 +36,10 @@ namespace dim
 
     Font d_font;
 
-    Shader d_shader;
-
     static bool s_initialized;
 
   public:
-    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font, Shader const &shader);
+    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font);
 
     Texture<GLubyte> const &buttonTexture() const;
     Texture<GLubyte> const &buttonHoverTexture() const;

@@ -112,4 +112,10 @@ bool Menu::active() const
 	return d_active;
 }
 
+Component *Menu::v_clone() const
+{
+  return new Menu(*this);
+}
+
+
 }

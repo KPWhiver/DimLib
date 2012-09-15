@@ -23,6 +23,7 @@
 #include "dim/texture.hpp"
 #include "dim/menuitem.hpp"
 #include "dim/component.hpp"
+#include "dim/copyptr.hpp"
 
 #include <memory>
 
@@ -33,7 +34,7 @@ namespace dim
     size_t d_width, d_height;
     int d_x, d_y;
 
-    std::vector<MenuItem*> d_items;
+    std::vector<CopyPtr<MenuItem>> d_items;
     bool d_active;
 
   public:
@@ -48,6 +49,8 @@ namespace dim
     bool active() const;
     virtual void setContext(Context *context);
 
+  private:
+    virtual Component *v_clone() const;
 };
 
 }

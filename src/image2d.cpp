@@ -64,4 +64,10 @@ namespace dim
     d_y = y;
   }
 
+  Component *Image2D::v_clone() const
+  {
+    return new Image2D(*this);
+  }
+
+
 }

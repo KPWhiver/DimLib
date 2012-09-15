@@ -113,9 +113,10 @@ namespace dim
       TextureBase();
 
       /* texture properties */
-      void setBorderColor(glm::vec4 const &color) const;
+      void setBorderColor(glm::vec4 const &color);
+      void setWrapping(Wrapping wrap);
 
-      void generateMipmap() const;
+      void generateMipmap();
 
       GLuint id() const;
       uint height() const;

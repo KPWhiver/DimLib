@@ -81,9 +81,6 @@ namespace dim
       
       SceneGraph &operator=(SceneGraph const &other);
       SceneGraph &operator=(SceneGraph &&tmp);
-      
-      ~SceneGraph();
-
 
     // regular functions
       template<typename RefType>
@@ -92,6 +89,7 @@ namespace dim
       template<typename RefType>
       void load(std::string const &filename);
 
+      template<typename RefType>
       void save(std::string const &filename);
       void clear();
 
@@ -114,6 +112,14 @@ namespace dim
 
       size_t key() const;
   };
+
+  // TODO fix
+  template<typename RefType>
+  void SceneGraph::save(std::string const &filename)
+  {
+    for(auto &element: d_drawableWrappers)
+      element->save(filename);
+  }
 
   template<typename RefType>
   void SceneGraph::load(std::string const &filename)

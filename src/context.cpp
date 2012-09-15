@@ -28,13 +28,12 @@ namespace dim
 	bool Context::s_initialized = false;
 	
 	Context::Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable,
-			Font const &font, Shader const &shader)
+			Font const &font)
 			:
 				d_butTexture(but),
 				d_butHoverTexture(butHover),
 				d_butDisableTexture(butDisable),
-				d_font(font),
-				d_shader(shader)
+				d_font(font)
 	{
 
 	}
@@ -70,7 +69,18 @@ namespace dim
 
 	Shader const &Context::shader() const
 	{
-	  return d_shader;
+	  static Shader paletShader("#version 120\n "
+	                            "%-vertex-shader\n"
+	                            "uniform mat4 in_mat_projection;\n uniform mat4 in_mat_view;\n uniform mat4 in_mat_model;\n"
+	                            "layout(location = dim_vertex) attribute vec2 in_position;\n layout(location = dim_texCoord) attribute vec2 in_texcoord0;\n"
+	                            "varying vec2 pass_texcoord0;\n"
+	                            "void main(){pass_texcoord0 = in_texcoord0;\n"
+	                            "gl_Position = in_mat_projection * in_mat_model * in_mat_view * vec4(in_position, vec2(1.0));}"
+	                            "%-fragment-shader\n"
+	                            "uniform sampler2D in_texture0;\n varying vec2 pass_texcoord0;\n"
+	                            "void main(){gl_FragColor = texture2D(in_texture0, pass_texcoord0);}");
+
+	  return paletShader;
 	}
 
 }

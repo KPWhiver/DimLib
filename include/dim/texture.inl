@@ -26,11 +26,11 @@ namespace dim
         :
             d_id(new GLuint(0), [](GLuint *ptr)
             { glDeleteTextures(1, ptr); delete ptr;}),
-            d_width(0),
             d_height(0),
+            d_width(0),
             d_format(Format::R8),
-            d_outdatedBuffer(false),
             d_keepBuffered(false),
+            d_outdatedBuffer(false),
             d_bufferLevel(0)
     {
       if(s_initialized == false)
@@ -337,14 +337,22 @@ namespace dim
 
     /* texture properties */
     template<typename Type>
-    void TextureBase<Type>::setBorderColor(glm::vec4 const &color) const
+    void TextureBase<Type>::setBorderColor(glm::vec4 const &color)
     {
       glBindTexture(GL_TEXTURE_2D, *d_id);
       glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
     }
 
     template<typename Type>
-    void TextureBase<Type>::generateMipmap() const
+    void TextureBase<Type>::setWrapping(Wrapping wrap)
+    {
+      glBindTexture(GL_TEXTURE_2D, *d_id);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap));
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap));
+    }
+
+    template<typename Type>
+    void TextureBase<Type>::generateMipmap()
     {
       glBindTexture(GL_TEXTURE_2D, *d_id);
       glGenerateMipmap (GL_TEXTURE_2D);
