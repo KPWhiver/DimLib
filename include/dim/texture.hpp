@@ -122,6 +122,8 @@ namespace dim
       uint width() const;
       Format format() const;
       
+      void bind() const;
+      
       /* local texture buffer */
       void renewBuffer();
       void update(Type *data = 0);

@@ -154,7 +154,7 @@ private:
 
     glActiveTexture(textureUnit);
     set(variable, static_cast<int>(unit));
-    glBindTexture(GL_TEXTURE_2D, texture.id());
+    texture.bind();
   }
 }
 

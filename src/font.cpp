@@ -106,12 +106,14 @@ Texture<GLubyte> Font::generateTexture(string const &text, size_t textureWidth, 
   size_t xStart = (textureWidth - textWidth) / 2;
   //size_t yStart = (textureHeight - textHeight) / 2;
 
-  GLubyte *textMap = new GLubyte[2 * textureHeight * textureWidth];
+  GLubyte *textMap = new GLubyte[4 * textureHeight * textureWidth];
   
-  for(size_t idx = 0; idx != 2 * textureHeight * textureWidth; idx += 2)
+  for(size_t idx = 0; idx != 4 * textureHeight * textureWidth; idx += 4)
   {
     textMap[idx] = 0;
     textMap[idx + 1] = 0;
+    textMap[idx + 2] = 0;
+    textMap[idx + 3] = 0;
   }
 
   size_t xTexture = xStart;
