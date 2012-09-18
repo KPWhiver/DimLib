@@ -116,15 +116,15 @@ void Light::setPosition(vec4 const &position)
 /* Transforms the light to camera space */
 void Light::transform()
 {
-
-	if(d_mode == Light::directional)
+// TODO fix
+	/*if(d_mode == Light::directional)
 	{
 		d_transformedPosition = vec4(Shader::active().normalMatrix() * vec3(d_position), 1.0);
 	}
 	else
 	{
 		d_transformedPosition = Shader::active().modelMatrix() * d_position;
-	}
+	}*/
 }
 
 }

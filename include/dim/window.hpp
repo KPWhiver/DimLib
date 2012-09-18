@@ -17,10 +17,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef WINDOW
-#define WINDOW
+#ifndef WINDOW_HPP
+#define WINDOW_HPP
 
 #include <string>
+#include <functional>
+
 
 #include "dim/mouse.hpp"
 
@@ -65,6 +67,9 @@ namespace dim
 		Mouse const &mouse() const;
 
 		void setClearColor(glm::vec4 const &color);
+		void setCloseFunction(int (*closeFunction)());
+		void setChangeSizeFunction(void (*changeSizeFunction)(int, int));
+		void enableVSync(bool enable = true);
 
     void renderTo();
     void renderToPart(size_t x, size_t y, size_t width, size_t height, bool clear);

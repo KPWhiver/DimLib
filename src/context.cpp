@@ -40,7 +40,7 @@ namespace dim
 	
 	Mesh const &Context::mesh() const
 	{
-		static GLfloat interleaved[24]{0, 0,  0, 0,  0, 10,  0, 1,  10, 0,  1, 0,  10, 10,  1, 1,  10, 0,  1, 0,  0, 10,  0, 1};
+		static GLfloat interleaved[24]{0, 0,  0, 0,  0, 1,  0, 1,  1, 0,  1, 0,  1, 1,  1, 1,  1, 0,  1, 0,  0, 1,  0, 1};
 		
 		static Mesh mesh(interleaved, {{Attribute::vertex, Attribute::vec2}, {Attribute::texCoord, Attribute::vec2}}, 6, Mesh::triangle, Mesh::interleaved);
 		
@@ -69,16 +69,16 @@ namespace dim
 
 	Shader const &Context::shader() const
 	{
-	  static Shader paletShader("#version 120\n "
+	  static Shader paletShader("guiShader", "#version 120\n"
 	                            "%-vertex-shader\n"
 	                            "uniform mat4 in_mat_projection;\n uniform mat4 in_mat_view;\n uniform mat4 in_mat_model;\n"
 	                            "layout(location = dim_vertex) attribute vec2 in_position;\n layout(location = dim_texCoord) attribute vec2 in_texcoord0;\n"
 	                            "varying vec2 pass_texcoord0;\n"
 	                            "void main(){pass_texcoord0 = in_texcoord0;\n"
-	                            "gl_Position = in_mat_projection * in_mat_model * in_mat_view * vec4(in_position, vec2(1.0));}"
+	                            "gl_Position = in_mat_projection * in_mat_model * in_mat_view * vec4(in_position, vec2(1.0));}\n"
 	                            "%-fragment-shader\n"
-	                            "uniform sampler2D in_texture0;\n varying vec2 pass_texcoord0;\n"
-	                            "void main(){gl_FragColor = texture2D(in_texture0, pass_texcoord0);}");
+	                            "uniform sampler2D in_texture0;\n uniform sampler2D in_text;\n varying vec2 pass_texcoord0;\n"
+	                            "void main(){gl_FragColor = texture2D(in_texture0, pass_texcoord0) - vec4(vec3(texture2D(in_text, pass_texcoord0).r), 0.0);}");
 
 	  return paletShader;
 	}

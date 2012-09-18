@@ -43,6 +43,8 @@ class Shader
   
   static void initialize();
 
+  static Shader const &defaultShader();
+
   std::shared_ptr<GLuint> d_id;
   std::shared_ptr<GLuint> d_fragmentId;
   std::shared_ptr<GLuint> d_vertexId;
@@ -52,9 +54,6 @@ class Shader
   std::shared_ptr<GLuint> d_computeId;
   
   static Shader const *s_activeShader;
-
-  static glm::mat4 s_modelMatrix;
-  static glm::mat3 s_normalMatrix;
     
   mutable std::unordered_map<std::string, GLint> d_uniforms;
   
@@ -64,7 +63,7 @@ public:
   ~Shader();
 
   Shader(std::string const &filename);
-  Shader(std::string const &input, std::string const &name);
+  Shader(std::string const &name, std::string const &input);
 
   template<typename Type>
   GLint set(std::string const &variable, Type const &value) const;  
@@ -72,6 +71,9 @@ public:
   template<typename Type>
   void set(std::string variable, Texture<Type> const &value, uint unit) const;
   
+  template<typename Type>
+  GLint set(std::string variable, Type const *values, size_t size) const;
+
   template<typename Type>
   void set(GLint variable, Type const &value) const;
 
@@ -101,12 +103,6 @@ public:
   void use() const;
 
   static Shader const &active();
-
-  static glm::mat4 &modelMatrix();
-  static glm::mat3 &normalMatrix();
-
-  void transformBegin() const;
-  void transformEnd() const;
 
   GLuint id() const;
 
@@ -142,6 +138,14 @@ private:
     return loc;
   }
   
+  template<typename Type>
+  GLint Shader::set(std::string variable, Type const *values, size_t size) const
+  {
+    GLint loc = uniform(variable);
+    set(loc, values, size);
+    return loc;
+  }
+
   template<typename Type>
   void Shader::set(std::string variable, Texture<Type> const &texture, uint unit) const
   { 

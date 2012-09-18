@@ -243,8 +243,7 @@ namespace dim
   template<typename Type>
   Texture<Type>::Texture()
   {
-    Type data(0);
-    init(&data, Filtering::nearest, Format::R8, 1, 1, false, Wrapping::repeat);
+    init(0, Filtering::nearest, Format::R8, 0, 0, false, Wrapping::repeat);
   }
 
   template<typename Type>

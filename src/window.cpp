@@ -147,6 +147,15 @@ namespace dim
       log(__FILE__, __LINE__, LogType::error, "Failed to open a window");
 
     glfwSetWindowTitle(title.c_str());
+
+    int realWidth;
+    int realHeight;
+    glfwGetWindowSize(&realWidth, &realHeight);
+
+    d_width = realWidth;
+    d_height = realHeight;
+
+    //d_mouse.setRealSize(realWidth, realHeight);
     //glfwDisable(GLFW_MOUSE_CURSOR);
 
     //initialize glew
@@ -163,6 +172,21 @@ namespace dim
     glDepthFunc(GL_LEQUAL);
 
     swapBuffers();
+  }
+
+  void Window::setCloseFunction(int (*closeFunction)())
+  {
+    glfwSetWindowCloseCallback(closeFunction);
+  }
+
+  void Window::setChangeSizeFunction(void (*changeSizeFunction)(int, int))
+  {
+    glfwSetWindowSizeCallback(changeSizeFunction);
+  }
+
+  void Window::enableVSync(bool enable)
+  {
+    glfwSwapInterval(enable);
   }
 
   Window::~Window()

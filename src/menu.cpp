@@ -49,14 +49,11 @@ Menu::Menu()
 
 bool Menu::listen(int x, int y, dim::Mouse const &mouse)
 {
-	x += d_x;
-	y += d_y;
-
   if(d_active == true)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      if(d_items[idx]->listen(x, y - idx * d_height - d_height, mouse))
+      if(d_items[idx]->listen(x + d_x, y + d_y - idx * d_height - d_height, mouse))
       {
         d_active = false;
         return true;
@@ -66,17 +63,12 @@ bool Menu::listen(int x, int y, dim::Mouse const &mouse)
   return false;
 }
 
-void Menu::draw(int x, int y)
+void Menu::draw(int x, int  y)
 {
-	x += d_x;
-	y += d_y;
-
   if(d_active == true)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
-    {
-      d_items[idx]->draw(x, y - idx * d_height - d_height);
-    }
+      d_items[idx]->draw(x + d_x, y + d_y - idx * d_height - d_height, d_context->buttonTexture(), d_context->buttonHoverTexture());
   }
 }
 
@@ -90,9 +82,7 @@ void Menu::setContext(Context *context)
 {
 	d_context = context;
 	for(size_t idx = 0; idx != d_items.size(); ++idx)
-	{
 		d_items[idx]->setContext(context);
-	}
 }
 
 void Menu::activate(int x, int y)

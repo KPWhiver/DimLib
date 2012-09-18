@@ -31,7 +31,7 @@ namespace dim
 
     public:
       CopyPtr();
-      CopyPtr(Type *ptr);
+      explicit CopyPtr(Type *ptr);
       CopyPtr(CopyPtr const &other);
       CopyPtr(CopyPtr &&tmp);
 
@@ -116,7 +116,10 @@ namespace dim
   template <typename Type>
   void CopyPtr<Type>::reset(Type *ptr)
   {
-    *this = CopyPtr<Type>(ptr);
+    if(d_ptr != 0)
+      delete d_ptr;
+
+    d_ptr = ptr;
   }
 
   template <typename Type>

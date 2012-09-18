@@ -27,8 +27,6 @@
 #include "dim/shader.hpp"
 #include "dim/scanner.hpp"
 
-#include <glm/gtc/matrix_inverse.hpp>
-
 using namespace std;
 using namespace glm;
 
@@ -143,10 +141,6 @@ namespace dim
 
   Shader const *Shader::s_activeShader = 0;
 
-  mat4 Shader::s_modelMatrix = mat4(1.0);
-
-  mat3 Shader::s_normalMatrix = mat3(1.0);
-
   void Shader::initialize()
   {
     s_initialized = true;
@@ -158,6 +152,18 @@ namespace dim
     s_layout = GLEW_ARB_explicit_attrib_location || s_separate;
 
     glGetFloatv(GL_MAX_TEXTURE_UNITS, &s_maxTextureUnits);
+  }
+
+  Shader const &Shader::defaultShader()
+  {
+    static Shader shader("defaultShader", "#version 120\n"
+                         "%-vertex-shader\n"
+                         "layout(location = dim_vertex) attribute vec4 in_position;\n"
+                         "void main(){gl_Position = in_position;}\n"
+                         "%-fragment-shader\n"
+                         "void main(){gl_FragColor = vec4(1.0);}\n");
+
+    return shader;
   }
 
   GLint Shader::uniform(string const &variable) const
@@ -383,7 +389,7 @@ namespace dim
     init(file);
   }
 
-  Shader::Shader(string const &input, string const &name)
+  Shader::Shader(string const &name, string const &input)
       :
           d_id(new GLuint(glCreateProgram()), [](GLuint *ptr)
           {
@@ -481,7 +487,7 @@ namespace dim
 
   void Shader::use() const
   {
-    if(s_activeShader == 0 || id() != active().id())
+    if(id() != active().id())
     {
       glUseProgram(*d_id);
       s_activeShader = const_cast<Shader*>(this);
@@ -490,36 +496,10 @@ namespace dim
 
   Shader const &Shader::active()
   {
-    return *s_activeShader;
-  }
-
-  mat4 &Shader::modelMatrix()
-  {
-    return s_modelMatrix;
-  }
-
-  mat3 &Shader::normalMatrix()
-  {
-    return s_normalMatrix;
-  }
-
-  void Shader::transformBegin() const
-  {
-    //s_tmp_modelMatrix = s_modelMatrix;
-    //s_tmp_normalMatrix = s_normalMatrix;
-
-    set("modelMatrix", s_modelMatrix);
-    s_normalMatrix = inverseTranspose(mat3(s_modelMatrix));
-    set("normalMatrix", s_normalMatrix);
-  }
-
-  void Shader::transformEnd() const
-  {
-    s_modelMatrix = mat4(1.0);
-    s_normalMatrix = mat3(1.0);
-
-    set("modelMatrix", s_modelMatrix);
-    set("normalMatrix", s_normalMatrix);
+    if(s_activeShader != 0)
+      return *s_activeShader;
+    else
+      return defaultShader();
   }
 
 // matrices

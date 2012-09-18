@@ -29,7 +29,7 @@ namespace dim
 
     public:
       ClonePtr();
-      ClonePtr(Type *ptr);
+      explicit ClonePtr(Type *ptr);
       ClonePtr(ClonePtr const &other);
       ClonePtr(ClonePtr &&tmp);
 
@@ -39,6 +39,8 @@ namespace dim
       operator Type*();
       Type &operator*() const;
       Type *operator->() const;
+
+      void reset(Type *ptr);
 
       ~ClonePtr();
   };
@@ -105,6 +107,15 @@ namespace dim
   Type *ClonePtr<Type>::operator->() const
   {
     return d_ptr;
+  }
+
+  template <typename Type>
+  void ClonePtr<Type>::reset(Type *ptr)
+  {
+    if(d_ptr != 0)
+      delete d_ptr;
+
+    d_ptr = ptr;
   }
 
   template <typename Type>

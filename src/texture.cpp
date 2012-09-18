@@ -128,7 +128,7 @@ namespace dim
 
     for(uint y = 0; y != height; ++y)
     {
-      png_uint_32 offset = (height - y - 1) * (width * channels);
+      png_uint_32 offset = y * (width * channels);
       rowPtrs[y] = static_cast<png_bytep>(data) + offset;
     }
 
@@ -195,7 +195,7 @@ namespace dim
 
     for(uint y = 0; y != height(); ++y)
     {
-      png_uint_32 offset = (height() - y - 1) * (width() * channels);
+      png_uint_32 offset = y * (width() * channels);
       rowPtrs[y] = static_cast<png_bytep>(data) + offset;
     }
 
@@ -216,8 +216,7 @@ namespace dim
 
   Texture<GLubyte>::Texture()
   {
-    GLubyte data(0);
-    init(&data, Filtering::nearest, Format::R8, 1, 1, false, Wrapping::repeat);
+    init(0, Filtering::nearest, Format::R8, 0, 0, false, Wrapping::repeat);
   }
 
   Texture<GLubyte>::Texture(GLubyte * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)

@@ -21,15 +21,19 @@
 #define MENUITEM_HPP
 
 #include "dim/texture.hpp"
-#include "dim/component.hpp"
+#include "dim/context.hpp"
+#include "dim/mouse.hpp"
 
 #include <functional>
 #include <string>
 
 namespace dim
 {
-  class MenuItem : public Component
+  class MenuItem
   {
+    friend class Menu;
+    Context *d_context;
+
     Texture<GLubyte> d_text;
     std::string d_strText;
 
@@ -45,14 +49,13 @@ namespace dim
     //~MenuItem();
 
 
-    void draw(int x, int y);
+    void draw(int x, int y, Texture<> const &texture, Texture<> const &hoverTexture);
     bool listen(int x, int y, dim::Mouse const &mouse);
     void setListener(std::function<void(void)> const &listenerFunction);
-    void setSize(size_t width, size_t height);
-    virtual void setContext(Context *context);
 
   private:
-    virtual Component *v_clone() const;
+    void setSize(size_t width, size_t height);
+    void setContext(Context *context);
   };
 }
 

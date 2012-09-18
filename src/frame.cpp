@@ -37,6 +37,7 @@ namespace dim
 			  d_width(width),
 			  d_height(height),
 			  d_cam(Camera::flat, d_width, d_height),
+			  d_components([](Component *ptr){return ptr->clone();}),
 			  d_context(new Context(but, butHover, butDisable, font))
 	{
 
@@ -47,19 +48,19 @@ namespace dim
 	  component->setContext(d_context.get());
 	  //component.setId(d_components.size());
 	  
-	  auto itToInsert = lower_bound(d_components.begin(), d_components.end(), component, [](ClonePtr<Component> &left, Component *right)
+	  auto itToInsert = lower_bound(d_components.begin(), d_components.end(), component, [](Component *left, Component *right)
 	  {
 	    return *left < *right;
 	  });
 	  
-		d_components.insert(itToInsert, ClonePtr<Component>(component));
+		d_components.insert(itToInsert, component);
 	}
 
 	void Frame::draw()
 	{
 	  d_context->shader().use();
-	  d_cam.setAtShader(d_context->shader());
-	  d_context->shader().set("in_mat_model", d_context->shader().modelMatrix());
+	  d_cam.setAtShader(d_context->shader(), "in_mat_view", "in_mat_projection");
+	  d_context->shader().set("in_mat_model", glm::mat4(1.0));
 
 	  d_context->mesh().bind();
 		for (size_t idx = 0; idx != d_components.size(); ++idx)

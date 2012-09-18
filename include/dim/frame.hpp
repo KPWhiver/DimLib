@@ -25,8 +25,9 @@
 
 #include "dim/component.hpp"
 #include "dim/mouse.hpp"
-#include "dim/cloneptr.hpp"
+#include "dim/ptrvector.hpp"
 #include "dim/camera.hpp"
+#include "dim/copyptr.hpp"
 #include <memory>
 
 namespace dim
@@ -39,19 +40,15 @@ namespace dim
 		
 		Camera d_cam;
 
-		std::vector<ClonePtr<Component>> d_components;
+		dim::PtrVector<Component> d_components;
 
     std::shared_ptr<Context> d_context;
     
 	public:
 		Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, size_t width, size_t height, Font const &font);
 
-    //template <typename RefType>
 		void add(Component *component);
 		void remove(Component *component);
-
-    //template <typename RefType>
-		//void update(RefType const &component);
 
     void listen(dim::Mouse const &mouse);
 		void draw();
@@ -71,29 +68,5 @@ namespace dim
 
 		//Mesh const &mesh() const;
 	};
-
-  /*template <typename RefType>
-	void Frame::add(RefType &component)
-	{
-	  component.setContext(d_context);
-	  component.setId(d_components.size());
-	  
-	  auto itToInsert = lower_bound(d_components.begin(), d_components.end(), component);
-		d_components.insert(itToInsert, new RefType(component));
-	}
-	
-	template <typename RefType>
-	void Frame::update(RefType const &component)
-	{
-    for(size_t idx = 0; idx != d_components.size(); ++idx)
-    {
-      if(d_components[idx]->id() == component.id())
-      {
-        delete d_components[idx];
-        d_components[idx] = new RefType(component);
-        break; 
-      }
-    }
-	}*/
 }
 #endif /* CONTEXT_HPP_ */

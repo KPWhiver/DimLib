@@ -35,7 +35,7 @@ namespace dim
 	  		
 		size_t d_width;
 		size_t d_height;
-		Texture<GLubyte> d_image;
+		Texture<> d_image;
 
   public:
     Image2D(int x, int y, size_t width, size_t height, Texture<GLubyte> const &image);
@@ -44,6 +44,7 @@ namespace dim
 
   private:
     virtual Component *v_clone() const;
+    static Texture<> defaultTexture();
 	};
 
 }
