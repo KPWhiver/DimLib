@@ -24,6 +24,8 @@
 namespace dim
 {
 
+Menu* Menu::s_active(0);
+
 Menu::Menu(size_t width, size_t height)
 :
   d_width(width),
@@ -47,16 +49,19 @@ Menu::Menu()
 	d_priority = 100;
 }
 
+Menu::~Menu()
+{
+  if(s_active == this)
+    s_active = 0;
+}
+
 bool Menu::listen(int x, int y, dim::Mouse const &mouse)
 {
-	x += d_x;
-	y += d_y;
-
   if(d_active == true)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      if(d_items[idx]->listen(x, y - idx * d_height - d_height, mouse))
+      if(d_items[idx]->listen(x + d_x, y + d_y - idx * d_height - d_height, mouse))
       {
         d_active = false;
         return true;
@@ -66,16 +71,18 @@ bool Menu::listen(int x, int y, dim::Mouse const &mouse)
   return false;
 }
 
-void Menu::draw(int x, int y)
+void Menu::draw(int x, int  y)
 {
-	x += d_x;
-	y += d_y;
-
   if(d_active == true)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      d_items[idx]->draw(x, y - idx * d_height - d_height);
+      if(idx == 0)
+        d_items[idx]->draw(x + d_x, y + d_y - idx * d_height - d_height, d_context->menuBottomTexture(), d_context->menuOverlayBottomTexture());
+      else if(idx == d_items.size() - 1)
+        d_items[idx]->draw(x + d_x, y + d_y - idx * d_height - d_height, d_context->menuTopTexture(), d_context->menuOverlayTopTexture());
+      else
+        d_items[idx]->draw(x + d_x, y + d_y - idx * d_height - d_height, d_context->menuMiddleTexture(), d_context->menuOverlayMiddleTexture());
     }
   }
 }
@@ -90,9 +97,7 @@ void Menu::setContext(Context *context)
 {
 	d_context = context;
 	for(size_t idx = 0; idx != d_items.size(); ++idx)
-	{
 		d_items[idx]->setContext(context);
-	}
 }
 
 void Menu::activate(int x, int y)
@@ -100,16 +105,28 @@ void Menu::activate(int x, int y)
 	d_x = x;
 	d_y = y;
   d_active = true;
+  if(s_active != 0)
+    s_active->deactivate();
+
+  s_active = this;
 }
 
 void Menu::deactivate()
 {
 	d_active = false;
+	if(s_active == this)
+	  s_active = 0;
 }
 
 bool Menu::active() const
 {
 	return d_active;
 }
+
+Component *Menu::v_clone() const
+{
+  return new Menu(*this);
+}
+
 
 }

@@ -226,12 +226,6 @@ namespace dim
     return end();
   }
 
-  void SceneGraph::save(string const &filename)
-  {
-    for(auto &element: d_drawableWrappers)
-      element->save(filename);
-  }
-
   void SceneGraph::clear()
   {
     for(auto &element: d_drawableWrappers)

@@ -110,4 +110,10 @@ namespace dim
 		d_listenerFunctionRightPressed = listenerFunction;
 	}
 
+  Component *ListenArea::v_clone() const
+  {
+    return new ListenArea(*this);
+  }
+
+
 }

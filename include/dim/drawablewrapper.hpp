@@ -32,7 +32,7 @@
 #include "dim/drawable.hpp"
 #include "dim/iteratorbase.hpp"
 #include "dim/onepair.hpp"
-#include "dim/copyptr.hpp"
+#include "dim/cloneptr.hpp"
 
 namespace dim
 {
@@ -123,7 +123,7 @@ namespace internal
   template<typename RefType>
   class DrawableWrapper<RefType> : public DrawableWrapper<Drawable>
   {
-      typedef std::unordered_map<Drawable::Key, std::vector<CopyPtr<RefType>>, std::hash<long>, std::equal_to<long>> Storage;
+      typedef std::unordered_map<Drawable::Key, std::vector<ClonePtr<RefType>>, std::hash<long>, std::equal_to<long>> Storage;
       
       Storage d_map;
 

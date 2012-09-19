@@ -23,6 +23,7 @@
 #include "dim/texture.hpp"
 #include "dim/menuitem.hpp"
 #include "dim/component.hpp"
+#include "dim/ptrvector.hpp"
 
 #include <memory>
 
@@ -33,12 +34,15 @@ namespace dim
     size_t d_width, d_height;
     int d_x, d_y;
 
-    std::vector<MenuItem*> d_items;
+    dim::PtrVector<MenuItem> d_items;
     bool d_active;
+
+    static Menu* s_active;
 
   public:
     Menu(size_t d_width, size_t d_height);
     Menu();
+    ~Menu();
 
     void draw(int x, int y);
     bool listen(int x, int y, dim::Mouse const &mouse);
@@ -48,6 +52,8 @@ namespace dim
     bool active() const;
     virtual void setContext(Context *context);
 
+  private:
+    virtual Component *v_clone() const;
 };
 
 }

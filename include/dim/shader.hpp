@@ -43,6 +43,8 @@ class Shader
   
   static void initialize();
 
+  static Shader const &defaultShader();
+
   std::shared_ptr<GLuint> d_id;
   std::shared_ptr<GLuint> d_fragmentId;
   std::shared_ptr<GLuint> d_vertexId;
@@ -52,9 +54,6 @@ class Shader
   std::shared_ptr<GLuint> d_computeId;
   
   static Shader const *s_activeShader;
-
-  static glm::mat4 s_modelMatrix;
-  static glm::mat3 s_normalMatrix;
     
   mutable std::unordered_map<std::string, GLint> d_uniforms;
   
@@ -64,6 +63,7 @@ public:
   ~Shader();
 
   Shader(std::string const &filename);
+  Shader(std::string const &name, std::string const &input);
 
   template<typename Type>
   GLint set(std::string const &variable, Type const &value) const;  
@@ -71,6 +71,9 @@ public:
   template<typename Type>
   void set(std::string variable, Texture<Type> const &value, uint unit) const;
   
+  template<typename Type>
+  GLint set(std::string variable, Type const *values, size_t size) const;
+
   template<typename Type>
   void set(GLint variable, Type const &value) const;
 
@@ -101,22 +104,18 @@ public:
 
   static Shader const &active();
 
-  static glm::mat4 &modelMatrix();
-  static glm::mat3 &normalMatrix();
-
-  void transformBegin() const;
-  void transformEnd() const;
-
   GLuint id() const;
 
   //static void initialize();
 
 private:
-  void parseShader(std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
+  void parseShader(std::istream &input, std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
   void compileShader(std::string const &file, std::string const &stage, std::shared_ptr<GLuint> &shader, GLuint shaderType);
   void checkCompile(GLuint shader, std::string const &stage) const;
   void checkProgram(GLuint program) const;
   GLint uniform(std::string const &variable) const;
+
+  void init(std::istream &input);
 
   //bool instanced;
 
@@ -139,6 +138,14 @@ private:
     return loc;
   }
   
+  template<typename Type>
+  GLint Shader::set(std::string variable, Type const *values, size_t size) const
+  {
+    GLint loc = uniform(variable);
+    set(loc, values, size);
+    return loc;
+  }
+
   template<typename Type>
   void Shader::set(std::string variable, Texture<Type> const &texture, uint unit) const
   { 

@@ -193,7 +193,7 @@ namespace internal
     if(changing)
       setChanged(true);
 
-    std::vector<CopyPtr<RefType*>> &list = d_map[Drawable::Key(xloc, zloc)];
+    std::vector<ClonePtr<RefType>> &list = d_map[Drawable::Key(xloc, zloc)];
 
     //std::pair<size_t, Drawable::Key> id(list.size(), Drawable::Key(xloc, zloc));
 

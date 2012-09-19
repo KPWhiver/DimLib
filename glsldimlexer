@@ -9,12 +9,12 @@
 %%
 
 // shader stages
-^[ \t]*%-vertex-shader        return Token::vertex;
-^[ \t]*%-fragment-shader      return Token::fragment;
-^[ \t]*%-geometry-shader      return Token::geometry;
-^[ \t]*%-tess-control-shader  return Token::tessControl;
-^[ \t]*%-tess-eval-shader     return Token::tessEval;
-^[ \t]*%-compute-shader       return Token::compute;
+^[ \t]*vertex:                return Token::vertex;
+^[ \t]*fragment:              return Token::fragment;
+^[ \t]*geometry:              return Token::geometry;
+^[ \t]*tessControl:           return Token::tessControl;
+^[ \t]*tessEvaluation:        return Token::tessEval;
+^[ \t]*compute:               return Token::compute;
 
 // preprocessor directives
 ^[ \t]*#version[ \t]*         return Token::version;

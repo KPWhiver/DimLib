@@ -25,6 +25,9 @@
 
 #include "dim/component.hpp"
 #include "dim/mouse.hpp"
+#include "dim/ptrvector.hpp"
+#include "dim/camera.hpp"
+#include "dim/copyptr.hpp"
 #include <memory>
 
 namespace dim
@@ -35,25 +38,31 @@ namespace dim
 		size_t d_width;
 		size_t d_height;
 		
-		std::vector<std::shared_ptr<Component>> d_components;
+		Camera d_cam;
+
+		dim::PtrVector<Component> d_components;
 
     std::shared_ptr<Context> d_context;
     
 	public:
-		Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, size_t width, size_t height, Font const &font, Shader const &shader);
+		Frame(Texture<> const &defaultTexture, size_t width, size_t height, Font const &font);
 
-    //template <typename RefType>
 		void add(Component *component);
 		void remove(Component *component);
-
-    //template <typename RefType>
-		//void update(RefType const &component);
 
     void listen(dim::Mouse const &mouse);
 		void draw();
 
 		void setCoords(int x, int y);
 		void setSize(size_t width, size_t height);
+
+		void setButtonTexture(Texture<> const &button);
+		void setButtonOverlayTexture(Texture<> const &overlay);
+		void setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom);
+		void setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu);
+
+		void setHoverColor(glm::vec4 const &color);
+		void setDisabledColor(glm::vec4 const &color);
 
 		//int x() const;
 		//int y() const;
@@ -67,29 +76,5 @@ namespace dim
 
 		//Mesh const &mesh() const;
 	};
-
-  /*template <typename RefType>
-	void Frame::add(RefType &component)
-	{
-	  component.setContext(d_context);
-	  component.setId(d_components.size());
-	  
-	  auto itToInsert = lower_bound(d_components.begin(), d_components.end(), component);
-		d_components.insert(itToInsert, new RefType(component));
-	}
-	
-	template <typename RefType>
-	void Frame::update(RefType const &component)
-	{
-    for(size_t idx = 0; idx != d_components.size(); ++idx)
-    {
-      if(d_components[idx]->id() == component.id())
-      {
-        delete d_components[idx];
-        d_components[idx] = new RefType(component);
-        break; 
-      }
-    }
-	}*/
 }
 #endif /* CONTEXT_HPP_ */

@@ -53,20 +53,20 @@ namespace dim
 
       glm::vec3 const &rot() const;
 
-      DrawState const &drawState() const;
+      virtual DrawState const &drawState() const = 0;
 
-      void draw();
+      virtual void draw();
 
       virtual ~Drawable();
+
+      virtual Drawable *clone() const = 0;
 
     protected:
       glm::mat4 matrix() const;
     
     private:
-      virtual void v_draw();
-      virtual DrawState const &v_drawState() const = 0;
-      virtual void v_insert(std::ostream &out) const;
-      virtual void v_extract(std::istream &out);
+      virtual void insert(std::ostream &out) const;
+      virtual void extract(std::istream &out);
 
   };
 

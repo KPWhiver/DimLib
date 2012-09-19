@@ -66,20 +66,10 @@ namespace dim
 
   void Drawable::draw()
   {
-    v_draw();
+    drawState().mesh().draw();
   }
 
-  void Drawable::v_draw()
-  {
-    v_drawState().mesh().draw();
-  }
-
-  DrawState const &Drawable::drawState() const
-  {
-    return v_drawState();
-  }
-
-  void Drawable::v_insert(ostream &out) const
+  void Drawable::insert(ostream &out) const
   {
 	  out << d_coor.x << ' ' << d_coor.y << ' ' << d_coor.z << ' ' << d_rot.x << ' ' << d_rot.y << ' ' << d_rot.z << '\n';
     //out.write(reinterpret_cast<const char*>(&d_coor.x), 4);
@@ -89,7 +79,7 @@ namespace dim
     //out.write(reinterpret_cast<const char*>(&d_yRot), 4);
   }
 
-  void Drawable::v_extract(istream &in)
+  void Drawable::extract(istream &in)
   {
 	  in >> d_coor.x >> d_coor.y >> d_coor.z >> d_rot.x >> d_rot.y >> d_rot.z;
 
@@ -105,13 +95,13 @@ namespace dim
 
   ostream &operator<<(ostream &out, Drawable const &object)
   {
-    object.v_insert(out);
+    object.insert(out);
     return out;
   }
 
   istream &operator>>(istream &in, Drawable &object)
   {
-    object.v_extract(in);
+    object.extract(in);
     return in;
   }
 

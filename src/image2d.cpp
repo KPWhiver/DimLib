@@ -26,6 +26,13 @@ using namespace glm;
 
 namespace dim
 {
+  Texture<> Image2D::defaultTexture()
+  {
+    static GLubyte data(0);
+    static Texture<> texture(&data, Filtering::nearest, Format::R8, 1, 1, false);
+    return texture;
+  }
+
 	Image2D::Image2D(int x, int y, size_t width, size_t height, Texture<GLubyte> const &image)
 	:
 	    d_x(x),
@@ -44,18 +51,16 @@ namespace dim
 	
 	  x += d_x;
 	  y += d_y;
-	  
+
 	  d_context->shader().set("in_texture0", d_image, 0);
+	  d_context->shader().set("in_text", defaultTexture(), 1);
 
-    Shader::modelMatrix() = translate(Shader::modelMatrix(), vec3(x, y, 0));
-	  Shader::modelMatrix() = scale(Shader::modelMatrix(), vec3(d_width/10.0, d_height/10.0, 1.0));
-	  d_context->shader().set("in_mat_model", Shader::modelMatrix());
+	  mat4 modelMatrix(1.0);
+    modelMatrix = translate(modelMatrix, vec3(x, y, 0));
+	  modelMatrix = scale(modelMatrix, vec3(d_width, d_height, 1.0));
+	  d_context->shader().set("in_mat_model", modelMatrix);
 	  
-	  d_context->shader().transformBegin();
-
 	  d_context->mesh().draw();
-
-	  d_context->shader().transformEnd();
 	}
 
   void Image2D::setCoor(int x, int y)
@@ -63,5 +68,11 @@ namespace dim
     d_x = x;
     d_y = y;
   }
+
+  Component *Image2D::v_clone() const
+  {
+    return new Image2D(*this);
+  }
+
 
 }

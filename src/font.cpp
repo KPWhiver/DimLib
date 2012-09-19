@@ -20,13 +20,23 @@
 #include <iostream>
 #include <cstring>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+
 #include "dim/font.hpp"
 
 using namespace std;
+using namespace glm;
 
-namespace dim {
+namespace dim
+{
+namespace
+{
+  //this is here to avoid freetype inclusion in the font.hpp
+  FT_Library g_library;
+}
 
-FT_Library Font::s_library;
 
 bool Font::s_initialized(false);
 
@@ -34,126 +44,146 @@ void Font::initialize()
 {
   s_initialized = true;
 
-  int error = FT_Init_FreeType(&s_library);
+  int error = FT_Init_FreeType(&g_library);
 
   if(error)
     log(__FILE__, __LINE__, LogType::error, "Failed to initialize FreeType2");
 }
 
-Font::Font(string filename)
+Font::Font(string filename, size_t maxSize)
+:
+    d_heightAboveBaseLine(0),
+    d_heightBelowBaseLine(0)
 {
   if(s_initialized == false)
     initialize();
 
-	int error = FT_New_Face(s_library, filename.c_str(), 0, &d_face);
+  FT_Face face;
+	int error = FT_New_Face(g_library, filename.c_str(), 0, &face);
 
 	if(error == FT_Err_Unknown_File_Format)
 	  log(__FILE__, __LINE__, LogType::error, "File: " + filename + " has a unsupported file format");
 	else if (error)
 	  log(__FILE__, __LINE__, LogType::error, "Failed to read file: " + filename);
 
-	FT_Set_Char_Size(d_face, 64 * 64, 64 * 64, 96, 96);
+	FT_Set_Pixel_Sizes(face, maxSize, maxSize);
+
+	// load glyphs
+	FT_Glyph glyphs[128];
 
 	for (size_t ch = 0; ch != 128; ++ch)
-		generateCharMap(ch);
+	{
+		if (FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT))
+		  log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
 
-	FT_Done_Face(d_face);
+    if (FT_Get_Glyph(face->glyph, &glyphs[ch]))
+      log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
 
-}
+    FT_Glyph_To_Bitmap(&glyphs[ch], ft_render_mode_normal, 0, 1);
+    FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(glyphs[ch]);
 
-void Font::generateCharMap(size_t ch)
-{
-	//d_charTex[ch].reset(new TextureBuffer);
+    d_heightAboveBaseLine = std::max(static_cast<size_t>(std::max(0, glyph->top)), d_heightAboveBaseLine);
+    d_heightBelowBaseLine = std::max(static_cast<size_t>(std::max(0, glyph->bitmap.rows - glyph->top)), d_heightBelowBaseLine);
+	}
+  size_t height = d_heightAboveBaseLine + d_heightBelowBaseLine;
 
-	if (FT_Load_Glyph(d_face, FT_Get_Char_Index(d_face, ch), FT_LOAD_DEFAULT))
-	  log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
+	// store glyphs
+	for(size_t ch = 0; ch != 128; ++ch)
+	{
+	  FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(glyphs[ch]);
+    int verMove = d_heightAboveBaseLine - glyph->top;
 
-	// Hamdle to a glyph
-	FT_Glyph glyph;
-	if (FT_Get_Glyph(d_face->glyph, &glyph))
-	  log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
+    if(glyph->bitmap.width > 0)
+      d_glyphs[ch].map.reset(new GLubyte[glyph->bitmap.width * height]{0});
 
-	FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
-	d_glyphs[ch] = glyph;
-}
+	  d_glyphs[ch].width = glyph->bitmap.width;
+	  d_glyphs[ch].advance = glyph->left;
 
-Texture<GLubyte> Font::generateTexture(string const &text, size_t textureWidth, size_t textureHeight) const
-{
-  size_t heightAboveLine = 0;
-  size_t heightBelowLine = 0;
-  size_t textHeight = 0;
-  size_t textWidth = 0;
-  for(size_t letter = 0; letter != text.length(); ++letter)
-  {
-  	size_t ch = text[letter];
-  	FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(d_glyphs[ch]);
-
-    heightAboveLine = max(static_cast<size_t>(glyph->top), heightAboveLine);
-    heightBelowLine = max(static_cast<size_t>(glyph->bitmap.rows - glyph->top), heightBelowLine);
-    textWidth += glyph->bitmap.width;
-  }
-
-  textHeight = heightAboveLine + heightBelowLine;
-  //height = nextPowerOf2(heightAboveLine + heightBelowLine);
-  //width = nextPowerOf2(width);
-
-  while(textureWidth < textWidth || textureHeight < textHeight)
-  {
-    textureWidth *= 2;
-    textureHeight *= 2;
-  }
-  
-  size_t xStart = (textureWidth - textWidth) / 2;
-  //size_t yStart = (textureHeight - textHeight) / 2;
-
-  GLubyte *textMap = new GLubyte[4 * textureHeight * textureWidth];
-  
-  for(size_t idx = 0; idx != 4 * textureHeight * textureWidth; idx += 4)
-  {
-    textMap[idx] = 0;
-    textMap[idx + 1] = 0;
-    textMap[idx + 2] = 0;
-    textMap[idx + 3] = 0;
-  }
-
-  size_t xTexture = xStart;
-
-  for(size_t letter = 0; letter != text.length(); ++letter)
-  {
-  	size_t ch = text[letter];
-  	FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(d_glyphs[ch]);
-  	int horMove = glyph->left;
-  	int verMove = heightAboveLine - glyph->top;
-
-    for(size_t x = 0; x != static_cast<size_t>(glyph->bitmap.width); ++x, ++xTexture)
+    for(size_t x = 0; x != static_cast<size_t>(glyph->bitmap.width); ++x)
     {
       for(size_t y = 0; y != static_cast<size_t>(glyph->bitmap.rows); ++y)
+        d_glyphs[ch].map.get()[(y + verMove) * d_glyphs[ch].width + x] = glyph->bitmap.buffer[y * d_glyphs[ch].width + x];
+	  }
+    FT_Done_Glyph(glyphs[ch]);
+	}
+
+	FT_Done_Face(face);
+}
+
+Texture<> Font::generateTexture(string const &text, bool centered, size_t textureWidth, size_t textureHeight, Filtering filter) const
+{
+  size_t textHeight = d_heightAboveBaseLine + d_heightBelowBaseLine;
+  size_t textWidth = 0;
+  size_t unscaledTextureWidth = textureWidth * (static_cast<float>(textHeight) / textureHeight);
+
+  for(size_t letter = 0; letter != text.length(); ++letter)
+  {
+  	size_t ch = text[letter];
+    textWidth += d_glyphs[ch].width;
+  }
+
+  GLubyte *textMap = new GLubyte[textHeight * unscaledTextureWidth]{0};
+
+  size_t xStart = 0;
+  if(centered && textWidth < unscaledTextureWidth)
+    xStart = (unscaledTextureWidth - textWidth) / 2;
+
+
+  for(size_t letter = 0; letter != text.length(); ++letter)
+  {
+    size_t ch = text[letter];
+  	int horMove = d_glyphs[ch].advance;
+
+    for(size_t x = 0; x != d_glyphs[ch].width; ++x, ++xStart)
+    {
+      if(xStart + horMove >= unscaledTextureWidth)
+        break;
+
+      for(size_t y = 0; y != textHeight; ++y)
       {
-      	if(textMap[2 * ((y + verMove) * textureWidth + xTexture + horMove) + 1] == 0)
-      		textMap[2 * ((y + verMove) * textureWidth + xTexture + horMove) + 1] = glyph->bitmap.buffer[y * glyph->bitmap.width + x];
+      	if(textMap[y * unscaledTextureWidth + xStart + horMove] == 0)
+      		textMap[y * unscaledTextureWidth + xStart + horMove] = d_glyphs[ch].map.get()[y * d_glyphs[ch].width + x];
       }
     }
   }
 
-  Texture<GLubyte> textTex(textMap, Filtering::bilinear, Format::RG8, textureWidth, textureHeight, false);
+  GLubyte *texture = scale(textMap, unscaledTextureWidth, textHeight, textureWidth, textureHeight);
+
+  Texture<> textTexture(texture, filter, Format::R8, textureWidth, textureHeight, false);
 
   delete[] textMap;
+  delete[] texture;
 
-  return textTex;
+  return textTexture;
 }
 
-size_t Font::nextPowerOf2(size_t number) const
+GLubyte *Font::scale(GLubyte *textMap, size_t oldWidth, size_t oldHeight, size_t newWidth, size_t newHeight) const
 {
-	size_t ret = 2;
-	while (ret < number)
-		ret <<= 1;
 
-	return ret;
+  GLubyte *texture = new GLubyte[newHeight * newWidth]{0};
+  float horScale = static_cast<float>(newWidth) / oldWidth;
+  float verScale = static_cast<float>(newHeight) / oldHeight;
+
+  for(size_t x = 0; x != newWidth; ++x)
+  {
+    for(size_t y = 0; y != newHeight; ++y)
+    {
+      size_t x1(std::max(0, static_cast<int>(floor(x / horScale))));
+      size_t x2(std::min(x1 + 1, oldWidth - 1));
+      size_t y1(std::max(0, static_cast<int>(floor(y / verScale))));
+      size_t y2(std::min(y1 + 1, oldHeight - 1));
+
+      GLubyte upLeft(textMap[y1 * oldWidth + x1]);
+      GLubyte downLeft(textMap[y2 * oldWidth + x1]);
+      GLubyte upRight(textMap[y1 * oldWidth + x2]);
+      GLubyte downRight(textMap[y2 * oldWidth + x2]);
+
+      vec2 uv(x / horScale, y / verScale);
+      vec2 frac(fract(uv));
+      texture[y * newWidth + x] = mix(mix(upLeft, upRight, frac.x), mix(downLeft, downRight, frac.x), frac.y);
+    }
+  }
+  return texture;
 }
-
-//GLuint Font::letter(size_t ch)
-//{
-//	return d_charTex[ch]->texture();
-//}
 
 }

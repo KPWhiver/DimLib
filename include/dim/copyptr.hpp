@@ -28,11 +28,10 @@ namespace dim
   class CopyPtr
   {
     Type *d_ptr;
-    size_t d_size;
 
     public:
       CopyPtr();
-      CopyPtr(Type *ptr, size_t size = 1);
+      explicit CopyPtr(Type *ptr);
       CopyPtr(CopyPtr const &other);
       CopyPtr(CopyPtr &&tmp);
 
@@ -43,7 +42,7 @@ namespace dim
       Type &operator*();
       Type *operator->();
 
-      void reset(Type *ptr, size_t size = 1);
+      void reset(Type *ptr);
 
       ~CopyPtr();
   };
@@ -51,45 +50,34 @@ namespace dim
   template <typename Type>
   CopyPtr<Type>::CopyPtr()
   :
-    d_ptr(0),
-    d_size(1)
+    d_ptr(0)
   {
   }
 
   template <typename Type>
-  CopyPtr<Type>::CopyPtr(Type *ptr, size_t size)
+  CopyPtr<Type>::CopyPtr(Type *ptr)
   :
-    d_ptr(ptr),
-    d_size(size)
+    d_ptr(ptr)
   {
   }
 
   template <typename Type>
   CopyPtr<Type>::CopyPtr(CopyPtr const &other)
   :
-    d_ptr(0),
-    d_size(other.d_size)
+    d_ptr(0)
   {
     if(other.d_ptr != 0)
     {
-      if(d_size > 1)
-      {
-        d_ptr = new Type[d_size];
-        std::memcpy(other.d_ptr, d_ptr, d_size * sizeof(Type));
-      }
-      else
-        d_ptr = new Type(*other.d_ptr);
+      d_ptr = new Type(*other.d_ptr);
     }
   }
 
   template <typename Type>
   CopyPtr<Type>::CopyPtr(CopyPtr &&tmp)
   :
-    d_ptr(tmp.d_ptr),
-    d_size(tmp.d_size)
+    d_ptr(tmp.d_ptr)
   {
     tmp.d_ptr = 0;
-    tmp.d_size = 1;
   }
 
   template <typename Type>
@@ -97,7 +85,6 @@ namespace dim
   {
     CopyPtr<Type> tmp(other);
     std::swap(tmp.d_ptr, d_ptr);
-    std::swap(tmp.d_size, d_size);
     return *this;
   }
 
@@ -105,7 +92,6 @@ namespace dim
   CopyPtr<Type> &CopyPtr<Type>::operator=(CopyPtr &&tmp)
   {
     std::swap(tmp.d_ptr, d_ptr);
-    std::swap(tmp.d_size, d_size);
     return *this;
   }
 
@@ -128,18 +114,18 @@ namespace dim
   }
 
   template <typename Type>
-  void CopyPtr<Type>::reset(Type *ptr, size_t size)
+  void CopyPtr<Type>::reset(Type *ptr)
   {
-    *this = CopyPtr<Type>(ptr, size);
+    if(d_ptr != 0)
+      delete d_ptr;
+
+    d_ptr = ptr;
   }
 
   template <typename Type>
   CopyPtr<Type>::~CopyPtr()
   {
-    if(d_size > 1)
-      delete[] d_ptr;
-    else
-      delete d_ptr;
+    delete d_ptr;
   }
 
 } /* namespace dim */

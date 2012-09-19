@@ -27,137 +27,143 @@
 #include "dim/shader.hpp"
 #include "dim/scanner.hpp"
 
-#include <glm/gtc/matrix_inverse.hpp>
-
 using namespace std;
 using namespace glm;
 
 namespace dim
 {
-namespace
-{
-  pair<uint, string> processLayout(Scanner &scanner, ostream &output)
+  namespace
   {
-    int nextToken = '(';
-    bool nextIdentIsType = true;
-    
-    stringstream ss;
-    
-    uint location = 0;
-    
-    while(int token = scanner.lex())
+    pair<uint, string> processLayout(Scanner &scanner, ostream &output)
     {
-      if(token != nextToken && token != Token::whitespace)
-        log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
-        
-      // layout ( location = 0 ) attribute vec3 in_vertex  
-      // Token::layout '(' Token::location '=' Token::number ')' Token::in
-        
-      switch(token)
-      {
-        case '(':
-          nextToken = Token::location;
-          break;
-        case ')':
-          nextToken = Token::in;
-          break;
-        case Token::location:
-          nextToken = '=';
-          break;
-        case '=':
-          nextToken = Token::number;
-          break;
-        case Token::number:
-          ss << scanner.matched();
-          ss >> location;
-          nextToken = ')';
-          break;
-        case Token::in:
-          nextToken = Token::identifier;
-          output << scanner.matched();
-          break;
-        case Token::identifier:
-          output << scanner.matched();
-          if(nextIdentIsType == true)
-            nextIdentIsType = false;
-          else
-            return make_pair(location, scanner.matched());
-          break;
-        case Token::whitespace:
-          output << scanner.matched();
-          break;
-        default:
-          log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
-          return make_pair(0, "unknown");
-      }
-    }
-    return make_pair(0, "unknown");
-  }
+      int nextToken = '(';
+      bool nextIdentIsType = true;
 
-  int processVersion(Scanner &scanner, stringstream *output, uint *globalVersion)
-  {
-    while(int token = scanner.lex())
-    {
-      if(token == Token::whitespace)
+      stringstream ss;
+
+      uint location = 0;
+
+      while(int token = scanner.lex())
       {
-        if(output != 0)
-          *output << scanner.matched();
-      }
-      else if(token == Token::version)
-      {
-        token = scanner.lex();
-        if(*globalVersion == 0)
+        if(token != nextToken && token != Token::whitespace)
+          log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
+
+        // layout ( location = 0 ) attribute vec3 in_vertex
+        // Token::layout '(' Token::location '=' Token::number ')' Token::in
+
+        switch(token)
         {
-          if(token == Token::number)
+          case '(':
+            nextToken = Token::location;
+            break;
+          case ')':
+            nextToken = Token::in;
+            break;
+          case Token::location:
+            nextToken = '=';
+            break;
+          case '=':
+            nextToken = Token::number;
+            break;
+          case Token::number:
+            ss << scanner.matched();
+            ss >> location;
+            nextToken = ')';
+            break;
+          case Token::in:
+            nextToken = Token::identifier;
+            output << scanner.matched();
+            break;
+          case Token::identifier:
+            output << scanner.matched();
+            if(nextIdentIsType == true)
+              nextIdentIsType = false;
+            else
+              return make_pair(location, scanner.matched());
+            break;
+          case Token::whitespace:
+            output << scanner.matched();
+            break;
+          default:
+            log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
+            return make_pair(0, "unknown");
+        }
+      }
+      return make_pair(0, "unknown");
+    }
+
+    int processVersion(Scanner &scanner, stringstream *output, uint *globalVersion)
+    {
+      while(int token = scanner.lex())
+      {
+        if(token == Token::whitespace)
+        {
+          if(output != 0)
+            *output << scanner.matched();
+        }
+        else if(token == Token::version)
+        {
+          token = scanner.lex();
+          if(*globalVersion == 0)
           {
-            if(output == 0)
+            if(token == Token::number)
             {
-              stringstream ss(scanner.matched());
-              ss >> *globalVersion;
+              if(output == 0)
+              {
+                stringstream ss(scanner.matched());
+                ss >> *globalVersion;
+              }
+              else
+                *output << "#version " << scanner.matched();
             }
             else
-              *output << "#version " << scanner.matched();
+              log(scanner.filename(), scanner.lineNr(), LogType::error, "Expected a number after #version instead of: " + scanner.matched());
           }
           else
-            log(scanner.filename(), scanner.lineNr(), LogType::error, "Expected a number after #version instead of: " + scanner.matched());
+            log(scanner.filename(), scanner.lineNr(), LogType::note, "Ignoring #version since it has already been set");
         }
         else
-          log(scanner.filename(), scanner.lineNr(), LogType::note, "Ignoring #version since it has already been set");
+          return token;
       }
-      else
-        return token;
+      return 0;
     }
-    return 0;
   }
-}
 
   bool Shader::s_geometryShader(false);
   bool Shader::s_tessellationShader(false);
   bool Shader::s_computeShader(false);
   bool Shader::s_layout(false);
   bool Shader::s_separate(false);
-  
+
   float Shader::s_maxTextureUnits(0);
 
-  bool Shader::s_initialized(false);   
+  bool Shader::s_initialized(false);
 
   Shader const *Shader::s_activeShader = 0;
 
-  mat4 Shader::s_modelMatrix = mat4(1.0);
-
-  mat3 Shader::s_normalMatrix = mat3(1.0);
-  
   void Shader::initialize()
   {
     s_initialized = true;
-  
+
     s_geometryShader = GLEW_ARB_geometry_shader4;
     s_tessellationShader = GLEW_ARB_tessellation_shader;
     s_computeShader = GLEW_ARB_compute_shader;
-    s_separate = GLEW_ARB_separate_shader_objects;    
+    s_separate = GLEW_ARB_separate_shader_objects;
     s_layout = GLEW_ARB_explicit_attrib_location || s_separate;
-    
+
     glGetFloatv(GL_MAX_TEXTURE_UNITS, &s_maxTextureUnits);
+  }
+
+  Shader const &Shader::defaultShader()
+  {
+    static Shader shader("defaultShader", "#version 120\n"
+                         "%-vertex-shader\n"
+                         "layout(location = dim_vertex) attribute vec4 in_position;\n"
+                         "void main(){gl_Position = in_position;}\n"
+                         "%-fragment-shader\n"
+                         "void main(){gl_FragColor = vec4(1.0);}\n");
+
+    return shader;
   }
 
   GLint Shader::uniform(string const &variable) const
@@ -178,27 +184,26 @@ namespace
     return it->second;
   }
 
-  void Shader::parseShader(string &vertexShader, string &fragmentShader, string &geometryShader, string &tessControlShader, string &tessEvalShader, string &computeShader) const
+  void Shader::parseShader(istream &input, string &vertexShader, string &fragmentShader, string &geometryShader, string &tessControlShader, string &tessEvalShader,
+                           string &computeShader) const
   {
     // set up scanner
     stringstream unmatched;
     int unmatchedPos = unmatched.tellp();
 
-    Scanner scanner;
-    scanner.switchOstream(unmatched);
-    scanner.switchIstream(d_filename);
+    Scanner scanner(input, d_filename, unmatched);
 
     // set up stages
     int const numStages = 6;
     stringstream shaders[numStages];
-    
+
     vector<pair<uint, string>> attributes;
 
     stringstream *output = 0;
 
     int fileNumber = 0;
     uint globalVersion = 0;
-    
+
     bool parseLayout = s_layout;
     bool parseVersion = true;
 
@@ -276,16 +281,16 @@ namespace
           if(token < 256)
           {
             *output << static_cast<unsigned char>(token);
-            continue;    
+            continue;
           }
-           
+
           switch(token)
           {
             case Token::layout:
               if((not parseLayout || globalVersion < 140) && output == &shaders[0])
               {
                 pair<uint, string> attrib = processLayout(scanner, *output);
-                glBindAttribLocation(*d_id, attrib.first, attrib.second.c_str()); 
+                glBindAttribLocation(*d_id, attrib.first, attrib.second.c_str());
               }
               else
                 *output << scanner.matched();
@@ -318,11 +323,11 @@ namespace
     tessEvalShader = shaders[4].str();
     computeShader = shaders[5].str();
   }
- 
+
   void Shader::checkCompile(GLuint shader, string const &stage) const
   {
     int const buffer_size = 512;
-    char buffer[buffer_size] = { 0 };
+    char buffer[buffer_size] = {0};
     GLsizei length = 0;
 
     glGetShaderInfoLog(shader, buffer_size, &length, buffer);
@@ -333,7 +338,7 @@ namespace
   void Shader::checkProgram(GLuint program) const
   {
     const int buffer_size = 512;
-    char buffer[buffer_size] = { 0 };
+    char buffer[buffer_size] = {0};
     GLsizei length = 0;
 
     glGetProgramInfoLog(program, buffer_size, &length, buffer);
@@ -351,11 +356,11 @@ namespace
   void Shader::compileShader(string const &file, string const &stage, shared_ptr<GLuint> &shader, GLuint shaderType)
   {
     shader.reset(new GLuint(glCreateShader(shaderType)), [&](GLuint *ptr)
-                 {
-                   glDetachShader(*d_id, *ptr);
-                   glDeleteShader(*ptr);
-                   delete ptr;
-                 });
+    {
+      glDetachShader(*d_id, *ptr);
+      glDeleteShader(*ptr);
+      delete ptr;
+    });
 
     char const *cfile = file.c_str();
     glShaderSource(*shader, 1, &cfile, 0);
@@ -368,17 +373,42 @@ namespace
   Shader::Shader(string const &filename)
       :
           d_id(new GLuint(glCreateProgram()), [](GLuint *ptr)
-               {
-                 glDeleteProgram(*ptr);
-                 delete ptr;
-               }),
+          {
+            glDeleteProgram(*ptr);
+            delete ptr;
+          }),
           d_filename(filename)
+  {
+    ifstream file(filename.c_str());
+    if(not file.is_open())
+    {
+      log(__FILE__, __LINE__, LogType::error, "Failed to open file: " + filename);
+      return;
+    }
+
+    init(file);
+  }
+
+  Shader::Shader(string const &name, string const &input)
+      :
+          d_id(new GLuint(glCreateProgram()), [](GLuint *ptr)
+          {
+            glDeleteProgram(*ptr);
+            delete ptr;
+          }),
+          d_filename(name)
+  {
+    istringstream sstream(input);
+    init(sstream);
+  }
+
+  void Shader::init(istream &input)
   {
     if(s_initialized == false)
       initialize();
-  
+
     string standardVertex("#version 120\n attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
-    
+
     string vertex;
     string fragment;
     string geometry;
@@ -386,7 +416,7 @@ namespace
     string tessEval;
     string compute;
 
-    parseShader(vertex, fragment, geometry, tessControl, tessEval, compute);
+    parseShader(input, vertex, fragment, geometry, tessControl, tessEval, compute);
 
 #if 0
     cout << vertex << "\n------\n";
@@ -457,7 +487,7 @@ namespace
 
   void Shader::use() const
   {
-    if(s_activeShader == 0 || id() != active().id())
+    if(id() != active().id())
     {
       glUseProgram(*d_id);
       s_activeShader = const_cast<Shader*>(this);
@@ -466,36 +496,10 @@ namespace
 
   Shader const &Shader::active()
   {
-    return *s_activeShader;
-  }
-
-  mat4 &Shader::modelMatrix()
-  {
-    return s_modelMatrix;
-  }
-
-  mat3 &Shader::normalMatrix()
-  {
-    return s_normalMatrix;
-  }
-
-  void Shader::transformBegin() const
-  {
-    //s_tmp_modelMatrix = s_modelMatrix;
-    //s_tmp_normalMatrix = s_normalMatrix;
-
-    set("modelMatrix", s_modelMatrix);
-    s_normalMatrix = inverseTranspose(mat3(s_modelMatrix));
-    set("normalMatrix", s_normalMatrix);
-  }
-
-  void Shader::transformEnd() const
-  {
-    s_modelMatrix = mat4(1.0);
-    s_normalMatrix = mat3(1.0);
-
-    set("modelMatrix", s_modelMatrix);
-    set("normalMatrix", s_normalMatrix);
+    if(s_activeShader != 0)
+      return *s_activeShader;
+    else
+      return defaultShader();
   }
 
 // matrices
@@ -509,7 +513,7 @@ namespace
   {
     glUniformMatrix4x3fv(variable, 1, GL_FALSE, &value[0][0]);
   }
-  
+
   void Shader::set(GLint variable, glm::mat4x2 const &value) const
   {
     glUniformMatrix4x2fv(variable, 1, GL_FALSE, &value[0][0]);
@@ -519,7 +523,7 @@ namespace
   {
     glUniformMatrix3x4fv(variable, 1, GL_FALSE, &value[0][0]);
   }
-  
+
   void Shader::set(GLint variable, glm::mat3 const &value) const
   {
     glUniformMatrix3fv(variable, 1, GL_FALSE, &value[0][0]);
@@ -529,7 +533,7 @@ namespace
   {
     glUniformMatrix3x2fv(variable, 1, GL_FALSE, &value[0][0]);
   }
-  
+
   void Shader::set(GLint variable, glm::mat2x4 const &value) const
   {
     glUniformMatrix2x4fv(variable, 1, GL_FALSE, &value[0][0]);
@@ -539,12 +543,12 @@ namespace
   {
     glUniformMatrix2x3fv(variable, 1, GL_FALSE, &value[0][0]);
   }
-  
+
   void Shader::set(GLint variable, glm::mat2 const &value) const
   {
     glUniformMatrix2fv(variable, 1, GL_FALSE, &value[0][0]);
   }
-  
+
 // arrays
 
   void Shader::set(GLint variable, glm::vec3 const *values, size_t size) const
@@ -561,7 +565,7 @@ namespace
   {
     glUniform4fv(variable, size, reinterpret_cast<GLfloat const *>(values));
   }
-  
+
   void Shader::set(GLint variable, glm::ivec3 const *values, size_t size) const
   {
     glUniform3iv(variable, size, reinterpret_cast<GLint const *>(values));
@@ -576,7 +580,7 @@ namespace
   {
     glUniform4iv(variable, size, reinterpret_cast<GLint const *>(values));
   }
-  
+
   void Shader::set(GLint variable, glm::uvec3 const *values, size_t size) const
   {
     glUniform3uiv(variable, size, reinterpret_cast<GLuint const *>(values));
@@ -592,7 +596,7 @@ namespace
     glUniform4uiv(variable, size, reinterpret_cast<GLuint const *>(values));
   }
 
-  void Shader::set(GLint variable,GLfloat const *values, size_t size) const
+  void Shader::set(GLint variable, GLfloat const *values, size_t size) const
   {
     glUniform1fv(variable, size, values);
   }
@@ -601,8 +605,8 @@ namespace
   {
     glUniform1iv(variable, size, values);
   }
-  
-    void Shader::set(GLint variable, GLuint const *values, size_t size) const
+
+  void Shader::set(GLint variable, GLuint const *values, size_t size) const
   {
     glUniform1uiv(variable, size, values);
   }

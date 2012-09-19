@@ -20,10 +20,6 @@
 #ifndef FONT_HPP
 #define FONT_HPP
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-
 #include <string>
 #include <memory>
 
@@ -34,22 +30,27 @@ namespace dim
 
   class Font
   {
-    FT_Face d_face;
+    struct Glyph
+    {
+      std::shared_ptr<GLubyte> map;
+      size_t width;
+      size_t advance;
+    };
 
-    FT_Glyph d_glyphs[128];
-    static FT_Library s_library;
+    Glyph d_glyphs[128];
+
+    size_t d_heightAboveBaseLine;
+    size_t d_heightBelowBaseLine;
 
     static bool s_initialized;
 
   public:
-    Font(std::string filename);
+    Font(std::string filename, size_t maxSize);
 
-    Texture<GLubyte> generateTexture(std::string const &text, size_t width, size_t height) const;
-    //GLuint letter(size_t ch);
+    Texture<GLubyte> generateTexture(std::string const &text, bool centered, size_t width, size_t height, Filtering filter) const;
 
   private:
-    size_t nextPowerOf2(size_t number) const;
-    void generateCharMap(size_t ch);
+    GLubyte *scale(GLubyte *textMap, size_t oldWidth, size_t oldHeight, size_t newWidth, size_t newHeight) const;
 
     static void initialize();
   };

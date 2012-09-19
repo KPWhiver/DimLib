@@ -27,8 +27,6 @@
 
 namespace dim
 {
-	class Context;
-
 	class ListenArea : public Component
 	{
 		int d_x, d_y;
@@ -48,6 +46,9 @@ namespace dim
     void setListenerLeftPressed(std::function<void(void)> const &listenerFunction);
     void setListenerRightRelease(std::function<void(void)> const &listenerFunction);
     void setListenerRightPressed(std::function<void(void)> const &listenerFunction);
+
+  private:
+    virtual Component *v_clone() const;
 	};
 
 }

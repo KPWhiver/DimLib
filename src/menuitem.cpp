@@ -32,28 +32,27 @@ namespace dim
 
 	MenuItem::MenuItem(string const &text)
 	:
+	    d_context(0),
 			d_strText(text),
 			d_selected(false),
       d_width(0),
       d_height(0)
 	{
-		d_priority = 101;
 	}
 	
 	MenuItem::MenuItem()
 	:
-	    //MenuItem("")
+	    d_context(0),
 			d_selected(false),
       d_width(0),
       d_height(0)
 	{
-		d_priority = 101;
 	}
 
 	void MenuItem::setContext(Context *context)
 	{
 		d_context = context;
-		d_text = Texture<GLubyte>(d_context->font().generateTexture(d_strText, d_width, d_height));
+		d_text = Texture<GLubyte>(d_context->font().generateTexture(d_strText, true, d_width, d_height, Filtering::linear));
 	}
 
 	void MenuItem::setSize(size_t width, size_t height)
@@ -83,29 +82,31 @@ namespace dim
 		return false;
   }
 
-  void MenuItem::draw(int x, int y)
+  void MenuItem::draw(int x, int y, Texture<> const &texture, Texture<> const &overlay)
   {
 	  if(d_context == 0)
 	    return;
 
-		if(d_selected == true)
-		  d_context->shader().set("in_texture0", d_context->buttonHoverTexture(), 0);
-		else
-		  d_context->shader().set("in_texture0", d_context->buttonTexture(), 0);
+    vec4 color;
 
-    Shader::modelMatrix() = translate(Shader::modelMatrix(), vec3(x, y, 0));
-	  Shader::modelMatrix() = scale(Shader::modelMatrix(), vec3(d_width/10.0, d_height/10.0, 1.0));
-	  d_context->shader().set("in_mat_model", Shader::modelMatrix());
+    if(d_selected)
+      color = d_context->hoverColor();
 
-	  d_context->shader().transformBegin();
-	  //mesh.draw();
-	  d_context->mesh().draw();
+    mat4 modelMatrix(1.0);
 
-	  d_context->shader().set("in_texture0", d_text, 0);
+    modelMatrix = translate(modelMatrix, vec3(x, y, 0));
+    modelMatrix = scale(modelMatrix, vec3(d_width, d_height, 1.0));
+    d_context->shader().set("in_mat_model", modelMatrix);
 
-	  d_context->mesh().draw();
+    d_context->shader().set("in_color", color);
+    d_context->shader().set("in_texture", texture, 0);
+    d_context->shader().set("in_text", d_text, 1);
+    d_context->mesh().draw();
 
-	  d_context->shader().transformEnd();
+    d_context->shader().set("in_color", vec4(0.0));
+    d_context->shader().set("in_texture", overlay, 0);
+    d_context->shader().set("in_text", d_context->zeroTexture(), 1);
+    d_context->mesh().draw();
   }
 
   void MenuItem::setListener(function<void(void)> const &listenerFunction)

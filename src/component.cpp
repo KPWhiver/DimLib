@@ -67,6 +67,11 @@ size_t Component::priority() const
 //  return d_id;
 //}
 
+Component *Component::clone() const
+{
+  return v_clone();
+}
+
 bool Component::operator<(Component const &component)
 {
 	return d_priority < component.d_priority;

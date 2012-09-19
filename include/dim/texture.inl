@@ -26,11 +26,11 @@ namespace dim
         :
             d_id(new GLuint(0), [](GLuint *ptr)
             { glDeleteTextures(1, ptr); delete ptr;}),
-            d_width(0),
             d_height(0),
+            d_width(0),
             d_format(Format::R8),
-            d_outdatedBuffer(false),
             d_keepBuffered(false),
+            d_outdatedBuffer(false),
             d_bufferLevel(0)
     {
       if(s_initialized == false)
@@ -257,7 +257,10 @@ namespace dim
 
       // update the internal buffer
       if(not d_keepBuffered)
+      {
         d_buffer = std::vector<Type>();
+        renewBuffer();
+      }
       else if(data != &d_buffer[0])
         d_buffer.assign(data, data + d_width * d_height * components());
     }
@@ -285,7 +288,7 @@ namespace dim
 
       switch(externalFormat())
       {
-        case GL_R:
+        case GL_RED:
         case GL_DEPTH_COMPONENT:
           if(channel == 0)
             return source[(y * bufferWidth + x)];
@@ -330,6 +333,8 @@ namespace dim
         glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, &d_buffer[0]);
 
         d_bufferLevel = level;
+
+        d_outdatedBuffer = false;
       }
 
       return &d_buffer[0];
@@ -337,14 +342,22 @@ namespace dim
 
     /* texture properties */
     template<typename Type>
-    void TextureBase<Type>::setBorderColor(glm::vec4 const &color) const
+    void TextureBase<Type>::setBorderColor(glm::vec4 const &color)
     {
       bind();
       glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
     }
 
     template<typename Type>
-    void TextureBase<Type>::generateMipmap() const
+    void TextureBase<Type>::setWrapping(Wrapping wrap)
+    {
+      glBindTexture(GL_TEXTURE_2D, *d_id);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap));
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap));
+    }
+
+    template<typename Type>
+    void TextureBase<Type>::generateMipmap()
     {
       bind();
       glGenerateMipmap (GL_TEXTURE_2D);
@@ -385,7 +398,7 @@ namespace dim
           return 3;
         case GL_RG:
           return 2;
-        case GL_R:
+        case GL_RED:
           return 1;
         case GL_DEPTH_COMPONENT:
           return 1;

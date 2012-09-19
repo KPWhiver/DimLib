@@ -81,7 +81,7 @@ void Light::setupShadowRender(vec3 const &origin, float dir)
 									 0.5, 0.5, 0.5, 1.0);
 
 	//Shader::active().send("in_mat_model", mat4(1.0));
-	d_in_mat_light = bias * cam.in_mat_projection() * cam.in_mat_view();// * lightprojection * lightview;
+	d_in_mat_light = bias * cam.projectionMatrix() * cam.viewMatrix();// * lightprojection * lightview;
 
 	cam.setAtShader(Shader::active());
 }
@@ -116,15 +116,15 @@ void Light::setPosition(vec4 const &position)
 /* Transforms the light to camera space */
 void Light::transform()
 {
-
-	if(d_mode == Light::directional)
+// TODO fix
+	/*if(d_mode == Light::directional)
 	{
 		d_transformedPosition = vec4(Shader::active().normalMatrix() * vec3(d_position), 1.0);
 	}
 	else
 	{
 		d_transformedPosition = Shader::active().modelMatrix() * d_position;
-	}
+	}*/
 }
 
 }
