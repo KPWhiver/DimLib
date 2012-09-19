@@ -37,9 +37,12 @@ namespace dim
     dim::PtrVector<MenuItem> d_items;
     bool d_active;
 
+    static Menu* s_active;
+
   public:
     Menu(size_t d_width, size_t d_height);
     Menu();
+    ~Menu();
 
     void draw(int x, int y);
     bool listen(int x, int y, dim::Mouse const &mouse);

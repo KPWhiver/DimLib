@@ -257,7 +257,10 @@ namespace dim
 
       // update the internal buffer
       if(not d_keepBuffered)
+      {
         d_buffer = std::vector<Type>();
+        renewBuffer();
+      }
       else if(data != &d_buffer[0])
         d_buffer.assign(data, data + d_width * d_height * components());
     }
@@ -285,7 +288,7 @@ namespace dim
 
       switch(externalFormat())
       {
-        case GL_R:
+        case GL_RED:
         case GL_DEPTH_COMPONENT:
           if(channel == 0)
             return source[(y * bufferWidth + x)];
@@ -330,6 +333,8 @@ namespace dim
         glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, &d_buffer[0]);
 
         d_bufferLevel = level;
+
+        d_outdatedBuffer = false;
       }
 
       return &d_buffer[0];
@@ -387,7 +392,7 @@ namespace dim
           return 3;
         case GL_RG:
           return 2;
-        case GL_R:
+        case GL_RED:
           return 1;
         case GL_DEPTH_COMPONENT:
           return 1;

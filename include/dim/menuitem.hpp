@@ -49,7 +49,7 @@ namespace dim
     //~MenuItem();
 
 
-    void draw(int x, int y, Texture<> const &texture, Texture<> const &hoverTexture);
+    void draw(int x, int y, Texture<> const &texture, Texture<> const &overlay);
     bool listen(int x, int y, dim::Mouse const &mouse);
     void setListener(std::function<void(void)> const &listenerFunction);
 

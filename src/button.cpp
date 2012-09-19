@@ -119,19 +119,25 @@ namespace dim
 	  x += d_x;
 	  y += d_y;
 
-		if(d_selected == true)
-		  d_context->shader().set("in_texture0", d_context->buttonHoverTexture(), 0);
-		else
-		  d_context->shader().set("in_texture0", d_context->buttonTexture(), 0);
+    vec4 color;
 
-		d_context->shader().set("in_text", d_text, 1);
+    if(d_selected)
+      color = d_context->hoverColor();
 
 		mat4 modelMatrix(1.0);
 
     modelMatrix = translate(modelMatrix, vec3(x, y, 0));
 	  modelMatrix = scale(modelMatrix, vec3(d_width, d_height, 1.0));
 	  d_context->shader().set("in_mat_model", modelMatrix);
+
+	  d_context->shader().set("in_color", color);
+	  d_context->shader().set("in_texture", d_context->buttonTexture(), 0);
+	  d_context->shader().set("in_text", d_text, 1);
+	  d_context->mesh().draw();
 	  
+	  d_context->shader().set("in_color", vec4(0.0));
+	  d_context->shader().set("in_texture", d_context->buttonOverlayTexture(), 0);
+    d_context->shader().set("in_text", d_context->zeroTexture(), 1);
 	  d_context->mesh().draw();
 	}
 

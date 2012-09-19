@@ -32,9 +32,8 @@ namespace dim
   {
     struct Glyph
     {
-      GLubyte *map;
+      std::shared_ptr<GLubyte> map;
       size_t width;
-      size_t heightAboveBaseLine;
       size_t advance;
     };
 
@@ -49,10 +48,8 @@ namespace dim
     Font(std::string filename, size_t maxSize);
 
     Texture<GLubyte> generateTexture(std::string const &text, bool centered, size_t width, size_t height, Filtering filter) const;
-    //GLuint letter(size_t ch);
 
   private:
-    void generateCharMap(size_t ch);
     GLubyte *scale(GLubyte *textMap, size_t oldWidth, size_t oldHeight, size_t newWidth, size_t newHeight) const;
 
     static void initialize();

@@ -30,24 +30,53 @@ namespace dim
 {
   class Context
   {
-    Texture<GLubyte> d_butTexture;
-    Texture<GLubyte> d_butHoverTexture;
-    Texture<GLubyte> d_butDisableTexture;
+    Texture<GLubyte> d_button;
+    Texture<GLubyte> d_buttonOverlay;
+    Texture<GLubyte> d_menuTop;
+    Texture<GLubyte> d_menuMiddle;
+    Texture<GLubyte> d_menuBottom;
+    Texture<GLubyte> d_menuOverlayTop;
+    Texture<GLubyte> d_menuOverlayMiddle;
+    Texture<GLubyte> d_menuOverlayBottom;
+    Texture<GLubyte> d_menuOverlaySubmenu;
 
     Font d_font;
+
+    glm::vec4 d_hoverColor;
+    glm::vec4 d_disabledColor;
 
     static bool s_initialized;
 
   public:
-    Context(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, Font const &font);
+    Context(Texture<GLubyte> const &defaultTexture, Font const &font);
 
     Texture<GLubyte> const &buttonTexture() const;
-    Texture<GLubyte> const &buttonHoverTexture() const;
-    Texture<GLubyte> const &buttonDisableTexture() const;
-    Font &font();
+    Texture<GLubyte> const &buttonOverlayTexture() const;
+    Texture<GLubyte> const &menuTopTexture() const;
+    Texture<GLubyte> const &menuMiddleTexture() const;
+    Texture<GLubyte> const &menuBottomTexture() const;
+    Texture<GLubyte> const &menuOverlayTopTexture() const;
+    Texture<GLubyte> const &menuOverlayMiddleTexture() const;
+    Texture<GLubyte> const &menuOverlayBottomTexture() const;
+    Texture<GLubyte> const &menuOverlaySubmenuTexture() const;
+
+    glm::vec4 const &hoverColor() const;
+    glm::vec4 const &disabledColor() const;
+
+    Font const &font() const;
     Shader const &shader() const;
 
     Mesh const &mesh() const;
+
+    void setButtonTexture(Texture<> const &button);
+    void setButtonOverlayTexture(Texture<> const &overlay);
+    void setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom);
+    void setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu);
+
+    void setHoverColor(glm::vec4 const &color);
+    void setDisabledColor(glm::vec4 const &color);
+
+    static Texture<> const &zeroTexture();
   };
 
 }

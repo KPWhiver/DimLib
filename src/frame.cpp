@@ -26,10 +26,11 @@
 #include "dim/mesh.hpp"
 
 using namespace std;
+using namespace glm;
 
 namespace dim
 {	
-	Frame::Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable,
+	Frame::Frame(Texture<GLubyte> const &defaultTexture,
 			size_t width, size_t height, Font const &font)
 			:
 			  d_x(0),
@@ -38,7 +39,7 @@ namespace dim
 			  d_height(height),
 			  d_cam(Camera::flat, d_width, d_height),
 			  d_components([](Component *ptr){return ptr->clone();}),
-			  d_context(new Context(but, butHover, butDisable, font))
+			  d_context(new Context(defaultTexture, font))
 	{
 
 	}
@@ -78,4 +79,34 @@ namespace dim
 			  break;
 		}
 	}
+
+  void Frame::setButtonTexture(Texture<> const &button)
+  {
+    d_context->setButtonTexture(button);
+  }
+
+  void Frame::setButtonOverlayTexture(Texture<> const &overlay)
+  {
+    d_context->setButtonOverlayTexture(overlay);
+  }
+
+  void Frame::setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom)
+  {
+    d_context->setMenuTextures(menuTop, menuMiddle, menuBottom);
+  }
+
+  void Frame::setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu)
+  {
+    d_context->setMenuOverlayTextures(overlayTop, overlayMiddle, overlayBottom, overlaySubmenu);
+  }
+
+  void Frame::setHoverColor(vec4 const &color)
+  {
+    d_context->setHoverColor(color);
+  }
+
+  void Frame::setDisabledColor(vec4 const &color)
+  {
+    d_context->setDisabledColor(color);
+  }
 }

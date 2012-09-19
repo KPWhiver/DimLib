@@ -45,7 +45,7 @@ namespace dim
     std::shared_ptr<Context> d_context;
     
 	public:
-		Frame(Texture<GLubyte> const &but, Texture<GLubyte> const &butHover, Texture<GLubyte> const &butDisable, size_t width, size_t height, Font const &font);
+		Frame(Texture<> const &defaultTexture, size_t width, size_t height, Font const &font);
 
 		void add(Component *component);
 		void remove(Component *component);
@@ -55,6 +55,14 @@ namespace dim
 
 		void setCoords(int x, int y);
 		void setSize(size_t width, size_t height);
+
+		void setButtonTexture(Texture<> const &button);
+		void setButtonOverlayTexture(Texture<> const &overlay);
+		void setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom);
+		void setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu);
+
+		void setHoverColor(glm::vec4 const &color);
+		void setDisabledColor(glm::vec4 const &color);
 
 		//int x() const;
 		//int y() const;
