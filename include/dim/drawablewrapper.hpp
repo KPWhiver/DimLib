@@ -38,8 +38,17 @@ namespace dim
 {
 namespace internal
 {
+  struct DrawState
+  {
+      Mesh d_mesh;
+      Shader d_shader;
 
-  //class Drawable;
+      Mesh const &mesh() const;
+      Shader const &shader() const;
+
+      bool operator==(DrawState const &other);
+      bool operator<(DrawState const &other);
+  };
 
   template <typename...>
   class DrawableWrapper;
@@ -76,7 +85,6 @@ namespace internal
       static const_iterator cendIterator();
 
       IterType increment(IterType const &iter) const;
-      //std::pair<size_t, Drawable::Key> const &decrement(std::pair<size_t, Drawable::Key> const &iter) const;
       Drawable &dereference(IterType const &iter);
       Drawable const &dereference(IterType const &iter) const;
 
@@ -97,7 +105,6 @@ namespace internal
     
     // iterators
       virtual IterType v_increment(IterType const &iter) const = 0;
-      //virtual IterType const &v_decrement(IterType const &iter) const = 0;
       virtual Drawable &v_dereference(IterType const &iter) = 0;
       virtual Drawable const &v_dereference(IterType const &iter) const = 0;
 
@@ -123,7 +130,7 @@ namespace internal
   template<typename RefType>
   class DrawableWrapper<RefType> : public DrawableWrapper<Drawable>
   {
-      typedef std::unordered_map<Drawable::Key, std::vector<ClonePtr<RefType>>, std::hash<long>, std::equal_to<long>> Storage;
+      typedef std::unordered_map<Drawable::Key, PtrVector<RefType>, std::hash<long>, std::equal_to<long>> Storage;
       
       Storage d_map;
 
@@ -172,7 +179,6 @@ namespace internal
 
     // iterators
       virtual DrawableWrapper<Drawable>::IterType v_increment(DrawableWrapper<Drawable>::IterType const &iter) const;
-      //virtual IterType const &v_decrement(IterType const &iter) const;
       virtual Drawable &v_dereference(DrawableWrapper<Drawable>::IterType const &iter);
       virtual Drawable const &v_dereference(DrawableWrapper<Drawable>::IterType const &iter) const;
 

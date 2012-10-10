@@ -25,6 +25,29 @@ namespace dim
 {
 namespace internal
 {
+  /* drawState */
+  Mesh const &DrawState::mesh() const
+  {
+    return d_mesh;
+  }
+
+  Shader const &DrawState::shader() const
+  {
+    return d_shader;
+  }
+
+  bool DrawState::operator==(DrawState const &other)
+  {
+    return forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id()) ==
+           forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id());
+  }
+
+  bool DrawState::operator<(DrawState const &other)
+  {
+    return forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id()) <
+           forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id());
+  }
+
   /* constructors */
   DrawableWrapper<Drawable>::DrawableWrapper(size_t gridSize, size_t ownerId)
       :

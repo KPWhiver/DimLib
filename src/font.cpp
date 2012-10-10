@@ -94,7 +94,7 @@ Font::Font(string filename, size_t maxSize)
     int verMove = d_heightAboveBaseLine - glyph->top;
 
     if(glyph->bitmap.width > 0)
-      d_glyphs[ch].map.reset(new GLubyte[glyph->bitmap.width * height]{0});
+      d_glyphs[ch].map.reset(new GLubyte[glyph->bitmap.width * height]{});
 
 	  d_glyphs[ch].width = glyph->bitmap.width;
 	  d_glyphs[ch].advance = glyph->left;
@@ -122,7 +122,7 @@ Texture<> Font::generateTexture(string const &text, bool centered, size_t textur
     textWidth += d_glyphs[ch].width;
   }
 
-  GLubyte *textMap = new GLubyte[textHeight * unscaledTextureWidth]{0};
+  GLubyte *textMap = new GLubyte[textHeight * unscaledTextureWidth]{};
 
   size_t xStart = 0;
   if(centered && textWidth < unscaledTextureWidth)
@@ -160,7 +160,7 @@ Texture<> Font::generateTexture(string const &text, bool centered, size_t textur
 GLubyte *Font::scale(GLubyte *textMap, size_t oldWidth, size_t oldHeight, size_t newWidth, size_t newHeight) const
 {
 
-  GLubyte *texture = new GLubyte[newHeight * newWidth]{0};
+  GLubyte *texture = new GLubyte[newHeight * newWidth]{};
   float horScale = static_cast<float>(newWidth) / oldWidth;
   float verScale = static_cast<float>(newHeight) / oldHeight;
 

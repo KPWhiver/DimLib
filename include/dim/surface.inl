@@ -54,6 +54,18 @@ namespace dim
   
   template<typename ...Types>
   template<uint Index>
+  typename std::tuple_element<Index, typename Surface<Types...>::TupleType>::type &Surface<Types...>::texture()
+  {
+    uint idx = 0;
+    if(d_buffers.size() == 2 && d_bufferToRenderTo == 0)
+      idx = 1;
+
+    return std::get<Index>(d_buffers[idx].d_textures);
+  }
+
+
+  template<typename ...Types>
+  template<uint Index>
   void Surface<Types...>::addTarget(Format format, Filtering filter)
   {
     uint oldDepth = d_depth;
@@ -226,17 +238,6 @@ namespace dim
     return std::get<0>(d_buffers[0].d_textures).width();
   }
 
-  template<typename ...Types> 
-  template<uint Index> 
-  typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type &Surface<Types...>::texture()
-  {
-    uint idx = 0;
-    if(d_buffers.size() == 2 && d_bufferToRenderTo == 0)
-      idx = 1;
-    
-    return std::get<Index>(d_buffers[idx].d_textures);
-  }
-  
   template<typename ...Types>
   void Surface<Types...>::renderTo()
   {
