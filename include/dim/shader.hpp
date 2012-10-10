@@ -55,7 +55,7 @@ class Shader
   
   static Shader const *s_activeShader;
     
-  mutable std::unordered_map<std::string, GLint> d_uniforms;
+  mutable std::shared_ptr<std::unordered_map<std::string, GLint>> d_uniforms;
   
   std::string d_filename;
 
