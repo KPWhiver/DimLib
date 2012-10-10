@@ -193,7 +193,9 @@ namespace internal
     if(changing)
       setChanged(true);
 
-    std::vector<ClonePtr<RefType>> &list = d_map[Drawable::Key(xloc, zloc)];
+    auto iter = d_map.find(Drawable::Key(xloc, zloc));
+    if(iter == d_map.end())
+      d_map.insert(make_pair(Drawable::Key(xloc, zloc), PtrVector<RefType>([](RefType *ptr){return ptr->clone();})));
 
     //std::pair<size_t, Drawable::Key> id(list.size(), Drawable::Key(xloc, zloc));
 
@@ -203,7 +205,7 @@ namespace internal
 
     auto iter = lower_bound(list.begin(), list.end(), object, [](Drawable const *lhs, Drawable const *rhs)
                             {
-                              return lhs->drawState() < rhs->drawState();
+                              return Drawable{lhs->scene(), lhs->shader()} < rhs->shader();
                             });
 
     iter = list.insert(iter, object);

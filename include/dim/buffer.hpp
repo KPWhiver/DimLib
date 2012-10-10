@@ -90,7 +90,7 @@ namespace dim
   template<typename Type>
   Buffer<Type>::Buffer(size_t size, Type* buffer)
       :
-          d_id(new GLuint, [](GLuint *ptr)
+          d_id(new GLuint(0), [](GLuint *ptr)
           { glDeleteBuffers(1, ptr);
             delete ptr;}),
           d_size(size),

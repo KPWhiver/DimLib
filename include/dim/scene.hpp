@@ -22,34 +22,28 @@
 
 #include <vector>
 
-
 #include "dim/mesh.hpp"
-#include "dim/shader.hpp"
 #include "dim/texture.hpp"
 
 namespace dim
 {
 
-class DrawState
+class Scene
 {
-	Mesh d_mesh;
-	Shader d_shader;
-	std::vector<std::pair<Texture<GLubyte>, std::string>> d_textures;
-	bool d_culling;
+  std::vector<Mesh> d_meshes;
 
 public:
-	DrawState(Mesh const &mesh, Shader const &shader, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures);
+	Scene(std::string const &filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
+        Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
+	Scene(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
+	void add(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
 
-  bool culling() const;
-  
-  void setCulling(bool culling);
+	void draw() const;
 
-	Mesh const &mesh() const;
-	Shader const &shader() const;
-	std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
+  Mesh &operator[](size_t idx);
+  Mesh const &operator[](size_t idx) const;
 
-	bool operator==(DrawState const &other) const;
-  bool operator<(DrawState const &other) const;
+  size_t size() const;
 };
 
 }
