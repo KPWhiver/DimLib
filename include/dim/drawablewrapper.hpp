@@ -56,63 +56,61 @@ namespace internal
   template <>
   class DrawableWrapper<Drawable>
   {
-      bool d_changed;
-      size_t d_gridSize;
       size_t d_ownerId;
-      
       
     public:
     // constructors
       virtual ~DrawableWrapper();
-      DrawableWrapper(size_t gridSize, size_t ownerId);
+      explicit DrawableWrapper(size_t ownerId);
 
       DrawableWrapper<Drawable>* clone() const;
 
       void copy(size_t dest);
 
-    // iterators
-      typedef std::pair<size_t, Drawable::Key> IterType;
+    private:
+      virtual void v_copy(size_t dest) const = 0;
+      virtual DrawableWrapper<Drawable>* v_clone() const = 0;
 
-      typedef IteratorBase<Drawable, DrawableWrapper<Drawable>, IterType>  iterator;
-      typedef IteratorBase<Drawable const, DrawableWrapper<Drawable> const, IterType> const_iterator;
+    public:
+    // iterators
+      struct IterType
+      {
+        virtual IterType* clone() const = 0;
+      };
+
+      typedef IteratorBase<Drawable, DrawableWrapper<Drawable>, ClonePtr<IterType>>  iterator;
+      typedef IteratorBase<Drawable const, DrawableWrapper<Drawable> const, ClonePtr<IterType>> const_iterator;
 
       iterator begin();
       iterator end();
       const_iterator begin() const;
       const_iterator end() const;
 
-      static iterator endIterator();
-      static const_iterator cendIterator();
+      void increment(ClonePtr<IterType> *iter) const;
+      Drawable &dereference(ClonePtr<IterType> const &iter);
+      Drawable const &dereference(ClonePtr<IterType> const &iter) const;
+      bool equal(IterType const &lhs, ClonePtr<IterType> const &rhs) const;
 
-      IterType increment(IterType const &iter) const;
-      Drawable &dereference(IterType const &iter);
-      Drawable const &dereference(IterType const &iter) const;
+    private:
+      virtual void v_increment(ClonePtr<IterType> *iter) const = 0;
+      virtual Drawable &v_dereference(ClonePtr<IterType> const &iter) = 0;
+      virtual Drawable const &v_dereference(ClonePtr<IterType> const &iter) const = 0;
+      virtual bool v_equal(IterType const &lhs, ClonePtr<IterType> const &rhs) const = 0;
 
+      virtual iterator v_begin() = 0;
+      virtual const_iterator v_begin() const = 0;
+      virtual iterator v_end() = 0;
+      virtual const_iterator v_end() const = 0;
+
+    public:
     // regular functions
-      void save(std::string const &filename);
       void clear();
       void draw(DrawState const &state);
       iterator find(DrawState const &state, float x, float z);
       iterator find(float x, float z);
       void del(iterator &object);
 
-      size_t gridSize() const;
-      
     private:
-    // static access
-      virtual void v_copy(size_t dest) const = 0;
-      virtual DrawableWrapper<Drawable>* v_clone() const = 0;
-    
-    // iterators
-      virtual IterType v_increment(IterType const &iter) const = 0;
-      virtual Drawable &v_dereference(IterType const &iter) = 0;
-      virtual Drawable const &v_dereference(IterType const &iter) const = 0;
-
-      virtual iterator v_begin() = 0;
-      virtual const_iterator v_begin() const = 0;
-      
-    // regular functions
-      virtual void v_save(std::string const &filename) = 0;
       virtual void v_clear() = 0;
       virtual void v_draw(DrawState const &state) = 0;
       virtual iterator v_find(float x, float z) = 0;
@@ -121,9 +119,6 @@ namespace internal
 
     protected:
     // private functions
-      bool changed() const;
-      void setChanged(bool changed);
-
       size_t ownerId() const;
   };
 
@@ -136,6 +131,8 @@ namespace internal
 
       static std::unordered_map<size_t, DrawableWrapper<RefType>*> s_map;
 
+      size_t d_gridSize;
+
     public:
     // constuctors
       DrawableWrapper(size_t gridSize, size_t key);
@@ -145,8 +142,22 @@ namespace internal
       static DrawableWrapper<RefType> *get(size_t key);
       static bool isPresent(size_t key);
 
+    private:
+      virtual void v_copy(size_t dest) const;
+      virtual DrawableWrapper<Drawable>* v_clone() const;
+
+    public:
     // iterators
-      typedef std::pair<size_t, typename Storage::iterator> IterType;
+      struct IterType
+      {
+        size_t listIdx;
+        typename Storage::iterator mapIterator;
+
+        virtual IterType* clone() const
+        {
+          return new IterType(*this);
+        }
+      };
 
       typedef IteratorBase<RefType, DrawableWrapper<RefType>, IterType> iterator;
       typedef IteratorBase<RefType const, DrawableWrapper<RefType> const, IterType> const_iterator;
@@ -158,32 +169,32 @@ namespace internal
       
       RefType &dereference(IterType const &iter);
       RefType const &dereference(IterType const &iter) const;
-      IterType increment(IterType const &iter) const;
+      void increment(IterType *iter) const;
+      bool equal(IterType const &lhs, IterType const &rhs) const;
 
+    private:
+      virtual void v_increment(ClonePtr<DrawableWrapper<Drawable>::IterType> *iter) const;
+      virtual Drawable &v_dereference(ClonePtr<DrawableWrapper<Drawable>::IterType> const &iter);
+      virtual Drawable const &v_dereference(ClonePtr<DrawableWrapper<Drawable>::IterType> const &iter) const;
+      virtual bool v_equal(ClonePtr<DrawableWrapper<Drawable>::IterType> const &lhs, ClonePtr<DrawableWrapper<Drawable>::IterType> const &rhs) const;
+
+      virtual DrawableWrapper<Drawable>::iterator v_begin();
+      virtual DrawableWrapper<Drawable>::const_iterator v_begin() const;
+      virtual DrawableWrapper<Drawable>::iterator v_end();
+      virtual DrawableWrapper<Drawable>::const_iterator v_end() const;
+
+    public:
     // regular functions
       iterator add(bool changing, RefType *object);
       iterator find(float x, float z);
 
     private:
-    // static access
-      virtual void v_copy(size_t dest) const;
-      virtual DrawableWrapper<Drawable>* v_clone() const;
-
-    // regular functions
       virtual void v_save(std::string const &filename);
       virtual void v_clear();
       virtual void v_draw(DrawState const &state);
       virtual DrawableWrapper<Drawable>::iterator v_find(float x, float z);
       virtual DrawableWrapper<Drawable>::iterator v_find(DrawState const &state, float x, float z);
       virtual void v_del(DrawableWrapper<Drawable>::iterator &object);
-
-    // iterators
-      virtual DrawableWrapper<Drawable>::IterType v_increment(DrawableWrapper<Drawable>::IterType const &iter) const;
-      virtual Drawable &v_dereference(DrawableWrapper<Drawable>::IterType const &iter);
-      virtual Drawable const &v_dereference(DrawableWrapper<Drawable>::IterType const &iter) const;
-
-      DrawableWrapper<Drawable>::iterator v_begin();
-      DrawableWrapper<Drawable>::const_iterator v_begin() const;
 
     // private functions
       size_t count() const;

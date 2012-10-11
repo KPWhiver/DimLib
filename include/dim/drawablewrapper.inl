@@ -26,7 +26,8 @@ namespace internal
   template<typename RefType>
   DrawableWrapper<RefType>::DrawableWrapper(size_t gridSize, size_t key)
       :
-        DrawableWrapper<Drawable>(gridSize, key)
+        DrawableWrapper<Drawable>(key),
+        d_gridSize(gridSize)
   {
     s_map[key] = this;
   }
@@ -78,7 +79,7 @@ namespace internal
     for(auto mapPart = d_map.begin(); mapPart != d_map.end(); ++mapPart)
     {
       if(mapPart->second.size() != 0)
-        return typename DrawableWrapper<RefType>::iterator(std::make_pair(0, mapPart), this);
+        return typename DrawableWrapper<RefType>::iterator({0, mapPart}, this);
     }
 
     return end();
@@ -87,7 +88,7 @@ namespace internal
   template <typename RefType>
   typename DrawableWrapper<RefType>::iterator DrawableWrapper<RefType>::end()
   {
-    return typename DrawableWrapper<RefType>::iterator(std::make_pair(std::numeric_limits<size_t>::max(), d_map.end()), this);
+    return typename DrawableWrapper<RefType>::iterator({std::numeric_limits<size_t>::max(), d_map.end()}, this);
   }
 
   template <typename RefType>
@@ -96,7 +97,7 @@ namespace internal
     for(auto mapPart = d_map.begin(); mapPart != d_map.end(); ++mapPart)
     {
       if(mapPart->second.size() != 0)
-        return typename DrawableWrapper<RefType>::const_iterator(std::make_pair(0, mapPart), this);
+        return typename DrawableWrapper<RefType>::const_iterator({0, mapPart}, this);
     }
 
     return end();
@@ -105,67 +106,95 @@ namespace internal
   template <typename RefType>
   typename DrawableWrapper<RefType>::const_iterator DrawableWrapper<RefType>::end() const
   {
-    return typename DrawableWrapper<RefType>::const_iterator(std::make_pair(std::numeric_limits<size_t>::max(), d_map.end()), this);
+    return typename DrawableWrapper<RefType>::const_iterator({std::numeric_limits<size_t>::max(), d_map.end()}, this);
   }
 
   template<typename RefType>
-  typename DrawableWrapper<RefType>::IterType DrawableWrapper<RefType>::increment(typename DrawableWrapper<RefType>::IterType const &iter) const
+  void DrawableWrapper<RefType>::increment(typename DrawableWrapper<RefType>::IterType *iter) const
   {
-    size_t next = iter.first + 1;
+    size_t next = iter->listIdx + 1;
 
-    for(auto mapPart = iter.second; mapPart != d_map.end(); ++mapPart)
+    for(auto mapPart = iter->mapIterator; mapPart != d_map.end(); ++mapPart)
     {
       if(next < mapPart->second.size())
-        return std::make_pair(next, mapPart);
+      {
+        *iter = {next, mapPart};
+        return;
+      }
 
       next = 0;
     }
 
-    return end().iter();
+    *iter = end().iter();
   }
 
   template<typename RefType>
   RefType &DrawableWrapper<RefType>::dereference(typename DrawableWrapper<RefType>::IterType const &iter)
   {
-    return iter.second->second[iter.first];
+    return iter.mapIterator->second[iter.listIdx];
   }
 
   template<typename RefType>
   RefType const &DrawableWrapper<RefType>::dereference(typename DrawableWrapper<RefType>::IterType const &iter) const
   {
-    return iter.second->second[iter.first];
+    return iter.mapIterator->second[iter.listIdx];
+  }
+
+  template<typename RefType>
+  bool equal(typename DrawableWrapper<RefType>::IterType const &lhs, typename DrawableWrapper<RefType>::IterType const &rhs) const
+  {
+    return lhs.listIdx == rhs.listIdx && lhs.mapIterator == rhs.mapIterator;
   }
 
   template <typename RefType>
   DrawableWrapper<Drawable>::iterator DrawableWrapper<RefType>::v_begin()
   {
-    IterType &ref = begin().iter();
-    return DrawableWrapper<Drawable>::iterator(std::make_pair(ref.first, ref.second->first), this);
+    IterType *ptr = new IterType(begin().iter());
+    return DrawableWrapper<Drawable>::iterator(ClonePtr<DrawableWrapper<Drawable>::IterType>(ptr), this);
   }
   template <typename RefType>
   DrawableWrapper<Drawable>::const_iterator DrawableWrapper<RefType>::v_begin() const
   {
-    IterType const &ref = begin().iter();
-    return DrawableWrapper<Drawable>::const_iterator(std::make_pair(ref.first, ref.second->first), this);
+    IterType *ptr = new IterType(begin().iter());
+    return DrawableWrapper<Drawable>::const_iterator(ClonePtr<DrawableWrapper<Drawable>::IterType>(ptr), this);
+  }
+
+  template <typename RefType>
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<RefType>::v_begin()
+  {
+    IterType *ptr = new IterType(end().iter());
+    return DrawableWrapper<Drawable>::iterator(ClonePtr<DrawableWrapper<Drawable>::IterType>(ptr), this);
+  }
+  template <typename RefType>
+  DrawableWrapper<Drawable>::const_iterator DrawableWrapper<RefType>::v_begin() const
+  {
+    IterType *ptr = new IterType(end().iter());
+    return DrawableWrapper<Drawable>::const_iterator(ClonePtr<DrawableWrapper<Drawable>::IterType>(ptr), this);
   }
 
   template<typename RefType>
-  DrawableWrapper<Drawable>::IterType DrawableWrapper<RefType>::v_increment(DrawableWrapper<Drawable>::IterType const &iter) const
+  void DrawableWrapper<RefType>::v_increment(ClonePtr<DrawableWrapper<Drawable>::IterType> *iter) const
   {
-    IterType const val = increment(std::make_pair(iter.first, d_map.find(iter.second)));
-    return std::make_pair(val.first, val.second->first);
+    // We can be certain that this goes okay, or this function would not have been called
+    increment(reinterpret_cast<IterType*>(iter));
   }
 
   template<typename RefType>
-  Drawable &DrawableWrapper<RefType>::v_dereference(DrawableWrapper<Drawable>::IterType const &iter)
+  Drawable &DrawableWrapper<RefType>::v_dereference(ClonePtr<DrawableWrapper<Drawable>::IterType> const &iter)
   {
-    return dereference(std::make_pair(iter.first, d_map.find(iter.second)));
+    return dereference(reinterpret_cast<IterType>(*iter));
   }
 
   template<typename RefType>
-  Drawable const &DrawableWrapper<RefType>::v_dereference(DrawableWrapper<Drawable>::IterType const &iter) const
+  Drawable const &DrawableWrapper<RefType>::v_dereference(ClonePtr<DrawableWrapper<Drawable>::IterType> const &iter) const
   {
-    return dereference(std::make_pair(iter.first, d_map.find(iter.second)));
+    return dereference(reinterpret_cast<IterType>(*iter));
+  }
+
+  template<typename RefType>
+  bool DrawableWrapper<RefType>::v_equal(ClonePtr<DrawableWrapper<Drawable>::IterType> const &lhs, ClonePtr<DrawableWrapper<Drawable>::IterType> const &rhs) const
+  {
+    return equal(reinterpret_cast<IterType>(*lhs), reinterpret_cast<IterType>(*rhs));
   }
 
   
@@ -187,8 +216,8 @@ namespace internal
   typename DrawableWrapper<RefType>::iterator DrawableWrapper<RefType>::add(bool changing, RefType *object)
   {
     int xloc, zloc;
-    xloc = object->coor().x / gridSize();
-    zloc = object->coor().z / gridSize();
+    xloc = object->coor().x / d_gridSize;
+    zloc = object->coor().z / d_gridSize;
   
     if(changing)
       setChanged(true);
@@ -284,8 +313,8 @@ namespace internal
   DrawableWrapper<Drawable>::iterator DrawableWrapper<RefType>::v_find(DrawState const &state, float x, float z)
   {
     int xloc, zloc;
-    xloc = x / gridSize();
-    zloc = z / gridSize();
+    xloc = x / d_gridSize;
+    zloc = z / d_gridSize;
 
     auto mapPart = d_map.find(Drawable::Key(xloc, zloc));
     if(mapPart == d_map.end())
@@ -310,8 +339,8 @@ namespace internal
   typename DrawableWrapper<RefType>::iterator DrawableWrapper<RefType>::find(float x, float z)
   {
     int xloc, zloc;
-    xloc = x / gridSize();
-    zloc = z / gridSize();
+    xloc = x / d_gridSize;
+    zloc = z / d_gridSize;
 
     auto mapPart = d_map.find(Drawable::Key(xloc, zloc));
     if(mapPart == d_map.end())
