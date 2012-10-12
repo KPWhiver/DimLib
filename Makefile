@@ -19,7 +19,7 @@ vpath %.hpp include/dim
 vpath %.o obj
 vpath %.d obj
 
-LIBS = -lglfw -lX11 -lpthread -lGL -lpng -lfreetype -lassimp -lGLEW
+LIBS = -lX11 -lpthread -lGL -lpng -lfreetype -lassimp -lGLEW -lglfw
 
 CXXSOURCES = textureproperties.cpp dim.cpp drawstate.cpp light.cpp scenegraph.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawable.cpp mouse.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp drawablewrapper.cpp frame.cpp tools.cpp texture.cpp surface.cpp lex.cpp
 

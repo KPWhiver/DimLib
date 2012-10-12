@@ -104,7 +104,8 @@ namespace dim
       static size_t const interleaved = std::numeric_limits<size_t>::max();
 
       Mesh(std::string filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
-           Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
+           Attribute const &binormal = Attribute(Attribute::unknown, Attribute::vec1), 
+           Attribute const &tangent = Attribute(Attribute::unknown, Attribute::vec1));
 
       Mesh(GLfloat* buffer, std::vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx);
       void addBuffer(GLfloat* buffer, size_t idx);
