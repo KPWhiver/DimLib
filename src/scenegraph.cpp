@@ -34,7 +34,9 @@ namespace dim
   /* constructors */
   
   SceneGraph::SceneGraph(size_t gridSize)
-      : d_gridSize(gridSize)
+      :
+          d_drawableWrappers([](DrawableWrapper<Drawable>* ptr){return ptr->clone();}),
+          d_gridSize(gridSize)
   {
   }
 
@@ -174,32 +176,20 @@ namespace dim
   {
     for(auto const &element: d_drawStateList)
     {
+      // TODO optimize optimize optimize
       DrawState const &state = element.first;
 
-      //if(mode == SceneGraph::normal)
-        state.shader().use();
-      //else
-      //{
-      //  glCullFace(GL_FRONT);
-	    //  glEnable(GL_POLYGON_OFFSET_FILL);
-	    //  glPolygonOffset(1.1f, 4.0f);
-      //}
+      state.shader().use();
       
       state.mesh().bind();
       if(state.culling() == false)
         glDisable(GL_CULL_FACE);
 
       for(size_t tex = 0; tex != state.textures().size(); ++tex)
-        state.shader().set(state.textures()[tex].second, state.textures()[tex].first, tex);
+        state.shader().set(state.mesh().textures()[tex].second, state.textures()[tex].first, tex);
 
       element.second->draw(state);
       
-      //if(mode == SceneGraph::shadow)
-      //{
-      //  glCullFace(GL_BACK);
-	    //  glDisable(GL_POLYGON_OFFSET_FILL);
-      //}
-
       state.mesh().unbind();
       if(state.culling() == false)
         glEnable(GL_CULL_FACE);

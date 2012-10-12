@@ -168,16 +168,16 @@ namespace dim
 
   GLint Shader::uniform(string const &variable) const
   {
-    auto it = d_uniforms.find(variable);
+    auto it = d_uniforms->find(variable);
 
-    if(it == d_uniforms.end())
+    if(it == d_uniforms->end())
     {
       GLint loc = glGetUniformLocation(*d_id, variable.c_str());
 
       if(loc == -1)
         log(d_filename, 0, LogType::warning, "Can`t find uniform " + variable);
 
-      d_uniforms[variable] = loc;
+      (*d_uniforms)[variable] = loc;
       return loc;
     }
 
@@ -377,6 +377,7 @@ namespace dim
             glDeleteProgram(*ptr);
             delete ptr;
           }),
+          d_uniforms(new unordered_map<string, GLint>),
           d_filename(filename)
   {
     ifstream file(filename.c_str());
@@ -396,6 +397,7 @@ namespace dim
             glDeleteProgram(*ptr);
             delete ptr;
           }),
+          d_uniforms(new unordered_map<string, GLint>),
           d_filename(name)
   {
     istringstream sstream(input);

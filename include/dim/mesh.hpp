@@ -26,13 +26,14 @@
 #include <vector>
 
 #include "dim/buffer.hpp"
+#include "dim/texture.hpp"
 
 namespace dim
 {
   class Attribute
   {
       std::string d_name;
-      GLuint d_id;
+      GLint d_id;
 
     public:
       enum Name: GLint
@@ -79,6 +80,9 @@ namespace dim
 
   class Mesh
   {
+      std::vector<std::pair<Texture<GLubyte>, std::string>> d_textures;
+      bool d_culling;
+
       Buffer<GLfloat> d_interleavedVBO;
       Buffer<GLushort> d_indexVBO;
       size_t d_numOfVertices;
@@ -102,10 +106,6 @@ namespace dim
         point,
       };
       static size_t const interleaved = std::numeric_limits<size_t>::max();
-
-      Mesh(std::string filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
-           Attribute const &binormal = Attribute(Attribute::unknown, Attribute::vec1), 
-           Attribute const &tangent = Attribute(Attribute::unknown, Attribute::vec1));
 
       Mesh(GLfloat* buffer, std::vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx);
       void addBuffer(GLfloat* buffer, size_t idx);
@@ -132,6 +132,15 @@ namespace dim
 
       GLuint id() const;
 
+      bool culling() const;
+
+      void setCulling(bool culling);
+
+      std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
+      void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param);
+
+      bool operator==(Mesh const &other) const;
+      bool operator<(Mesh const &other) const;
     private:
       Shape d_shape;
       std::vector<Attribute> d_attributes;
@@ -141,10 +150,7 @@ namespace dim
       void updateBuffer(GLfloat *target, GLfloat *source, GLuint varNumOfElements, size_t idx);
 
       uint numOfElements() const;
-
-      //size_t readFormatString(std::string const &format);
   };
-
 }
 
 #endif	/* MESHES_HPP */

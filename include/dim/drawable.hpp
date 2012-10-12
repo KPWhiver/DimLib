@@ -23,7 +23,8 @@
 #include <iosfwd>
 #include <string>
 
-#include "dim/drawstate.hpp"
+#include "dim/scene.hpp"
+#include "dim/shader.hpp"
 #include "dim/onepair.hpp"
 
 namespace dim
@@ -43,8 +44,6 @@ namespace dim
       float d_radius;
 
     public:
-      typedef Onepair<long, 10000000> Key;
-
       Drawable() = default;
       Drawable(glm::vec3 const &coor, glm::vec3 const &rot, float radius);
 
@@ -53,7 +52,8 @@ namespace dim
 
       glm::vec3 const &rot() const;
 
-      virtual DrawState const &drawState() const = 0;
+      virtual Shader const &shader() const = 0;
+      virtual Scene const &scene() const = 0;
 
       virtual void draw();
 

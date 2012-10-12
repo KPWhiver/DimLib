@@ -21,8 +21,8 @@
 #define DRAWMAP_HPP
 
 #include "dim/drawablewrapper.hpp"
-#include "dim/drawstate.hpp"
-#include "dim/cloneptr.hpp"
+#include "dim/scene.hpp"
+#include "dim/ptrvector.hpp"
 
 #include <vector>
 #include <map>
@@ -35,18 +35,18 @@ namespace dim
 
   class SceneGraph
   {
-      std::multimap<DrawState, internal::DrawableWrapper<Drawable>*> d_drawStateList;
+      std::multimap<internal::DrawState, internal::DrawableWrapper<Drawable>*> d_drawStateList;
 
-      std::vector<ClonePtr<internal::DrawableWrapper<Drawable>>> d_drawableWrappers;
+      PtrVector<internal::DrawableWrapper<Drawable>> d_drawableWrappers;
 
       size_t d_gridSize;
 
     public:
       //typedefs + iterators
-      //template <typename RefType>
-      //using iterator = typename internal::DrawableWrapper<RefType>::iterator;
-      //template <typename RefType>
-      //using const_iterator = typename internal::DrawableWrapper<RefType>::const_iterator;
+      template <typename RefType>
+      using iterator = typename internal::DrawableWrapper<RefType>::iterator;
+      template <typename RefType>
+      using const_iterator = typename internal::DrawableWrapper<RefType>::const_iterator;
 
     // iterators
       typedef std::pair<internal::DrawableWrapper<Drawable>::iterator, size_t> IterType;
@@ -69,7 +69,6 @@ namespace dim
       const_iterator end() const;
 
       IterType increment(IterType const &iter) const;
-      //IdType const &decrement(IdType const &id) const;
       Drawable &dereference(IterType const &iter);
       Drawable const &dereference(IterType const &iter) const;
 
@@ -96,18 +95,15 @@ namespace dim
       void del(SceneGraph::iterator object);
       SceneGraph::iterator get(float x, float z);
 
-      SceneGraph::iterator get(DrawState const &state, float x, float z);
+      SceneGraph::iterator get(internal::DrawState const &state, float x, float z);
 
       template<typename RefType>
       typename internal::DrawableWrapper<RefType>::iterator get(float x, float z);
 
       void draw();
 
-      //void change(Drawable const &object);
-
     private:
-      //SceneGraph::iterator d_objSelect;
-      void add(DrawState const &state, internal::DrawableWrapper<Drawable>* ptr);
+      void add(internal::DrawState const &state, internal::DrawableWrapper<Drawable>* ptr);
       SceneGraph::iterator find(float x, float z);
 
       size_t key() const;
@@ -164,7 +160,8 @@ namespace dim
     typename internal::DrawableWrapper<RefType>::iterator iter = ptr->add(!saved, object);
         
     // Add the drawstate
-    add(object->drawState(), ptr);
+    for(size_t idx = 0; idx != object->scene().size(); ++idx)
+      add({object->scene()[idx], object->shader()}, ptr);
 
     return iter;
   }

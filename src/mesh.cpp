@@ -116,145 +116,6 @@ namespace dim
     }
   }
 
-  namespace
-  {
-    void addAttributeToBuffer(Attribute const &attrib, GLfloat *array, size_t offset, aiVector3D const &vector)
-    {
-      array[offset] = vector.x;
-
-      if(attrib.format() > Attribute::vec1)
-        array[offset + 1] = vector.y;
-
-      if(attrib.format() > Attribute::vec2)
-        array[offset + 2] = vector.z;
-    }
-  }
-
-  Mesh::Mesh(string filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord, Attribute const &binormal,
-             Attribute const &tangent)
-      :
-          d_interleavedVBO(0, 0),
-          d_indexVBO(0, 0),
-          d_numOfVertices(0),
-          d_numOfTriangles(0),
-          d_instancingVBO(0, 0),
-          d_maxLocations(0),
-          d_shape(triangle),
-          d_instanceAttribute(Attribute::instance, Attribute::vec1)
-  {
-    // static initialize
-    if(s_initialized == false)
-      initialize();
-
-    // set flags
-    uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices;
-
-    if(vertex.id() != Attribute::unknown)
-      d_attributes.push_back(vertex);
-    else
-      log(__FILE__, __LINE__, LogType::error, "No vertex array specified while loading " + filename);
-
-    if(normal.id() != Attribute::unknown)
-    {
-      flags |= aiProcess_GenSmoothNormals;
-      d_attributes.push_back(normal);
-    }
-
-    if(texCoord.id() != Attribute::unknown)
-      d_attributes.push_back(texCoord);
-
-    if(binormal.id() != Attribute::unknown)
-    {
-      flags |= aiProcess_CalcTangentSpace;
-      d_attributes.push_back(binormal);
-    }
-
-    if(tangent.id() != Attribute::unknown)
-    {
-      flags |= aiProcess_CalcTangentSpace;
-      d_attributes.push_back(tangent);
-    }
-
-    // load model
-    Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(filename, flags);
-
-    if(!scene)
-      log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
-
-    if(texCoord.id() != Attribute::unknown && scene->mMeshes[0]->mTextureCoords[0] == 0)
-      log(filename, 0, LogType::error, "No texture coordinates present");
-
-    uint varNumOfElements = 0;
-
-    size_t mesh = 0;
-    for(Attribute attrib : d_attributes)
-    {
-      if(attrib.format() > Attribute::vec3)
-        log(__FILE__, __LINE__, LogType::error, "Can't extract more than 3 coordinates from a model file");
-
-      varNumOfElements += attrib.size();
-    }
-
-    //for(size_t mesh = 0; mesh != scene->mNummeshes; ++mesh)
-    //{
-    // allocate buffer
-    d_numOfVertices = scene->mMeshes[mesh]->mNumVertices;
-
-    GLfloat *array = new GLfloat[d_numOfVertices * varNumOfElements];
-
-    // fill buffer
-    for(size_t vert = 0; vert != d_numOfVertices; ++vert)
-    {
-      uint arrayIdxOffset = 0;
-      size_t arrayIdxStart = vert * varNumOfElements;
-
-      addAttributeToBuffer(vertex, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mVertices[vert]);
-      arrayIdxOffset += vertex.size();
-
-      if(normal.id() != Attribute::unknown)
-      {
-        addAttributeToBuffer(normal, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mNormals[vert]);
-        arrayIdxOffset += normal.size();
-      }
-
-      if(texCoord.id() != Attribute::unknown)
-      {
-        addAttributeToBuffer(texCoord, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mTextureCoords[0][vert]);
-        arrayIdxOffset += texCoord.size();
-      }
-
-      if(binormal.id() != Attribute::unknown)
-      {
-        addAttributeToBuffer(binormal, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mBitangents[vert]);
-        arrayIdxOffset += binormal.size();
-      }
-
-      if(tangent.id() != Attribute::unknown)
-      {
-        addAttributeToBuffer(tangent, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mTangents[vert]);
-        arrayIdxOffset += tangent.size();
-      }
-    }
-
-    addBuffer(array, interleaved);
-
-    delete[] array;
-
-    GLushort *indexArray = new GLushort[scene->mMeshes[mesh]->mNumFaces * 3];
-
-    for(size_t idx = 0; idx != scene->mMeshes[mesh]->mNumFaces; ++idx)
-    {
-      indexArray[0 + idx * 3] = scene->mMeshes[mesh]->mFaces[idx].mIndices[0];
-      indexArray[0 + idx * 3 + 1] = scene->mMeshes[mesh]->mFaces[idx].mIndices[1];
-      indexArray[0 + idx * 3 + 2] = scene->mMeshes[mesh]->mFaces[idx].mIndices[2];
-    }
-
-    addElementBuffer(indexArray, scene->mMeshes[mesh]->mNumFaces);
-
-    delete[] indexArray;
-  }
-
   Mesh::Mesh(GLfloat* buffer, vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx)
       :
           d_interleavedVBO(0, 0),
@@ -553,6 +414,26 @@ namespace dim
   GLuint Mesh::id() const
   {
     return d_interleavedVBO.id();
+  }
+
+  bool Mesh::culling() const
+  {
+    return d_culling;
+  }
+
+  void Mesh::setCulling(bool culling)
+  {
+    d_culling = culling;
+  }
+
+  vector<pair<Texture<GLubyte>, string>> const &Mesh::textures() const
+  {
+    return d_textures;
+  }
+
+  void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param)
+  {
+    d_textures = param;
   }
 
 }

@@ -185,8 +185,8 @@ namespace dim
       }
 
       glGenTextures(1, d_id.get());
-      glBindTexture(GL_TEXTURE_2D, *d_id);
-
+      bind();
+      
       // set the correct filtering
       if(s_anisotropic == false && static_cast<int>(filter) >= 0)
         filter = Filtering::trilinear;
@@ -252,7 +252,7 @@ namespace dim
           data = &d_buffer[0];
       }
 
-      glBindTexture(GL_TEXTURE_2D, *d_id);
+      bind();
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, d_width, d_height, externalFormat(), DataType<Type>::value, data);
 
       // update the internal buffer
@@ -329,7 +329,7 @@ namespace dim
       {
         d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * components());
 
-        glBindTexture(GL_TEXTURE_2D, *d_id);
+        bind();
         glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, &d_buffer[0]);
 
         d_bufferLevel = level;
@@ -344,7 +344,7 @@ namespace dim
     template<typename Type>
     void TextureBase<Type>::setBorderColor(glm::vec4 const &color)
     {
-      glBindTexture(GL_TEXTURE_2D, *d_id);
+      bind();
       glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
     }
 
@@ -359,7 +359,7 @@ namespace dim
     template<typename Type>
     void TextureBase<Type>::generateMipmap()
     {
-      glBindTexture(GL_TEXTURE_2D, *d_id);
+      bind();
       glGenerateMipmap (GL_TEXTURE_2D);
     }
 
@@ -379,6 +379,12 @@ namespace dim
     Format TextureBase<Type>::format() const
     {
       return d_format;
+    }
+    
+    template<typename Type>
+    void TextureBase<Type>::bind() const
+    {
+      glBindTexture(GL_TEXTURE_2D, *d_id);
     }
 
     template<typename Type>
