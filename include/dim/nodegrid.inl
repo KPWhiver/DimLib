@@ -176,25 +176,30 @@ namespace internal
   void NodeGrid<RefType>::v_increment(ClonePtr<NodeStorageBase::IterType> *iter) const
   {
     // We can be certain that this goes okay, or this function would not have been called
-    increment(reinterpret_cast<IterType*>((*iter));
+    NodeStorageBase::IterType *ptr = *iter;
+    increment(reinterpret_cast<IterType*>(ptr);
   }
 
   template<typename RefType>
-  Drawable &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter)
+  DrawNode &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter)
   {
-    return dereference(reinterpret_cast<IterType>(*iter));
+    NodeStorageBase::IterType *ptr = iter;
+    return dereference(reinterpret_cast<IterType>(*ptr));
   }
 
   template<typename RefType>
-  Drawable const &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const
+  DrawNode const &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const
   {
-    return dereference(reinterpret_cast<IterType>(*iter));
+    NodeStorageBase::IterType *ptr = iter;
+    return dereference(reinterpret_cast<IterType>(*ptr));
   }
 
   template<typename RefType>
   bool NodeGrid<RefType>::v_equal(ClonePtr<NodeStorageBase::IterType> const &lhs, ClonePtr<NodeStorageBase::IterType> const &rhs) const
   {
-    return equal(reinterpret_cast<IterType>(*lhs), reinterpret_cast<IterType>(*rhs));
+    NodeStorageBase::IterType *ptr1 = lhs;
+    NodeStorageBase::IterType *ptr2 = rhs;
+    return equal(reinterpret_cast<IterType>(*ptr1), reinterpret_cast<IterType>(*ptr2));
   }
 
   
@@ -226,15 +231,15 @@ namespace internal
     if(iter == d_map.end())
       d_map.insert(make_pair(Key(xloc, zloc), PtrVector<RefType>([](RefType *ptr){return ptr->clone();})));
 
-    //std::pair<size_t, Drawable::Key> id(list.size(), Drawable::Key(xloc, zloc));
+    //std::pair<size_t, DrawNode::Key> id(list.size(), DrawNode::Key(xloc, zloc));
 
     //object.d_id = id;
     //RefType tmp(object);
     //tmp.d_id = id;
 
-    auto iter = lower_bound(list.begin(), list.end(), object, [](Drawable const *lhs, Drawable const *rhs)
+    auto iter = lower_bound(list.begin(), list.end(), object, [](DrawNode const *lhs, DrawNode const *rhs)
                             {
-                              return Drawable{lhs->scene(), lhs->shader()} < rhs->shader();
+                              return DrawNode{lhs->scene(), lhs->shader()} < rhs->shader();
                             });
 
     iter = list.insert(iter, object);
@@ -247,7 +252,7 @@ namespace internal
         break;
     }
 
-    return typename NodeGrid<RefType>::iterator(idx, d_map.find(Drawable::Key(xloc, zloc)));
+    return typename NodeGrid<RefType>::iterator(idx, d_map.find(Key(xloc, zloc)));
   }
 
   template<typename RefType>
@@ -261,13 +266,13 @@ namespace internal
   {
     for(auto mapPart : d_map)
     {
-      auto drawable = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](Drawable const *lhs, DrawState const &rhs)
+      auto DrawNode = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNode const *lhs, DrawState const &rhs)
                               {
                                 return lhs->drawState() < rhs;
                               });
 
-      for(; drawable->drawState() == state; ++drawable)
-        drawable->draw();
+      for(; DrawNode->drawState() == state; ++DrawNode)
+        DrawNode->draw();
     }
   }
 
@@ -293,16 +298,16 @@ namespace internal
     xloc = x / d_gridSize;
     zloc = z / d_gridSize;
 
-    auto mapPart = d_map.find(Drawable::Key(xloc, zloc));
+    auto mapPart = d_map.find(Key(xloc, zloc));
     if(mapPart == d_map.end())
       return end();
 
-    auto drawable = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](Drawable const *lhs, DrawState const &rhs)
+    auto DrawNode = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNode const *lhs, DrawState const &rhs)
                             {
                               return lhs->drawState() < rhs;
                             });
 
-    for(size_t idx = 0; drawable->drawState() == state; ++drawable, ++idx)
+    for(size_t idx = 0; DrawNode->drawState() == state; ++DrawNode, ++idx)
     {
       glm::vec3 coor = mapPart->second[idx].coor();
 
@@ -319,7 +324,7 @@ namespace internal
     xloc = x / d_gridSize;
     zloc = z / d_gridSize;
 
-    auto mapPart = d_map.find(Drawable::Key(xloc, zloc));
+    auto mapPart = d_map.find(Key(xloc, zloc));
     if(mapPart == d_map.end())
       return end();
 

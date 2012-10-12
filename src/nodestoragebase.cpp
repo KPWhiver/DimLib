@@ -87,12 +87,12 @@ namespace internal
     return iter;
   }
 
-  Drawable &NodeStorageBase::dereference(ClonePtr<IterType> const &iter)
+  DrawNode &NodeStorageBase::dereference(ClonePtr<IterType> const &iter)
   {
     return v_dereference(iter);
   }
 
-  Drawable const &NodeStorageBase::dereference(ClonePtr<IterType> const &iter) const
+  DrawNode const &NodeStorageBase::dereference(ClonePtr<IterType> const &iter) const
   {
     return v_dereference(iter);
   }

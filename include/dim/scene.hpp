@@ -28,9 +28,27 @@
 namespace dim
 {
 
+class DrawState
+{
+    Mesh d_mesh;
+    std::vector<std::pair<Texture<GLubyte>, std::string>> d_textures;
+    bool d_culling;
+  
+  public:
+    bool culling() const;
+    std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
+    Mesh const &mesh() const;
+    
+    void setCulling(bool culling);
+    void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param);
+
+    bool operator==(Mesh const &other) const;
+    bool operator<(Mesh const &other) const;
+}
+
 class Scene
 {
-  std::vector<Mesh> d_meshes;
+  std::vector<DrawState> d_states;
 
 public:
 	Scene(std::string const &filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
@@ -40,8 +58,8 @@ public:
 
 	void draw() const;
 
-  Mesh &operator[](size_t idx);
-  Mesh const &operator[](size_t idx) const;
+  DrawState &operator[](size_t idx);
+  DrawState const &operator[](size_t idx) const;
 
   size_t size() const;
 };

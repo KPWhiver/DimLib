@@ -80,9 +80,6 @@ namespace dim
 
   class Mesh
   {
-      std::vector<std::pair<Texture<GLubyte>, std::string>> d_textures;
-      bool d_culling;
-
       Buffer<GLfloat> d_interleavedVBO;
       Buffer<GLushort> d_indexVBO;
       size_t d_numOfVertices;
@@ -132,15 +129,6 @@ namespace dim
 
       GLuint id() const;
 
-      bool culling() const;
-
-      void setCulling(bool culling);
-
-      std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
-      void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param);
-
-      bool operator==(Mesh const &other) const;
-      bool operator<(Mesh const &other) const;
     private:
       Shape d_shape;
       std::vector<Attribute> d_attributes;

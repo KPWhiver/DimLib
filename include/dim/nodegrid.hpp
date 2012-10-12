@@ -17,8 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef DRAWABLEWRAPPER_HPP
-#define DRAWABLEWRAPPER_HPP
+#ifndef NODEGRID_HPP
+#define NODEGRID_HPP
 
 #include <string>
 #include <vector>
@@ -38,15 +38,14 @@ namespace internal
   template<typename RefType>
   class NodeGrid : public NodeStorageBase
   {
-      typedef std::unordered_map<Drawable::Key, PtrVector<RefType>, std::hash<long>, std::equal_to<long>> Storage;
+      typedef Onepair<long, 10000000> Key;
+      typedef std::unordered_map<Key, PtrVector<RefType>, std::hash<long>, std::equal_to<long>> Storage;
       
       Storage d_map;
 
       static std::unordered_map<size_t, NodeGrid<RefType>*> s_map;
 
       size_t d_gridSize;
-
-      typedef Onepair<long, 10000000> Key;
 
     public:
     // constuctors
@@ -89,8 +88,8 @@ namespace internal
 
     private:
       virtual void v_increment(ClonePtr<NodeStorageBase::IterType> *iter) const;
-      virtual Drawable &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter);
-      virtual Drawable const &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const;
+      virtual DrawNode &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter);
+      virtual DrawNode const &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const;
       virtual bool v_equal(ClonePtr<NodeStorageBase::IterType> const &lhs, ClonePtr<NodeStorageBase::IterType> const &rhs) const;
 
       virtual NodeStorageBase::iterator v_begin();

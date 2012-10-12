@@ -17,8 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#ifndef DRAWABLEWRAPPER_HPP
-#define DRAWABLEWRAPPER_HPP
+#ifndef NODESTORAGEBASE_HPP
+#define NODESTORAGEBASE_HPP
 
 #include <string>
 #include <vector>
@@ -29,7 +29,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include "dim/drawable.hpp"
+#include "dim/DrawNode.hpp"
 #include "dim/iteratorbase.hpp"
 #include "dim/onepair.hpp"
 #include "dim/cloneptr.hpp"
@@ -59,13 +59,13 @@ namespace internal
       virtual ~NodeStorageBase();
       explicit NodeStorageBase(size_t ownerId);
 
-      NodeStorageBase<Drawable>* clone() const;
+      NodeStorageBase* clone() const;
 
       void copy(size_t dest);
 
     private:
       virtual void v_copy(size_t dest) const = 0;
-      virtual NodeStorageBase<Drawable>* v_clone() const = 0;
+      virtual NodeStorageBase* v_clone() const = 0;
 
     public:
     // iterators
@@ -74,8 +74,8 @@ namespace internal
         virtual IterType* clone() const = 0;
       };
 
-      typedef IteratorBase<Drawable, NodeStorageBase<Drawable>, ClonePtr<IterType>>  iterator;
-      typedef IteratorBase<Drawable const, NodeStorageBase<Drawable> const, ClonePtr<IterType>> const_iterator;
+      typedef IteratorBase<DrawNode, NodeStorageBase, ClonePtr<IterType>>  iterator;
+      typedef IteratorBase<DrawNode const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
 
       iterator begin();
       iterator end();
@@ -83,14 +83,14 @@ namespace internal
       const_iterator end() const;
 
       void increment(ClonePtr<IterType> *iter) const;
-      Drawable &dereference(ClonePtr<IterType> const &iter);
-      Drawable const &dereference(ClonePtr<IterType> const &iter) const;
+      DrawNode &dereference(ClonePtr<IterType> const &iter);
+      DrawNode const &dereference(ClonePtr<IterType> const &iter) const;
       bool equal(ClonePtr<IterType> const &lhs, ClonePtr<IterType> const &rhs) const;
 
     private:
       virtual void v_increment(ClonePtr<IterType> *iter) const = 0;
-      virtual Drawable &v_dereference(ClonePtr<IterType> const &iter) = 0;
-      virtual Drawable const &v_dereference(ClonePtr<IterType> const &iter) const = 0;
+      virtual DrawNode &v_dereference(ClonePtr<IterType> const &iter) = 0;
+      virtual DrawNode const &v_dereference(ClonePtr<IterType> const &iter) const = 0;
       virtual bool v_equal(ClonePtr<IterType> const &lhs, ClonePtr<IterType> const &rhs) const = 0;
 
       virtual iterator v_begin() = 0;

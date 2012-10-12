@@ -35,21 +35,21 @@ namespace dim
 
   class SceneGraph
   {
-      std::multimap<internal::DrawState, internal::DrawableWrapper<Drawable>*> d_drawStateList;
+      std::multimap<internal::DrawState, internal::DrawableWrapper<Drawable>*> d_drawStates;
 
-      PtrVector<internal::DrawableWrapper<Drawable>> d_drawableWrappers;
+      PtrVector<internal::NodeStorageBase> d_storages;
 
-      size_t d_gridSize;
+      size_t d_gridSize;//
 
     public:
       //typedefs + iterators
       template <typename RefType>
-      using iterator = typename internal::DrawableWrapper<RefType>::iterator;
+      using iterator = typename internal::DrawableWrapper<RefType>::iterator;//
       template <typename RefType>
-      using const_iterator = typename internal::DrawableWrapper<RefType>::const_iterator;
+      using const_iterator = typename internal::DrawableWrapper<RefType>::const_iterator;//
 
     // iterators
-      typedef std::pair<internal::DrawableWrapper<Drawable>::iterator, size_t> IterType;
+      typedef std::pair<internal::NodeStorageBase::iterator, size_t> IterType;
 
       typedef internal::IteratorBase<Drawable, SceneGraph, IterType> iterator;
       typedef internal::IteratorBase<Drawable const, SceneGraph const, IterType> const_iterator;
@@ -70,7 +70,7 @@ namespace dim
 
       IterType increment(IterType const &iter) const;
       Drawable &dereference(IterType const &iter);
-      Drawable const &dereference(IterType const &iter) const;
+      DrawNode const &dereference(IterType const &iter) const;
 
     // constructors
       explicit SceneGraph(size_t gridSize = 64);
@@ -83,7 +83,7 @@ namespace dim
 
     // regular functions
       template<typename RefType>
-      typename internal::DrawableWrapper<RefType>::iterator add(bool saved, RefType *object);
+      typename internal::DrawNodeWrapper<RefType>::iterator add(bool saved, RefType *object);
 
       template<typename RefType>
       void load(std::string const &filename);
@@ -98,12 +98,12 @@ namespace dim
       SceneGraph::iterator get(internal::DrawState const &state, float x, float z);
 
       template<typename RefType>
-      typename internal::DrawableWrapper<RefType>::iterator get(float x, float z);
+      typename internal::DrawNodeWrapper<RefType>::iterator get(float x, float z);
 
       void draw();
 
     private:
-      void add(internal::DrawState const &state, internal::DrawableWrapper<Drawable>* ptr);
+      void add(internal::DrawState const &state, internal::DrawNodeWrapper<Drawable>* ptr);
       SceneGraph::iterator find(float x, float z);
 
       size_t key() const;
