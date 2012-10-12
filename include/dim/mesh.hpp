@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "dim/buffer.hpp"
+#include "dim/texture.hpp"
 
 namespace dim
 {
@@ -138,8 +139,8 @@ namespace dim
       std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
       void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param);
 
-      bool operator==(MeshSet const &other) const;
-      bool operator<(MeshSet const &other) const;
+      bool operator==(Mesh const &other) const;
+      bool operator<(Mesh const &other) const;
     private:
       Shape d_shape;
       std::vector<Attribute> d_attributes;

@@ -25,32 +25,11 @@ namespace dim
 {
 namespace internal
 {
-  /* drawState */
-  Mesh const &DrawState::mesh() const
-  {
-    return d_mesh;
-  }
-
-  Shader const &DrawState::shader() const
-  {
-    return d_shader;
-  }
-
-  bool DrawState::operator==(DrawState const &other)
-  {
-    return forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id()) ==
-           forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id());
-  }
-
-  bool DrawState::operator<(DrawState const &other)
-  {
-    return forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id()) <
-           forward_as_tuple(other.d_shader.id(), other.d_mesh.textures()[0].first.id(), other.d_mesh.id());
-  }
-
   /* constructors */
-  DrawableWrapper<Drawable>::DrawableWrapper(size_t ownerId)
+  DrawableWrapper<Drawable>::DrawableWrapper(size_t gridSize, size_t ownerId)
       :
+          d_changed(false),
+          d_gridSize(gridSize),
           d_ownerId(ownerId)
   {
   }  
@@ -71,6 +50,11 @@ namespace internal
   }
   
   /* general functions */
+  void DrawableWrapper<Drawable>::save(string const &filename)
+  {
+    v_save(filename);
+  }
+
   void DrawableWrapper<Drawable>::clear()
   {
     v_clear();
@@ -97,9 +81,12 @@ namespace internal
   }
 
   /* iterators */
-  void DrawableWrapper<Drawable>::increment(IterType *iter) const
+  DrawableWrapper<Drawable>::IterType DrawableWrapper<Drawable>::increment(IterType const &iter) const
   {
-    v_increment(iter);
+    if(iter != end().iter())
+      return v_increment(iter);
+
+    return iter;
   }
 
   Drawable &DrawableWrapper<Drawable>::dereference(IterType const &iter)
@@ -112,11 +99,6 @@ namespace internal
     return v_dereference(iter);
   }
 
-  bool DrawableWrapper<Drawable>::equal(IterType const &lhs, IterType const &rhs) const
-  {
-    return v_equal(lhs, rhs);
-  }
-
   DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::begin()
   {
     return v_begin();
@@ -124,7 +106,7 @@ namespace internal
 
   DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::end()
   {
-    return v_end();
+    return iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), this);
   }
 
   DrawableWrapper<Drawable>::const_iterator DrawableWrapper<Drawable>::begin() const
@@ -134,14 +116,38 @@ namespace internal
 
   DrawableWrapper<Drawable>::const_iterator DrawableWrapper<Drawable>::end() const
   {
-    return v_end();
+    return const_iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), this);
+  }
+
+  DrawableWrapper<Drawable>::iterator DrawableWrapper<Drawable>::endIterator()
+  {
+    return iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), 0);
+  }
+
+  DrawableWrapper<Drawable>::const_iterator DrawableWrapper<Drawable>::cendIterator()
+  {
+    return const_iterator(IterType(std::numeric_limits<size_t>::max(), Drawable::Key(Drawable::Key::maxFirst, 0)), 0);
   }
 
   /* private functions */
+  size_t DrawableWrapper<Drawable>::gridSize() const
+  {
+    return d_gridSize;
+  }
+  
   size_t DrawableWrapper<Drawable>::ownerId() const
   {
     return d_ownerId;
   }
 
+  bool DrawableWrapper<Drawable>::changed() const
+  {
+    return d_changed;
+  }
+
+  void DrawableWrapper<Drawable>::setChanged(bool changed)
+  {
+    d_changed = changed;
+  }
 }
 }
