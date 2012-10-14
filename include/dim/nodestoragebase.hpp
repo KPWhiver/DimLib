@@ -38,18 +38,6 @@ namespace dim
 {
 namespace internal
 {
-  struct DrawState
-  {
-      Mesh d_mesh;
-      Shader d_shader;
-
-      Mesh const &mesh() const;
-      Shader const &shader() const;
-
-      bool operator==(DrawState const &other);
-      bool operator<(DrawState const &other);
-  };
-
   class NodeStorageBase
   {
       size_t d_ownerId;
@@ -74,8 +62,8 @@ namespace internal
         virtual IterType* clone() const = 0;
       };
 
-      typedef IteratorBase<DrawNode, NodeStorageBase, ClonePtr<IterType>>  iterator;
-      typedef IteratorBase<DrawNode const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
+      typedef IteratorBase<DrawNodeBase, NodeStorageBase, ClonePtr<IterType>>  iterator;
+      typedef IteratorBase<DrawNodeBase const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
 
       iterator begin();
       iterator end();
@@ -83,14 +71,14 @@ namespace internal
       const_iterator end() const;
 
       void increment(ClonePtr<IterType> *iter) const;
-      DrawNode &dereference(ClonePtr<IterType> const &iter);
-      DrawNode const &dereference(ClonePtr<IterType> const &iter) const;
+      DrawNodeBase &dereference(ClonePtr<IterType> const &iter);
+      DrawNodeBase const &dereference(ClonePtr<IterType> const &iter) const;
       bool equal(ClonePtr<IterType> const &lhs, ClonePtr<IterType> const &rhs) const;
 
     private:
       virtual void v_increment(ClonePtr<IterType> *iter) const = 0;
-      virtual DrawNode &v_dereference(ClonePtr<IterType> const &iter) = 0;
-      virtual DrawNode const &v_dereference(ClonePtr<IterType> const &iter) const = 0;
+      virtual DrawNodeBase &v_dereference(ClonePtr<IterType> const &iter) = 0;
+      virtual DrawNodeBase const &v_dereference(ClonePtr<IterType> const &iter) const = 0;
       virtual bool v_equal(ClonePtr<IterType> const &lhs, ClonePtr<IterType> const &rhs) const = 0;
 
       virtual iterator v_begin() = 0;
@@ -101,16 +89,16 @@ namespace internal
     public:
     // regular functions
       void clear();
-      void draw(DrawState const &state);
-      iterator find(DrawState const &state, float x, float z);
+      void draw(ShaderScene const &state);
+      iterator find(ShaderScene const &state, float x, float z);
       iterator find(float x, float z);
       void del(iterator &object);
 
     private:
       virtual void v_clear() = 0;
-      virtual void v_draw(DrawState const &state) = 0;
+      virtual void v_draw(ShaderScene const &state) = 0;
       virtual iterator v_find(float x, float z) = 0;
-      virtual iterator v_find(DrawState const &state, float x, float z) = 0;
+      virtual iterator v_find(ShaderScene const &state, float x, float z) = 0;
       virtual void v_del(iterator &object) = 0;
 
     protected:

@@ -58,7 +58,7 @@ namespace internal
     v_clear();
   }
 
-  void NodeStorageBase::draw(DrawState const &state)
+  void NodeStorageBase::draw(ShaderScene const &state)
   {
     v_draw(state);
   }  
@@ -68,7 +68,7 @@ namespace internal
     return v_find(x, z);
   }
 
-  NodeStorageBase::iterator NodeStorageBase::find(DrawState const &state, float x, float z)
+  NodeStorageBase::iterator NodeStorageBase::find(ShaderScene const &state, float x, float z)
   {
     return v_find(state, x, z);
   }
@@ -87,12 +87,12 @@ namespace internal
     return iter;
   }
 
-  DrawNode &NodeStorageBase::dereference(ClonePtr<IterType> const &iter)
+  DrawNodeBase &NodeStorageBase::dereference(ClonePtr<IterType> const &iter)
   {
     return v_dereference(iter);
   }
 
-  DrawNode const &NodeStorageBase::dereference(ClonePtr<IterType> const &iter) const
+  DrawNodeBase const &NodeStorageBase::dereference(ClonePtr<IterType> const &iter) const
   {
     return v_dereference(iter);
   }

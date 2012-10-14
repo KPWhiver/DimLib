@@ -35,38 +35,41 @@ namespace dim
   
   SceneGraph::SceneGraph(size_t gridSize)
       :
-          d_drawableWrappers([](DrawableWrapper<Drawable>* ptr){return ptr->clone();}),
+          d_storages([](NodeStorageBase* ptr){return ptr->clone();}),
           d_gridSize(gridSize)
   {
+    // make sure there's at least one NodeGrid
+    auto ptr = new NodeGrid<DefaultDrawNode>(d_gridSize, key());
+    d_storages.push_back(ptr);
   }
 
   SceneGraph::SceneGraph(SceneGraph const &other)
   :
-      d_drawStateList(other.d_drawStateList),
-      d_drawableWrappers(other.d_drawableWrappers),
+      d_drawStates(other.d_drawStates),
+      d_storages(other.d_storages),
       d_gridSize(other.d_gridSize)
   {
-    for(auto const &element: d_drawableWrappers)
+    for(auto const &element: d_storages)
       element->copy(key());
   }
 
   SceneGraph::SceneGraph(SceneGraph &&tmp)
   :
-      d_drawStateList(move(tmp.d_drawStateList)),
-      d_drawableWrappers(move(tmp.d_drawableWrappers)),
+      d_drawStates(move(tmp.d_drawStates)),
+      d_storages(move(tmp.d_storages)),
       d_gridSize(move(tmp.d_gridSize))
   {
-    for(auto const &element: d_drawableWrappers)
+    for(auto const &element: d_storages)
       element->copy(key());
   }
 
   SceneGraph &SceneGraph::operator=(SceneGraph const &other)
   {
-    d_drawStateList = other.d_drawStateList;
-    d_drawableWrappers = other.d_drawableWrappers;
+    d_drawStates = other.d_drawStates;
+    d_storages = other.d_storages;
     d_gridSize = other.d_gridSize;
 
-    for(auto const &element: d_drawableWrappers)
+    for(auto const &element: d_storages)
       element->copy(key());
 
     return *this;
@@ -74,11 +77,11 @@ namespace dim
 
   SceneGraph &SceneGraph::operator=(SceneGraph &&tmp)
   {
-    d_drawStateList = move(tmp.d_drawStateList);
-    d_drawableWrappers = move(tmp.d_drawableWrappers);
+    d_drawStates = move(tmp.d_drawStates);
+    d_storages = move(tmp.d_storages);
     d_gridSize = move(tmp.d_gridSize);
 
-    for(auto const &element: d_drawableWrappers)
+    for(auto const &element: d_storages)
       element->copy(key());
 
     return *this;
@@ -88,11 +91,11 @@ namespace dim
 
   SceneGraph::iterator SceneGraph::begin()
   {
-    for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
+    for(size_t idx = 0; idx != d_storages.size(); ++idx)
     {
-      DrawableWrapper<Drawable>::iterator iter = d_drawableWrappers[idx]->begin();
+      NodeStorageBase::iterator iter = d_storages[idx]->begin();
 
-      if(iter != d_drawableWrappers[idx]->end())
+      if(iter != d_storages[idx]->end())
         return iterator(IterType(iter, idx), this);
     }
 
@@ -101,19 +104,16 @@ namespace dim
 
   SceneGraph::iterator SceneGraph::end()
   {
-    if(d_drawableWrappers.size() > 0)
-      return iterator(IterType(d_drawableWrappers.back()->end(), d_drawableWrappers.size()), this);
-
-    return iterator(IterType(DrawableWrapper<Drawable>::endIterator(), d_drawableWrappers.size()), this);
+    return iterator(IterType(d_storages.back()->end(), d_storages.size()), this);
   }
 
   SceneGraph::const_iterator SceneGraph::begin() const
   {
-    for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
+    for(size_t idx = 0; idx != d_storages.size(); ++idx)
     {
-      DrawableWrapper<Drawable>::iterator iter = d_drawableWrappers[idx]->begin();
+      NodeStorageBase::iterator iter = d_storages[idx]->begin();
 
-      if(iter != d_drawableWrappers[idx]->end())
+      if(iter != d_storages[idx]->end())
         return const_iterator(make_pair(iter, idx), this);
     }
 
@@ -122,62 +122,64 @@ namespace dim
 
   SceneGraph::const_iterator SceneGraph::end() const
   {
-    if(d_drawableWrappers.size() > 0)
-      return const_iterator(IterType(d_drawableWrappers.back()->end(), d_drawableWrappers.size()), this);
-
-    return const_iterator(IterType(DrawableWrapper<Drawable>::endIterator(), d_drawableWrappers.size()), this);
+    return const_iterator(IterType(d_storages.back()->end(), d_storages.size()), this);
   }
 
-  SceneGraph::IterType SceneGraph::increment(IterType const &iter) const
+  void SceneGraph::increment(IterType *iter) const
   {
-    DrawableWrapper<Drawable>::iterator iterate = iter.first;
+    NodeStorageBase::iterator iterate = iter->first;
     ++iterate;
 
-    if(iterate == d_drawableWrappers[iter.second]->end())
+    if(iterate == d_storages[iter->second]->end())
     {
-      for(size_t idx = iter.second; idx != d_drawableWrappers.size(); ++idx)
+      for(size_t idx = iter->second; idx != d_storages.size(); ++idx)
       {
-        iterate = d_drawableWrappers[idx]->begin();
+        iterate = d_storages[idx]->begin();
 
-        if(iterate != d_drawableWrappers[idx]->end())
+        if(iterate != d_storages[idx]->end())
           return make_pair(iterate, idx);
       }
 
-      return make_pair(iterate, d_drawableWrappers.size());
+      *iter = make_pair(iterate, d_storages.size());
     }
     else
-      return make_pair(iterate, iter.second);
+      *iter = make_pair(iterate, iter->second);
   }
 
-  Drawable &SceneGraph::dereference(IterType const &iter)
+  DrawNodeBase &SceneGraph::dereference(IterType const &iter)
   {
     return *iter.first;
   }
 
-  Drawable const &SceneGraph::dereference(IterType const &iter) const
+  DrawNodeBase const &SceneGraph::dereference(IterType const &iter) const
   {
     return *iter.first;
+  }
+
+  bool SceneGraph::equal(IterType const &lhs, IterType const &rhs) const
+  {
+    return lhs == rhs;
   }
 
   /* regular functions */
 
-  void SceneGraph::add(DrawState const &state, DrawableWrapper<Drawable> *ptr)
+  void SceneGraph::add(ShaderScene const &state, NodeStorageBase *ptr)
   {
-    for(auto iter = d_drawStateList.find(state); iter->first == state; ++iter)
+    for(auto iter = d_drawStates.find(state); iter->first == state; ++iter)
     {
       if(iter->second == ptr)
         return;
     }
 
-    d_drawStateList.insert(make_pair(state, ptr));
+    d_drawStates.insert(make_pair(state, ptr));
   }
 
   void SceneGraph::draw()
   {
-    for(auto const &element: d_drawStateList)
+    for(auto const &element: d_drawStates)
     {
       // TODO optimize optimize optimize
-      DrawState const &state = element.first;
+      ShaderScene const &state = element.first;
 
       state.shader().use();
       
@@ -201,15 +203,15 @@ namespace dim
     if(object == end())
       return;
 
-    d_drawableWrappers[object.iter().second]->del(object.iter().first);
+    d_storages[object.iter().second]->del(object.iter().first);
   }
 
   SceneGraph::iterator SceneGraph::find(float x, float z)
   {
-    for(size_t idx = 0; idx != d_drawableWrappers.size(); ++idx)
+    for(size_t idx = 0; idx != d_storages.size(); ++idx)
     {
-      auto iter = d_drawableWrappers[idx]->find(x, z);
-      if(iter != d_drawableWrappers[idx]->end())
+      auto iter = d_storages[idx]->find(x, z);
+      if(iter != d_storages[idx]->end())
         return iterator(make_pair(iter, idx), this);
     }
 
@@ -218,7 +220,7 @@ namespace dim
 
   void SceneGraph::clear()
   {
-    for(auto &element: d_drawableWrappers)
+    for(auto &element: d_storages)
       element->clear();
   }
 
@@ -227,11 +229,11 @@ namespace dim
     return find(x, z);
   }
 
-  SceneGraph::iterator SceneGraph::get(DrawState const &state, float x, float z)
+  SceneGraph::iterator SceneGraph::get(ShaderScene const &state, float x, float z)
   {
     size_t idx = 0;
 
-    for(auto drawState = d_drawStateList.find(state); drawState->first == state; ++drawState, ++idx)
+    for(auto drawState = d_drawStates.find(state); drawState->first == state; ++drawState, ++idx)
     {
       auto iter = drawState->second->find(state, x, z);
       if(iter != drawState->second->end())

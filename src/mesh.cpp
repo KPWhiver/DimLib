@@ -415,25 +415,4 @@ namespace dim
   {
     return d_interleavedVBO.id();
   }
-
-  bool Mesh::culling() const
-  {
-    return d_culling;
-  }
-
-  void Mesh::setCulling(bool culling)
-  {
-    d_culling = culling;
-  }
-
-  vector<pair<Texture<GLubyte>, string>> const &Mesh::textures() const
-  {
-    return d_textures;
-  }
-
-  void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param)
-  {
-    d_textures = param;
-  }
-
 }

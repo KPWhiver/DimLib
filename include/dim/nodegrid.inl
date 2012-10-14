@@ -181,14 +181,14 @@ namespace internal
   }
 
   template<typename RefType>
-  DrawNode &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter)
+  DrawNodeBase &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter)
   {
     NodeStorageBase::IterType *ptr = iter;
     return dereference(reinterpret_cast<IterType>(*ptr));
   }
 
   template<typename RefType>
-  DrawNode const &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const
+  DrawNodeBase const &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const
   {
     NodeStorageBase::IterType *ptr = iter;
     return dereference(reinterpret_cast<IterType>(*ptr));
@@ -223,9 +223,6 @@ namespace internal
     int xloc, zloc;
     xloc = object->coor().x / d_gridSize;
     zloc = object->coor().z / d_gridSize;
-  
-    if(changing)
-      setChanged(true);
 
     auto iter = d_map.find(Key(xloc, zloc));
     if(iter == d_map.end())
@@ -237,9 +234,9 @@ namespace internal
     //RefType tmp(object);
     //tmp.d_id = id;
 
-    auto iter = lower_bound(list.begin(), list.end(), object, [](DrawNode const *lhs, DrawNode const *rhs)
+    auto iter = lower_bound(list.begin(), list.end(), object, [](DrawNodeBase const *lhs, DrawNodeBase const *rhs)
                             {
-                              return DrawNode{lhs->scene(), lhs->shader()} < rhs->shader();
+                              return ShaderScene{lhs->scene(), lhs->shader()} < ShaderScene{lhs->scene(), rhs->shader()};
                             });
 
     iter = list.insert(iter, object);
@@ -266,13 +263,13 @@ namespace internal
   {
     for(auto mapPart : d_map)
     {
-      auto DrawNode = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNode const *lhs, DrawState const &rhs)
+      auto DrawNodeBase = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNodeBase const *lhs, DrawState const &rhs)
                               {
                                 return lhs->drawState() < rhs;
                               });
 
-      for(; DrawNode->drawState() == state; ++DrawNode)
-        DrawNode->draw();
+      for(; DrawNodeBase->drawState() == state; ++DrawNodeBase)
+        DrawNodeBase->draw();
     }
   }
 
@@ -302,12 +299,12 @@ namespace internal
     if(mapPart == d_map.end())
       return end();
 
-    auto DrawNode = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNode const *lhs, DrawState const &rhs)
+    auto DrawNodeBase = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNodeBase const *lhs, DrawState const &rhs)
                             {
                               return lhs->drawState() < rhs;
                             });
 
-    for(size_t idx = 0; DrawNode->drawState() == state; ++DrawNode, ++idx)
+    for(size_t idx = 0; DrawNodeBase->drawState() == state; ++DrawNodeBase, ++idx)
     {
       glm::vec3 coor = mapPart->second[idx].coor();
 

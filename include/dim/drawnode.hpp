@@ -29,14 +29,13 @@
 
 namespace dim
 {
-
-  class DrawNode
+  class DrawNodeBase
   {
       friend class SceneGraph;
       template <typename RefType>
       friend class NodeGrid;
-      friend std::ostream &operator<<(std::ostream &out, DrawNode const &object);
-      friend std::istream &operator>>(std::istream &in, DrawNode &object);
+      friend std::ostream &operator<<(std::ostream &out, DrawNodeBase const &object);
+      friend std::istream &operator>>(std::istream &in, DrawNodeBase &object);
 
       glm::vec3 d_coor;
       glm::vec3 d_rot;
@@ -44,8 +43,8 @@ namespace dim
       float d_radius;
 
     public:
-      DrawNode() = default;
-      DrawNode(glm::vec3 const &coor, glm::vec3 const &rot, float radius);
+      DrawNodeBase() = default;
+      DrawNodeBase(glm::vec3 const &coor, glm::vec3 const &rot, float radius);
 
       glm::vec3 coor() const;
       void setCoor(glm::vec3 const &coor);
@@ -57,9 +56,9 @@ namespace dim
 
       virtual void draw();
 
-      virtual ~DrawNode();
+      virtual ~DrawNodeBase();
 
-      virtual DrawNode *clone() const = 0;
+      virtual DrawNodeBase *clone() const = 0;
 
     protected:
       glm::mat4 matrix() const;
@@ -70,8 +69,29 @@ namespace dim
 
   };
 
+  namespace internal
+  {
+    class DefaultDrawNode : public DrawNodeBase
+    {
+      static Scene s_defaultScene;
+      public:
+        virtual Shader const &shader() const = 0
+        {
+          return Shader::defaultShader();
+        }
 
+        virtual Scene const &scene() const = 0
+        {
 
+          return s_defaultScene;
+        }
+
+        virtual DrawNodeBase *clone() const = 0
+        {
+          return new DefaultDrawNode;
+        }
+    };
+  }
 }
 
 #endif /* DRAWNODE_HPP_ */

@@ -88,8 +88,8 @@ namespace internal
 
     private:
       virtual void v_increment(ClonePtr<NodeStorageBase::IterType> *iter) const;
-      virtual DrawNode &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter);
-      virtual DrawNode const &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const;
+      virtual DrawNodeBase &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter);
+      virtual DrawNodeBase const &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const;
       virtual bool v_equal(ClonePtr<NodeStorageBase::IterType> const &lhs, ClonePtr<NodeStorageBase::IterType> const &rhs) const;
 
       virtual NodeStorageBase::iterator v_begin();
@@ -104,9 +104,9 @@ namespace internal
 
     private:
       virtual void v_clear();
-      virtual void v_draw(DrawState const &state);
+      virtual void v_draw(ShaderScene const &state);
       virtual NodeStorageBase::iterator v_find(float x, float z);
-      virtual NodeStorageBase::iterator v_find(DrawState const &state, float x, float z);
+      virtual NodeStorageBase::iterator v_find(ShaderScene const &state, float x, float z);
       virtual void v_del(NodeStorageBase::iterator &object);
 
     // private functions

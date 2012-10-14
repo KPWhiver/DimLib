@@ -23,6 +23,92 @@ using namespace std;
 
 namespace dim
 {
+  DrawState::DrawState(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures)
+  :
+      d_mesh(mesh),
+      d_textures(textures),
+      d_culling(true)
+  {
+    sort(d_textures.begin(), d_textures.end());
+  }
+
+  bool DrawState::culling() const
+  {
+    return d_culling;
+  }
+
+  void DrawState::setCulling(bool culling)
+  {
+    d_culling = culling;
+  }
+
+  vector<pair<Texture<GLubyte>, string>> const &DrawState::textures() const
+  {
+    return d_textures;
+  }
+
+  void DrawState::setTextures(vector<pair<Texture<GLubyte>, string>> const &param)
+  {
+    d_textures = param;
+    sort(d_textures.begin(), d_textures.end(), [](pair<Texture<GLubyte>, string> const &lhs, pair<Texture<GLubyte>, string> const &rhs)
+    {
+      return lhs.first.id() < rhs.first.id();
+    });
+  }
+
+  Mesh const &DrawState::mesh() const
+  {
+    return d_mesh;
+  }
+
+  bool DrawState::operator==(DrawState const &other)
+  {
+    if(d_textures.size() != other.size())
+      return false;
+
+    for(size_t idx = 0; idx != d_textures.size(); ++idx)
+    {
+      if(d_textures[idx].first.id() != other.d_textures[idx].first.id())
+        return false;
+    }
+
+    if(d_mesh.id() != other.d_mesh.id())
+      return false;
+
+    if(d_culling != other.d_culling)
+      return false;
+
+    return true;
+  }
+
+  bool DrawState::operator<(DrawState const &other)
+  {
+    size_t minSize = min(d_textures.size(), other.d_textures.size());
+
+    for(size_t idx = 0; idx != minSize; ++idx)
+    {
+      if(d_textures[idx].first.id() < other.d_textures[idx].first.id())
+        return true;
+      if(not d_textures[idx].first.id() == other.d_textures[idx].first.id())
+        return false;
+    }
+
+    if(d_textures.size() < other.size())
+      return true;
+    if(not d_textures.size() == other.size())
+      return false;
+
+    if(d_mesh.id() < other.d_mesh.id())
+      return true;
+    if(not d_mesh.id() == other.d_mesh.id())
+      return false;
+
+    if(d_culling < other.d_culling)
+      return true;
+
+    return false;
+  }
+
 	// Scene
 
   Scene::Scene(Mesh const &mesh, Shader const &shader, std::vector<pair<Texture<GLubyte>, string>> const &textures)

@@ -30,9 +30,13 @@ namespace dim
 
 class DrawState
 {
+    friend class Scene;
+
     Mesh d_mesh;
     std::vector<std::pair<Texture<GLubyte>, std::string>> d_textures;
     bool d_culling;
+
+    DrawState(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures);
   
   public:
     bool culling() const;
@@ -48,9 +52,12 @@ class DrawState
 
 class Scene
 {
+
+
   std::vector<DrawState> d_states;
 
 public:
+  Scene() = default;
 	Scene(std::string const &filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
         Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
 	Scene(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
