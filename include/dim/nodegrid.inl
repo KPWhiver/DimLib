@@ -236,7 +236,7 @@ namespace internal
 
     auto iter = lower_bound(list.begin(), list.end(), object, [](DrawNodeBase const *lhs, DrawNodeBase const *rhs)
                             {
-                              return ShaderScene{lhs->scene(), lhs->shader()} < ShaderScene{lhs->scene(), rhs->shader()};
+                              return ShaderScene{lhs->scene()[0], lhs->shader()} < ShaderScene{lhs->scene()[0], rhs->shader()};
                             });
 
     iter = list.insert(iter, object);

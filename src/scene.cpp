@@ -18,6 +18,11 @@
 // MA 02110-1301, USA.
 
 #include "dim/scene.hpp"
+#include <algorithm>
+
+#include "assimp/Importer.hpp"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"
 
 using namespace std;
 
@@ -29,7 +34,10 @@ namespace dim
       d_textures(textures),
       d_culling(true)
   {
-    sort(d_textures.begin(), d_textures.end());
+    sort(d_textures.begin(), d_textures.end(), [](pair<Texture<GLubyte>, string> const &lhs, pair<Texture<GLubyte>, string> const &rhs)
+    {
+      return lhs.first.id() < rhs.first.id();
+    });
   }
 
   bool DrawState::culling() const
@@ -61,9 +69,9 @@ namespace dim
     return d_mesh;
   }
 
-  bool DrawState::operator==(DrawState const &other)
+  bool DrawState::operator==(DrawState const &other) const
   {
-    if(d_textures.size() != other.size())
+    if(d_textures.size() != other.d_textures.size())
       return false;
 
     for(size_t idx = 0; idx != d_textures.size(); ++idx)
@@ -81,7 +89,7 @@ namespace dim
     return true;
   }
 
-  bool DrawState::operator<(DrawState const &other)
+  bool DrawState::operator<(DrawState const &other) const
   {
     size_t minSize = min(d_textures.size(), other.d_textures.size());
 
@@ -93,9 +101,9 @@ namespace dim
         return false;
     }
 
-    if(d_textures.size() < other.size())
+    if(d_textures.size() < other.d_textures.size())
       return true;
-    if(not d_textures.size() == other.size())
+    if(not d_textures.size() == other.d_textures.size())
       return false;
 
     if(d_mesh.id() < other.d_mesh.id())
@@ -111,14 +119,14 @@ namespace dim
 
 	// Scene
 
-  Scene::Scene(Mesh const &mesh, Shader const &shader, std::vector<pair<Texture<GLubyte>, string>> const &textures)
+  Scene::Scene(Mesh const &mesh, std::vector<pair<Texture<GLubyte>, string>> const &textures)
   {
-    add(mesh, shader, textures);
+    add(mesh, textures);
   }
 
-  void Scene::add(Mesh const &mesh, Shader const &shader, std::vector<pair<Texture<GLubyte>, string>> const &textures)
+  void Scene::add(Mesh const &mesh, std::vector<pair<Texture<GLubyte>, string>> const &textures)
   {
-    d_meshes.push_back(MeshSet(mesh, shader, textures));
+    d_states.push_back(DrawState(mesh, textures));
   }
 
   namespace
@@ -139,17 +147,17 @@ namespace dim
     {
       vector<Attribute> attributes;
       attributes.push_back(vertex);
-      if(normal.format() != Attribute::unknown)
+      if(normal.id() != Attribute::unknown)
         attributes.push_back(normal);
-      if(texCoord.format() != Attribute::unknown)
+      if(texCoord.id() != Attribute::unknown)
         attributes.push_back(texCoord);
-      if(binormal.format() != Attribute::unknown)
+      if(binormal.id() != Attribute::unknown)
         attributes.push_back(binormal);
-      if(tangent.format() != Attribute::unknown)
+      if(tangent.id() != Attribute::unknown)
         attributes.push_back(tangent);
 
       // allocate buffer
-      size_t numOfVertices = scene->mMeshes[mesh]->mNumVertices;
+      size_t numOfVertices = scene.mMeshes[mesh]->mNumVertices;
 
       GLfloat *array = new GLfloat[numOfVertices * varNumOfElements];
 
@@ -159,30 +167,30 @@ namespace dim
         uint arrayIdxOffset = 0;
         size_t arrayIdxStart = vert * varNumOfElements;
 
-        addAttributeToBuffer(vertex, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mVertices[vert]);
+        addAttributeToBuffer(vertex, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mVertices[vert]);
         arrayIdxOffset += vertex.size();
 
         if(normal.id() != Attribute::unknown)
         {
-          addAttributeToBuffer(normal, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mNormals[vert]);
+          addAttributeToBuffer(normal, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mNormals[vert]);
           arrayIdxOffset += normal.size();
         }
 
         if(texCoord.id() != Attribute::unknown)
         {
-          addAttributeToBuffer(texCoord, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mTextureCoords[0][vert]);
+          addAttributeToBuffer(texCoord, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTextureCoords[0][vert]);
           arrayIdxOffset += texCoord.size();
         }
 
         if(binormal.id() != Attribute::unknown)
         {
-          addAttributeToBuffer(binormal, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mBitangents[vert]);
+          addAttributeToBuffer(binormal, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mBitangents[vert]);
           arrayIdxOffset += binormal.size();
         }
 
         if(tangent.id() != Attribute::unknown)
         {
-          addAttributeToBuffer(tangent, array, arrayIdxStart + arrayIdxOffset, scene->mMeshes[mesh]->mTangents[vert]);
+          addAttributeToBuffer(tangent, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTangents[vert]);
           arrayIdxOffset += tangent.size();
         }
       }
@@ -191,16 +199,16 @@ namespace dim
 
       delete[] array;
 
-      GLushort *indexArray = new GLushort[scene->mMeshes[mesh]->mNumFaces * 3];
+      GLushort *indexArray = new GLushort[scene.mMeshes[mesh]->mNumFaces * 3];
 
-      for(size_t idx = 0; idx != scene->mMeshes[mesh]->mNumFaces; ++idx)
+      for(size_t idx = 0; idx != scene.mMeshes[mesh]->mNumFaces; ++idx)
       {
-        indexArray[0 + idx * 3] = scene->mMeshes[mesh]->mFaces[idx].mIndices[0];
-        indexArray[0 + idx * 3 + 1] = scene->mMeshes[mesh]->mFaces[idx].mIndices[1];
-        indexArray[0 + idx * 3 + 2] = scene->mMeshes[mesh]->mFaces[idx].mIndices[2];
+        indexArray[0 + idx * 3] = scene.mMeshes[mesh]->mFaces[idx].mIndices[0];
+        indexArray[0 + idx * 3 + 1] = scene.mMeshes[mesh]->mFaces[idx].mIndices[1];
+        indexArray[0 + idx * 3 + 2] = scene.mMeshes[mesh]->mFaces[idx].mIndices[2];
       }
 
-      model.addElementBuffer(indexArray, scene->mMeshes[mesh]->mNumFaces);
+      model.addElementBuffer(indexArray, scene.mMeshes[mesh]->mNumFaces);
 
       delete[] indexArray;
 
@@ -247,7 +255,7 @@ namespace dim
 
     // load scene
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(filename, flags);
+    aiScene const *scene = importer.ReadFile(filename, flags);
 
     if(!scene)
     {
@@ -264,7 +272,7 @@ namespace dim
       varNumOfElements += texCoord.size();
 
     // load meshes
-    for(size_t mesh = 0; mesh != scene->mNummeshes; ++mesh)
-      d_meshes.push_back(loadMesh(*scene, varNumOfElements, mesh, vertex, normal, texCoord, binormal, tangent));
+    for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
+      d_states.push_back(DrawState(loadMesh(*scene, varNumOfElements, mesh, vertex, normal, texCoord, binormal, tangent), {}));
   }
 }

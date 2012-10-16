@@ -20,7 +20,7 @@
 #ifndef DRAWMAP_HPP
 #define DRAWMAP_HPP
 
-#include "dim/drawablewrapper.hpp"
+#include "dim/nodestoragebase.hpp"
 #include "dim/scene.hpp"
 #include "dim/ptrvector.hpp"
 
@@ -32,29 +32,6 @@
 
 namespace dim
 {
-  struct ShaderScene
-  {
-    Shader shader;
-    DrawState state;
-
-    bool operator==(ShaderScene const &other) const
-    {
-      return shader.id() == other.shader.id() && state == other.state;
-    }
-
-    bool operator<(ShaderScene const &other) const
-    {
-      if(shader.id() < other.shader.id())
-        return true;
-      if(not shader.id() == other.shader.id())
-        return false;
-
-      if(state < other.state)
-        return true;
-
-      return false;
-    }
-  };
 
   class SceneGraph
   {

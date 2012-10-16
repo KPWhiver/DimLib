@@ -46,9 +46,9 @@ class DrawState
     void setCulling(bool culling);
     void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param);
 
-    bool operator==(Mesh const &other) const;
-    bool operator<(Mesh const &other) const;
-}
+    bool operator==(DrawState const &other) const;
+    bool operator<(DrawState const &other) const;
+};
 
 class Scene
 {

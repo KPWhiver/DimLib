@@ -75,18 +75,18 @@ namespace dim
     {
       static Scene s_defaultScene;
       public:
-        virtual Shader const &shader() const = 0
+        virtual Shader const &shader() const
         {
           return Shader::defaultShader();
         }
 
-        virtual Scene const &scene() const = 0
+        virtual Scene const &scene() const
         {
 
           return s_defaultScene;
         }
 
-        virtual DrawNodeBase *clone() const = 0
+        virtual DrawNodeBase *clone() const
         {
           return new DefaultDrawNode;
         }

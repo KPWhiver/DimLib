@@ -24,10 +24,6 @@
 #include "dim/mesh.hpp"
 #include "dim/shader.hpp"
 
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
-
 using namespace glm;
 using namespace std;
 

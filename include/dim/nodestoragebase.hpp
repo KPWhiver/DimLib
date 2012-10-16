@@ -29,7 +29,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include "dim/DrawNode.hpp"
+#include "dim/drawnode.hpp"
 #include "dim/iteratorbase.hpp"
 #include "dim/onepair.hpp"
 #include "dim/cloneptr.hpp"
@@ -38,6 +38,30 @@ namespace dim
 {
 namespace internal
 {
+  struct ShaderScene
+  {
+    Shader shader;
+    DrawState state;
+
+    bool operator==(ShaderScene const &other) const
+    {
+      return shader.id() == other.shader.id() && state == other.state;
+    }
+
+    bool operator<(ShaderScene const &other) const
+    {
+      if(shader.id() < other.shader.id())
+        return true;
+      if(not shader.id() == other.shader.id())
+        return false;
+
+      if(state < other.state)
+        return true;
+
+      return false;
+    }
+  };
+
   class NodeStorageBase
   {
       size_t d_ownerId;

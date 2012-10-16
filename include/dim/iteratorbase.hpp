@@ -37,7 +37,7 @@ namespace internal
 
     public:
       IteratorBase &operator++();
-      IteratorBase const operator++(int);
+      IteratorBase operator++(int);
 
       bool operator==(IteratorBase const &rhs) const;
       bool operator!=(IteratorBase const &rhs) const;
