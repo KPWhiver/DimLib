@@ -26,7 +26,7 @@ using namespace std;
 
 namespace dim
 {
-  mat4 DrawNode::matrix() const
+  mat4 DrawNodeBase::matrix() const
   {
     mat4 modelMat;
     modelMat = translate(modelMat, d_coor);
@@ -40,36 +40,46 @@ namespace dim
     return modelMat;
   }
 
-  DrawNode::DrawNode(vec3 const &coor, vec3 const &rot, float radius)
+  DrawNodeBase::DrawNodeBase(vec3 const &coor, vec3 const &rot, float radius)
       : d_coor(coor), d_rot(rot), d_radius(radius)
   {
   }
 
-  DrawNode::~DrawNode()
+  DrawNodeBase::~DrawNodeBase()
   {
   }
 
-  glm::vec3 DrawNode::coor() const
+  glm::vec3 DrawNodeBase::coor() const
   {
     return d_coor;
   }
 
-  void DrawNode::setCoor(const vec3 & coor)
+  void DrawNodeBase::setCoor(const vec3 & coor)
   {
     d_coor = coor;
   }
 
-  glm::vec3 const &DrawNode::rot() const
+  glm::vec3 const &DrawNodeBase::rot() const
   {
     return d_rot;
   }
 
-  void DrawNode::draw()
+  void DrawNodeBase::draw()
   {
-    drawState().mesh().draw();
+    shader().use();
+
+    shader().set("in_mat_model", matrix());
+
+    for(size_t mesh = 0; mesh != scene().size(); ++mesh)
+    {
+      for(size_t idx = 0; idx != scene()[mesh].textures().size(); ++idx)
+        shader().set(scene()[mesh].textures()[idx].second, scene()[mesh].textures()[idx].first, idx);
+
+      scene()[mesh].mesh().draw();
+    }
   }
 
-  void DrawNode::insert(ostream &out) const
+  void DrawNodeBase::insert(ostream &out) const
   {
 	  out << d_coor.x << ' ' << d_coor.y << ' ' << d_coor.z << ' ' << d_rot.x << ' ' << d_rot.y << ' ' << d_rot.z << '\n';
     //out.write(reinterpret_cast<const char*>(&d_coor.x), 4);
@@ -79,7 +89,7 @@ namespace dim
     //out.write(reinterpret_cast<const char*>(&d_yRot), 4);
   }
 
-  void DrawNode::extract(istream &in)
+  void DrawNodeBase::extract(istream &in)
   {
 	  in >> d_coor.x >> d_coor.y >> d_coor.z >> d_rot.x >> d_rot.y >> d_rot.z;
 
@@ -93,13 +103,13 @@ namespace dim
     //in.read(reinterpret_cast<char*>(&d_yRot), 4);
   }
 
-  ostream &operator<<(ostream &out, DrawNode const &object)
+  ostream &operator<<(ostream &out, DrawNodeBase const &object)
   {
     object.insert(out);
     return out;
   }
 
-  istream &operator>>(istream &in, DrawNode &object)
+  istream &operator>>(istream &in, DrawNodeBase &object)
   {
     object.extract(in);
     return in;

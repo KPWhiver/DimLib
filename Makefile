@@ -23,7 +23,7 @@ LIBS = -lX11 -lpthread -lGL -lpng -lfreetype -lassimp -lGLEW -lglfw
 
 CXXSOURCES = textureproperties.cpp dim.cpp scene.cpp light.cpp scenegraph.cpp camera.cpp shader.cpp mesh.cpp window.cpp drawnode.cpp mouse.cpp button.cpp context.cpp menu.cpp menuitem.cpp listenarea.cpp component.cpp font.cpp image2d.cpp nodestoragebase.cpp frame.cpp tools.cpp texture.cpp surface.cpp lex.cpp
 
-CXXHEADERS = iteratorbase.hpp buffer.hpp button.hpp camera.hpp component.hpp context.hpp dim.hpp drawnode.hpp nodestoragebase.hpp nodegrid.hpp nodegrid.inl scenegraph.hpp scene.hpp font.hpp frame.hpp image2d.hpp light.hpp listenarea.hpp menu.hpp menuitem.hpp mesh.hpp mouse.hpp onepair.hpp shader.hpp surface.hpp surface.inl texture.hpp texture.inl tools.hpp window.hpp copyptr.hpp cloneptr.hpp ptrvector.hpp
+CXXHEADERS = iteratorbase.hpp buffer.hpp button.hpp camera.hpp component.hpp context.hpp dim.hpp drawnode.hpp nodestoragebase.hpp nodegrid.hpp nodegrid.inl scenegraph.hpp scene.hpp font.hpp frame.hpp image2d.hpp light.hpp listenarea.hpp menu.hpp menuitem.hpp mesh.hpp mouse.hpp onepair.hpp shader.hpp surface.hpp surface.inl texture.hpp texture.inl tools.hpp window.hpp copyptr.hpp ptrvector.hpp
 
 CXXOBJECTS = $(CXXSOURCES:.cpp=.o)
 CXXDEPS = $(CXXSOURCES:.cpp=.d)

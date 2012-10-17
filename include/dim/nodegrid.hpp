@@ -30,6 +30,8 @@
 #include <algorithm>
 
 #include "dim/nodestoragebase.hpp"
+#include "dim/ptrvector.hpp"
+#include "dim/copyptr.hpp"
 
 namespace dim
 {
@@ -57,45 +59,48 @@ namespace internal
       static bool isPresent(size_t key);
 
     private:
-      virtual void v_copy(size_t dest) const;
+      virtual void v_copy(size_t dest);
       virtual NodeStorageBase* v_clone() const;
 
     public:
     // iterators
-      struct IterType : public NodeStorageBase::IterType
+      class Iterable : public NodeStorageBase::Iterable
       {
-        size_t listIdx;
-        typename Storage::iterator mapIterator;
+        size_t d_listIdx;
+        typename Storage::iterator d_mapIterator;
+        NodeGrid<RefType> *d_container;
 
-        virtual IterType* clone() const
-        {
-          return new IterType(*this);
-        }
+        public:
+
+        Iterable(size_t idx, typename Storage::iterator iter, NodeGrid<RefType> *d_container);
+
+        virtual Iterable* clone() const;
+
+        RefType &dereference();
+        RefType const &dereference() const;
+        void increment();
+        bool equal(CopyPtr<Iterable> const &other) const;
+        void erase();
+
+        virtual void v_increment();
+        virtual DrawNodeBase &v_dereference();
+        virtual DrawNodeBase const &v_dereference() const;
+        virtual bool v_equal(ClonePtr<NodeStorageBase::Iterable> const &other) const;
       };
+      friend Iterable;
 
-      typedef IteratorBase<RefType, NodeGrid<RefType>, IterType> iterator;
-      typedef IteratorBase<RefType const, NodeGrid<RefType> const, IterType> const_iterator;
+      typedef IteratorBase<RefType, NodeGrid<RefType>, CopyPtr<Iterable>> iterator;
+      //typedef IteratorBase<RefType const, NodeGrid<RefType> const, ConstIterType> const_iterator;
 
       iterator begin();
       iterator end();
-      const_iterator begin() const;
-      const_iterator end() const;
-      
-      RefType &dereference(IterType const &iter);
-      RefType const &dereference(IterType const &iter) const;
-      void increment(IterType *iter) const;
-      bool equal(IterType const &lhs, IterType const &rhs) const;
-
+      //const_iterator begin() const;
+      //const_iterator end() const;
     private:
-      virtual void v_increment(ClonePtr<NodeStorageBase::IterType> *iter) const;
-      virtual DrawNodeBase &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter);
-      virtual DrawNodeBase const &v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const;
-      virtual bool v_equal(ClonePtr<NodeStorageBase::IterType> const &lhs, ClonePtr<NodeStorageBase::IterType> const &rhs) const;
-
       virtual NodeStorageBase::iterator v_begin();
-      virtual NodeStorageBase::const_iterator v_begin() const;
+      //virtual NodeStorageBase::const_iterator v_begin() const;
       virtual NodeStorageBase::iterator v_end();
-      virtual NodeStorageBase::const_iterator v_end() const;
+      //virtual NodeStorageBase::const_iterator v_end() const;
 
     public:
     // regular functions

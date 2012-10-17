@@ -20,7 +20,7 @@
 #ifndef DRAWMAP_HPP
 #define DRAWMAP_HPP
 
-#include "dim/nodestoragebase.hpp"
+#include "dim/nodegrid.hpp"
 #include "dim/scene.hpp"
 #include "dim/ptrvector.hpp"
 
@@ -43,35 +43,46 @@ namespace dim
 
     public:
       //typedefs + iterators
-      template <typename RefType>
-      using iterator = typename internal::NodeGrid<RefType>::iterator;//
-      template <typename RefType>
-      using const_iterator = typename internal::NodeGrid<RefType>::const_iterator;//
+      //template <typename RefType>
+      //using iterator = typename internal::NodeGrid<RefType>::iterator;//
+      //template <typename RefType>
+      //using const_iterator = typename internal::NodeGrid<RefType>::const_iterator;//
 
     // iterators
-      typedef std::pair<internal::NodeStorageBase::iterator, size_t> IterType;
+      class Iterable
+      {
+        internal::NodeStorageBase::iterator d_iterator;
+        size_t d_listIdx;
+        SceneGraph *d_container;
 
-      typedef internal::IteratorBase<Drawable, SceneGraph, IterType> iterator;
-      typedef internal::IteratorBase<Drawable const, SceneGraph const, IterType> const_iterator;
+        public:
+        Iterable(internal::NodeStorageBase::iterator iter, size_t idx, SceneGraph *container);
+
+        void erase();
+
+        void increment();
+        DrawNodeBase &dereference();
+        DrawNodeBase const &dereference() const;
+        bool equal(CopyPtr<Iterable> const &other) const;
+      };
+      friend Iterable;
+
+      typedef internal::IteratorBase<DrawNodeBase, SceneGraph, CopyPtr<Iterable>> iterator;
+      //typedef internal::IteratorBase<DrawNodeBase const, Iterable> const_iterator;
 
       template<typename RefType>
       typename internal::NodeGrid<RefType>::iterator begin();//
       template<typename RefType>
       typename internal::NodeGrid<RefType>::iterator end();//
-      template<typename RefType>
-      typename internal::NodeGrid<RefType>::const_iterator begin() const;//
-      template<typename RefType>
-      typename internal::NodeGrid<RefType>::const_iterator end() const;//
+      //template<typename RefType>
+      //typename internal::NodeGrid<RefType>::const_iterator begin() const;//
+      //template<typename RefType>
+      //typename internal::NodeGrid<RefType>::const_iterator end() const;//
 
       iterator begin();
       iterator end();
-      const_iterator begin() const;
-      const_iterator end() const;
-
-      void increment(IterType *iter) const;
-      DrawNodeBase &dereference(IterType const &iter);
-      DrawNodeBase const &dereference(IterType const &iter) const;
-      bool equal(IterType const &lhs, IterType const &rhs) const;
+      //const_iterator begin() const;
+      //const_iterator end() const;
 
     // constructors
       explicit SceneGraph(size_t gridSize = 64);
@@ -118,13 +129,9 @@ namespace dim
 
     if(file.is_open() == false)
     {
-      file.close();
       log(__FILE__, __LINE__, LogType::error, "Failed to load " + filename);
+      return;
     }
-
-    file << count() << '\n';
-    file.precision(0);
-    file.setf(std::fstream::fixed);
 
     for(auto node = begin<RefType>(); node != end<RefType>(); ++node)
       file << *node;
@@ -142,22 +149,17 @@ namespace dim
       log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename);
       return;
     }
-    else
-    {
-      //TODO change to till EOF
-      size_t numItems;
-      file >> numItems;
-      for(size_t idx = 0; idx != numItems; ++idx)
-      {
-        RefType ref = new RefType;
-        file >> *ref;
-        //file.ignore();
 
-        //TODO room for optimization
-        add(true, ref);
-      }
-      file.close();
+    RefType ref = new RefType;
+    while(file >> *ref)
+    {
+      //TODO room for optimization
+      add(true, ref);
+      ref = new RefType;
     }
+    delete ref;
+    file.close();
+
   }
 
   template<typename RefType>
@@ -217,7 +219,7 @@ namespace dim
     return ptr->end();
   }
 
-  template<typename RefType>
+  /*template<typename RefType>
   typename internal::NodeGrid<RefType>::const_iterator SceneGraph::begin() const
   {
     auto ptr = internal::NodeGrid<RefType>::get(key());
@@ -240,7 +242,7 @@ namespace dim
     }
 
     return ptr->end();
-  }
+  }*/
 
 }
 

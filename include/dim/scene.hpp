@@ -69,6 +69,9 @@ public:
   DrawState const &operator[](size_t idx) const;
 
   size_t size() const;
+
+  bool operator==(Scene const &other) const;
+  bool operator<(Scene const &other) const;
 };
 
 }

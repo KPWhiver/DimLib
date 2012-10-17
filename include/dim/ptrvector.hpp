@@ -117,8 +117,8 @@ namespace dim
   template<typename Type>
   PtrVector<Type>::~PtrVector()
   {
-    for(Type *element : *this)
-      delete element;
+    for(size_t idx = 0; idx != std::vector<Type*>::size(); ++idx)
+      delete std::vector<Type*>::at(idx);
   }
 } /* namespace dim */
 #endif /* PTRVECTOR_HPP_ */

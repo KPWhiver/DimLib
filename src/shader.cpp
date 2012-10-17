@@ -154,7 +154,7 @@ namespace dim
     glGetFloatv(GL_MAX_TEXTURE_UNITS, &s_maxTextureUnits);
   }
 
-  Shader const &Shader::defaultShader()
+  Shader const &defaultShader()
   {
     static Shader shader("defaultShader", "#version 120\n"
                          "%-vertex-shader\n"

@@ -26,7 +26,7 @@ namespace dim
 namespace internal
 {
   /* constructors */
-  NodeStorageBase::NodeStorageBase(size_t gridSize, size_t ownerId)
+  NodeStorageBase::NodeStorageBase(size_t ownerId)
       :
           d_ownerId(ownerId)
   {
@@ -48,10 +48,6 @@ namespace internal
   }
   
   /* general functions */
-  void NodeStorageBase::save(string const &filename)
-  {
-    v_save(filename);
-  }
 
   void NodeStorageBase::clear()
   {
@@ -79,27 +75,24 @@ namespace internal
   }
 
   /* iterators */
-  NodeStorageBase::IterType NodeStorageBase::increment(ClonePtr<IterType> const &iter) const
+  void NodeStorageBase::Iterable::increment()
   {
-    if(iter != end().iter())
-      return v_increment(iter);
-
-    return iter;
+    return v_increment();
   }
 
-  DrawNodeBase &NodeStorageBase::dereference(ClonePtr<IterType> const &iter)
+  DrawNodeBase &NodeStorageBase::Iterable::dereference()
   {
-    return v_dereference(iter);
+    return v_dereference();
   }
 
-  DrawNodeBase const &NodeStorageBase::dereference(ClonePtr<IterType> const &iter) const
+  DrawNodeBase const &NodeStorageBase::Iterable::dereference() const
   {
-    return v_dereference(iter);
+    return v_dereference();
   }
 
-  bool NodeStorageBase::equal(ClonePtr<IterType> const &lhs, ClonePtr<IterType> const &rhs) const
+  bool NodeStorageBase::Iterable::equal(ClonePtr<Iterable> const &other) const
   {
-    return v_equal(lhs, rhs);
+    return v_equal(other);
   }
 
   NodeStorageBase::iterator NodeStorageBase::begin()
@@ -112,15 +105,15 @@ namespace internal
     return v_end();
   }
 
-  NodeStorageBase::const_iterator NodeStorageBase::begin() const
-  {
-    return v_begin();
-  }
+  //NodeStorageBase::const_iterator NodeStorageBase::begin() const
+  //{
+  //  return v_begin();
+  //}
 
-  NodeStorageBase::const_iterator NodeStorageBase::end() const
-  {
-    return v_end();
-  }
+  //NodeStorageBase::const_iterator NodeStorageBase::end() const
+  //{
+  //  return v_end();
+  //}
 
   /* private functions */
   size_t NodeStorageBase::ownerId() const

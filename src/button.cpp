@@ -64,7 +64,7 @@ namespace dim
 		d_context = context;
 	  d_text = Texture<GLubyte>(d_context->font().generateTexture(d_strText, true, d_width, d_height, Filtering::linear));
 	  
-	  if(d_menu != 0)
+	  if(d_menu.get() != 0)
 	  	d_menu->setContext(context);
 	}
 	
@@ -77,7 +77,7 @@ namespace dim
 	{
 	  ivec2 mouseC = mouse.coor();
 	  
-	  if(d_menu != 0 && d_menu->listen(x, y, mouse))
+	  if(d_menu.get() != 0 && d_menu->listen(x, y, mouse))
 	    return true;
 	  
 	  x += d_x;
@@ -90,7 +90,7 @@ namespace dim
 		  	if(d_listenerFunction)
 		  		d_listenerFunction();
 
-		  	if(d_menu != 0)
+		  	if(d_menu.get() != 0)
 		  	{
 		  		if(d_menu->active())
 		  			d_menu->deactivate();
@@ -113,7 +113,7 @@ namespace dim
 	  if(d_context == 0)
 	    return;
 
-	  if(d_menu != 0)
+	  if(d_menu.get() != 0)
 	    d_menu->draw(x, y);
 	  
 	  x += d_x;

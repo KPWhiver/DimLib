@@ -43,8 +43,6 @@ class Shader
   
   static void initialize();
 
-  static Shader const &defaultShader();
-
   std::shared_ptr<GLuint> d_id;
   std::shared_ptr<GLuint> d_fragmentId;
   std::shared_ptr<GLuint> d_vertexId;
@@ -120,6 +118,8 @@ private:
   //bool instanced;
 
 };
+
+Shader const &defaultShader();
 
 //
 // Using string

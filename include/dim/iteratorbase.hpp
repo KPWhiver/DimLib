@@ -21,107 +21,102 @@
 #define ITERATORBASE_HPP__
 
 #include <iterator>
-#include <dim/drawable.hpp>
 
 namespace dim
 {
 namespace internal
 {
-  template<typename RetType, typename Container, typename IterType>
+  template<typename RetType, typename Container, typename Iterable>
   class IteratorBase : public std::iterator<std::forward_iterator_tag, RetType>
   {
       friend Container;
 
-      IterType d_iter;
-      Container *d_container;
+      template<typename RefType>
+      friend class NodeGrid;
+
+      Iterable d_iterable;
 
     public:
       IteratorBase &operator++();
       IteratorBase operator++(int);
 
-      bool operator==(IteratorBase const &rhs) const;
-      bool operator!=(IteratorBase const &rhs) const;
+      bool operator==(IteratorBase const &other) const;
+      bool operator!=(IteratorBase const &other) const;
 
       RetType &operator*();
       RetType *operator->();
 
-      RetType &operator*() const;
-      RetType *operator->() const;
+      RetType const &operator*() const;
+      RetType const *operator->() const;
 
     private:
-      IteratorBase(IterType const &iter, Container *container);
-      IterType &iter();
-      IterType const &iter() const;
-      Container *container();
+      explicit IteratorBase(Iterable const &iterable);
+      Iterable &iterable();
+      Iterable const &iterable() const;
   };
 
-  template<typename RetType, typename Container, typename IterType>
-  IterType &IteratorBase<RetType, Container, IterType>::iter()
+  template<typename RetType, typename Container, typename Iterable>
+  Iterable &IteratorBase<RetType, Container,Iterable>::iterable()
   {
-    return d_iter;
+    return d_iterable;
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  Container *IteratorBase<RetType, Container, IterType>::container()
-  {
-    return d_container;
-  }
-
-  template<typename RetType, typename Container, typename IterType>
-  IteratorBase<RetType, Container, IterType>::IteratorBase(IterType const &iter
-      , Container *container)
-      : d_iter(iter), d_container(container)
+  template<typename RetType, typename Container, typename Iterable>
+  IteratorBase<RetType, Container,Iterable>::IteratorBase(Iterable const &iterable)
+      : d_iterable(iterable)
   {
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  IteratorBase<RetType, Container, IterType> &IteratorBase<RetType, Container, IterType>::operator++()
+  template<typename RetType, typename Container, typename Iterable>
+  IteratorBase<RetType, Container,Iterable> &IteratorBase<RetType, Container,Iterable>::operator++()
   {
-    d_iter = d_container->increment(&d_iter);
+    d_iterable->increment();
     return *this;
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  IteratorBase<RetType, Container, IterType> IteratorBase<RetType, Container, IterType>::operator++(int)
+  template<typename RetType, typename Container, typename Iterable>
+  IteratorBase<RetType, Container,Iterable> IteratorBase<RetType, Container,Iterable>::operator++(int)
   {
-    IteratorBase<RetType, Container, IterType> ret(d_container->increment(&d_iter), d_container);
+    Iterable iterable(d_iterable);
+    iterable->increment();
+    IteratorBase<RetType, Container, Iterable> ret(iterable);
     return ret;
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  bool IteratorBase<RetType, Container, IterType>::operator==(IteratorBase<RetType, Container, IterType> const &rhs) const
+  template<typename RetType, typename Container, typename Iterable>
+  bool IteratorBase<RetType, Container,Iterable>::operator==(IteratorBase<RetType, Container,Iterable> const &other) const
   {
-    return d_container->equal(d_iter, rhs.d_iter);
+    return d_iterable->equal(other.d_iterable);
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  bool IteratorBase<RetType, Container, IterType>::operator!=(IteratorBase<RetType, Container, IterType> const &rhs) const
+  template<typename RetType, typename Container, typename Iterable>
+  bool IteratorBase<RetType, Container,Iterable>::operator!=(IteratorBase<RetType, Container,Iterable> const &other) const
   {
-    return not d_container->equal(d_iter, rhs.d_iter);
+    return not d_iterable->equal(other.d_iterable);
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  RetType &IteratorBase<RetType, Container, IterType>::operator*()
+  template<typename RetType, typename Container, typename Iterable>
+  RetType &IteratorBase<RetType, Container,Iterable>::operator*()
   {
-    return d_container->dereference(d_iter);
+    return d_iterable->dereference();
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  RetType *IteratorBase<RetType, Container, IterType>::operator->()
+  template<typename RetType, typename Container, typename Iterable>
+  RetType *IteratorBase<RetType, Container,Iterable>::operator->()
   {
-    return &d_container->dereference(d_iter);
+    return &d_iterable->dereference();
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  RetType &IteratorBase<RetType, Container, IterType>::operator*() const
+  template<typename RetType, typename Container, typename Iterable>
+  RetType const &IteratorBase<RetType, Container,Iterable>::operator*() const
   {
-    return d_container->dereference(d_iter);
+    return d_iterable->dereference();
   }
 
-  template<typename RetType, typename Container, typename IterType>
-  RetType *IteratorBase<RetType, Container, IterType>::operator->() const
+  template<typename RetType, typename Container, typename Iterable>
+  RetType const *IteratorBase<RetType, Container,Iterable>::operator->() const
   {
-    return &d_container->dereference(d_iter);
+    return &d_iterable->dereference();
   }
 }
 }

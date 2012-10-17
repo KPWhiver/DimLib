@@ -22,6 +22,8 @@ namespace dim
 namespace internal
 {
   /* constructors */
+  template<typename RefType>
+  std::unordered_map<size_t, NodeGrid<RefType>*> NodeGrid<RefType>::s_map;
 
   template<typename RefType>
   NodeGrid<RefType>::NodeGrid(size_t gridSize, size_t key)
@@ -35,7 +37,7 @@ namespace internal
   template<typename RefType>
   NodeGrid<RefType>::~NodeGrid()
   {
-    s_map.remove(ownerId());
+    s_map.erase(ownerId());
   }
 
   /* static access */
@@ -45,7 +47,7 @@ namespace internal
   {
     auto iter = s_map.find(key);
     if(iter != s_map.end())
-      return iter.second;
+      return iter->second;
 
     return 0;
   }
@@ -60,7 +62,7 @@ namespace internal
   }
   
   template <typename RefType>
-  void NodeGrid<RefType>::v_copy(size_t dest) const
+  void NodeGrid<RefType>::v_copy(size_t dest)
   {
     s_map[dest] = this;
   }
@@ -79,7 +81,7 @@ namespace internal
     for(auto mapPart = d_map.begin(); mapPart != d_map.end(); ++mapPart)
     {
       if(mapPart->second.size() != 0)
-        return typename NodeGrid<RefType>::iterator({0, mapPart}, this);
+        return typename NodeGrid<RefType>::iterator(CopyPtr<Iterable>(new NodeGrid<RefType>::Iterable(0, mapPart, this)));
     }
 
     return end();
@@ -88,10 +90,10 @@ namespace internal
   template <typename RefType>
   typename NodeGrid<RefType>::iterator NodeGrid<RefType>::end()
   {
-    return typename NodeGrid<RefType>::iterator({std::numeric_limits<size_t>::max(), d_map.end()}, this);
+    return typename NodeGrid<RefType>::iterator(CopyPtr<Iterable>(new NodeGrid<RefType>::Iterable(std::numeric_limits<size_t>::max(), d_map.end(), this)));
   }
 
-  template <typename RefType>
+  /*template <typename RefType>
   typename NodeGrid<RefType>::const_iterator NodeGrid<RefType>::begin() const
   {
     for(auto mapPart = d_map.begin(); mapPart != d_map.end(); ++mapPart)
@@ -107,99 +109,119 @@ namespace internal
   typename NodeGrid<RefType>::const_iterator NodeGrid<RefType>::end() const
   {
     return typename NodeGrid<RefType>::const_iterator({std::numeric_limits<size_t>::max(), d_map.end()}, this);
+  }*/
+
+  template<typename RefType>
+  NodeGrid<RefType>::Iterable::Iterable(size_t idx, typename Storage::iterator iter, NodeGrid<RefType> *container)
+  :
+    d_listIdx(idx),
+    d_mapIterator(iter),
+    d_container(container)
+  {
   }
 
   template<typename RefType>
-  void NodeGrid<RefType>::increment(typename NodeGrid<RefType>::IterType *iter) const
+  typename NodeGrid<RefType>::Iterable* NodeGrid<RefType>::Iterable::clone() const
   {
-    size_t next = iter->listIdx + 1;
+    return new NodeGrid<RefType>::Iterable(*this);
+  }
 
-    for(auto mapPart = iter->mapIterator; mapPart != d_map.end(); ++mapPart)
+  template<typename RefType>
+  void NodeGrid<RefType>::Iterable::increment()
+  {
+    size_t next = d_listIdx + 1;
+
+    for(auto mapPart = d_mapIterator; mapPart != d_container->d_map.end(); ++mapPart)
     {
       if(next < mapPart->second.size())
       {
-        *iter = {next, mapPart};
+        d_listIdx = next;
+        d_mapIterator = mapPart;
         return;
       }
 
       next = 0;
     }
 
-    *iter = end().iter();
+    d_listIdx = d_container->end().iterable()->d_listIdx;
+    d_mapIterator = d_container->end().iterable()->d_mapIterator;
   }
 
   template<typename RefType>
-  RefType &NodeGrid<RefType>::dereference(typename NodeGrid<RefType>::IterType const &iter)
+  RefType &NodeGrid<RefType>::Iterable::dereference()
   {
-    return iter.mapIterator->second[iter.listIdx];
+    return *d_mapIterator->second[d_listIdx];
   }
 
   template<typename RefType>
-  RefType const &NodeGrid<RefType>::dereference(typename NodeGrid<RefType>::IterType const &iter) const
+  RefType const &NodeGrid<RefType>::Iterable::dereference() const
   {
-    return iter.mapIterator->second[iter.listIdx];
+    return *d_mapIterator->second[d_listIdx];
   }
 
   template<typename RefType>
-  bool equal(typename NodeGrid<RefType>::IterType const &lhs, typename NodeGrid<RefType>::IterType const &rhs) const
+  bool NodeGrid<RefType>::Iterable::equal(CopyPtr<NodeGrid<RefType>::Iterable> const &other) const
   {
-    return lhs.listIdx == rhs.listIdx && lhs.mapIterator == rhs.mapIterator;
+    return d_listIdx == other->d_listIdx && d_mapIterator == other->d_mapIterator;
+  }
+
+  template<typename RefType>
+  void NodeGrid<RefType>::Iterable::erase()
+  {
+    auto &list = d_mapIterator->second;
+    list.erase(list.begin() + d_listIdx);
   }
 
   template <typename RefType>
   NodeStorageBase::iterator NodeGrid<RefType>::v_begin()
   {
-    IterType *ptr = new IterType(begin().iter());
-    return NodeStorageBase::iterator(ClonePtr<NodeStorageBase::IterType>(ptr), this);
+    Iterable *ptr = begin().iterable()->clone();
+    return NodeStorageBase::iterator(ClonePtr<NodeStorageBase::Iterable>(ptr));
   }
-  template <typename RefType>
+  /*template <typename RefType>
   NodeStorageBase::const_iterator NodeGrid<RefType>::v_begin() const
   {
     IterType *ptr = new IterType(begin().iter());
     return NodeStorageBase::const_iterator(ClonePtr<NodeStorageBase::IterType>(ptr), this);
-  }
+  }*/
 
   template <typename RefType>
-  NodeStorageBase::iterator NodeGrid<RefType>::v_begin()
+  NodeStorageBase::iterator NodeGrid<RefType>::v_end()
   {
-    IterType *ptr = new IterType(end().iter());
-    return NodeStorageBase::iterator(ClonePtr<NodeStorageBase::IterType>(ptr), this);
+    Iterable *ptr = end().iterable()->clone();
+    return NodeStorageBase::iterator(ClonePtr<NodeStorageBase::Iterable>(ptr));
   }
-  template <typename RefType>
-  NodeStorageBase::const_iterator NodeGrid<RefType>::v_begin() const
+  /*template <typename RefType>
+  NodeStorageBase::const_iterator NodeGrid<RefType>::v_end() const
   {
     IterType *ptr = new IterType(end().iter());
     return NodeStorageBase::const_iterator(ClonePtr<NodeStorageBase::IterType>(ptr), this);
+  }*/
+
+  template<typename RefType>
+  void NodeGrid<RefType>::Iterable::v_increment()
+  {
+    increment();
   }
 
   template<typename RefType>
-  void NodeGrid<RefType>::v_increment(ClonePtr<NodeStorageBase::IterType> *iter) const
+  DrawNodeBase &NodeGrid<RefType>::Iterable::v_dereference()
   {
-    // We can be certain that this goes okay, or this function would not have been called
-    NodeStorageBase::IterType *ptr = *iter;
-    increment(reinterpret_cast<IterType*>(ptr);
+    return dereference();
   }
 
   template<typename RefType>
-  DrawNodeBase &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter)
+  DrawNodeBase const &NodeGrid<RefType>::Iterable::v_dereference() const
   {
-    NodeStorageBase::IterType *ptr = iter;
-    return dereference(reinterpret_cast<IterType>(*ptr));
+    return dereference();
   }
 
   template<typename RefType>
-  DrawNodeBase const &NodeGrid<RefType>::v_dereference(ClonePtr<NodeStorageBase::IterType> const &iter) const
+  bool NodeGrid<RefType>::Iterable::v_equal(ClonePtr<NodeStorageBase::Iterable> const &other) const
   {
-    NodeStorageBase::IterType *ptr = iter;
-    return dereference(reinterpret_cast<IterType>(*ptr));
-  }
+    NodeStorageBase::Iterable *ptr = other->clone();
 
-  template<typename RefType>
-  bool NodeGrid<RefType>::v_equal(ClonePtr<NodeStorageBase::IterType> const &lhs, ClonePtr<NodeStorageBase::IterType> const &rhs) const
-  {
-    NodeStorageBase::IterType *ptr1 = lhs;
-    NodeStorageBase::IterType *ptr2 = rhs;
-    return equal(reinterpret_cast<IterType>(*ptr1), reinterpret_cast<IterType>(*ptr2));
+    return equal(CopyPtr<Iterable>(reinterpret_cast<Iterable *>(ptr)));
   }
 
   
@@ -224,9 +246,9 @@ namespace internal
     xloc = object->coor().x / d_gridSize;
     zloc = object->coor().z / d_gridSize;
 
-    auto iter = d_map.find(Key(xloc, zloc));
-    if(iter == d_map.end())
-      d_map.insert(make_pair(Key(xloc, zloc), PtrVector<RefType>([](RefType *ptr){return ptr->clone();})));
+    auto list = d_map.find(Key(xloc, zloc));
+    if(list == d_map.end())
+      list = d_map.insert(make_pair(Key(xloc, zloc), PtrVector<RefType>{})).first;
 
     //std::pair<size_t, DrawNode::Key> id(list.size(), DrawNode::Key(xloc, zloc));
 
@@ -234,22 +256,20 @@ namespace internal
     //RefType tmp(object);
     //tmp.d_id = id;
 
-    auto iter = lower_bound(list.begin(), list.end(), object, [](DrawNodeBase const *lhs, DrawNodeBase const *rhs)
+    auto iter = lower_bound(list->second.begin(), list->second.end(), object, [](DrawNodeBase const *lhs, DrawNodeBase const *rhs) -> bool
                             {
-                              return ShaderScene{lhs->scene()[0], lhs->shader()} < ShaderScene{lhs->scene()[0], rhs->shader()};
+                              GLuint id1 = lhs->shader().id();
+                              GLuint id2 = rhs->shader().id();
+
+                              return std::tie(id1, lhs->scene()) < std::tie(id2, rhs->scene());
                             });
 
-    iter = list.insert(iter, object);
+    iter = list->second.insert(iter, object);
 
     // TODO improve efficiency
-    size_t idx = 0;
-    for(auto iterate = list.begin(); iterate != list.end(); ++iterate, ++idx)
-    {
-      if(iterate == iter)
-        break;
-    }
+    size_t idx = distance(list->second.begin(), iter);
 
-    return typename NodeGrid<RefType>::iterator(idx, d_map.find(Key(xloc, zloc)));
+    return typename NodeGrid<RefType>::iterator(CopyPtr<Iterable>(new Iterable(idx, d_map.find(Key(xloc, zloc)), this)));
   }
 
   template<typename RefType>
@@ -259,39 +279,46 @@ namespace internal
   }
 
   template<typename RefType>
-  void NodeGrid<RefType>::v_draw(DrawState const &state)
+  void NodeGrid<RefType>::v_draw(ShaderScene const &scene)
   {
+    //TODO optimize optimize optimize
     for(auto mapPart : d_map)
     {
-      auto DrawNodeBase = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNodeBase const *lhs, DrawState const &rhs)
-                              {
-                                return lhs->drawState() < rhs;
-                              });
-
-      for(; DrawNodeBase->drawState() == state; ++DrawNodeBase)
-        DrawNodeBase->draw();
+      for(DrawNodeBase *node : mapPart.second)
+      {
+        for(size_t idx = 0; idx != node->scene().size(); ++idx)
+        {
+          if(node->scene()[idx] == scene.state)
+          {
+            scene.state.mesh().draw();
+            break;
+          }
+        }
+      }
     }
   }
 
   template<typename RefType>
   void NodeGrid<RefType>::v_del(NodeStorageBase::iterator &object)
   {
-    setChanged(true);
-    auto mapPart = d_map.find(object.iter().second);
-    mapPart->second.remove(mapPart->second.begin() + object.iter().first);
+    NodeStorageBase::Iterable *ptr = object.iterable().get();
+    Iterable *iterPair = reinterpret_cast<Iterable*>(ptr);
+
+    iterPair->erase();
   }
 
   template<typename RefType>
   NodeStorageBase::iterator NodeGrid<RefType>::v_find(float x, float z)
   {
     auto iter = find(x, z);
-    return NodeStorageBase::iterator(std::make_pair(iter->first, iter->second->first), this);
+    Iterable *ptr = iter.iterable()->clone();
+    return NodeStorageBase::iterator(ClonePtr<NodeStorageBase::Iterable>(ptr));
   }
 
   template<typename RefType>
-  NodeStorageBase::iterator NodeGrid<RefType>::v_find(DrawState const &state, float x, float z)
+  NodeStorageBase::iterator NodeGrid<RefType>::v_find(ShaderScene const &state, float x, float z)
   {
-    int xloc, zloc;
+    /*int xloc, zloc;
     xloc = x / d_gridSize;
     zloc = z / d_gridSize;
 
@@ -310,14 +337,14 @@ namespace internal
 
       if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < mapPart->second[idx].d_radius * mapPart->second[idx].d_radius)
         return typename NodeGrid<RefType>::iterator(make_pair(idx, mapPart->first), this);
-    }
-    return end();
+    }*/
+    return v_end();
   }
 
   template<typename RefType>
   typename NodeGrid<RefType>::iterator NodeGrid<RefType>::find(float x, float z)
   {
-    int xloc, zloc;
+    /*int xloc, zloc;
     xloc = x / d_gridSize;
     zloc = z / d_gridSize;
 
@@ -331,7 +358,7 @@ namespace internal
 
       if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < mapPart->second[idx].d_radius * mapPart->second[idx].d_radius)
         return typename NodeGrid<RefType>::iterator(make_pair(idx, mapPart), this);
-    }
+    }*/
     return end();
   }
 }

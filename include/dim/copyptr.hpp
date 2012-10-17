@@ -27,7 +27,8 @@ namespace dim
   template <typename Type>
   class CopyPtr
   {
-    Type *d_ptr;
+    protected:
+      Type *d_ptr;
 
     public:
       CopyPtr();
@@ -38,14 +39,71 @@ namespace dim
       CopyPtr &operator=(CopyPtr const &other);
       CopyPtr &operator=(CopyPtr &&tmp);
 
-      operator Type*();
+      Type* get();
+      Type const *get() const;
       Type &operator*();
       Type *operator->();
+      Type const &operator*() const;
+      Type const *operator->() const;
 
       void reset(Type *ptr);
 
-      ~CopyPtr();
+      virtual ~CopyPtr();
   };
+
+  template <typename Type>
+  class ClonePtr : public CopyPtr<Type>
+  {
+    using CopyPtr<Type>::d_ptr;
+
+    public:
+      ClonePtr() = default;
+      explicit ClonePtr(Type *ptr);
+      ClonePtr(ClonePtr const &other);
+      ClonePtr(ClonePtr &&tmp);
+
+      ClonePtr &operator=(ClonePtr const &other);
+      ClonePtr &operator=(ClonePtr &&tmp);
+  };
+
+  template <typename Type>
+  ClonePtr<Type>::ClonePtr(Type *ptr)
+  :
+    CopyPtr<Type>::CopyPtr(ptr)
+  {
+  }
+
+  template <typename Type>
+  ClonePtr<Type>::ClonePtr(ClonePtr const &other)
+  :
+    CopyPtr<Type>::CopyPtr(0)
+  {
+    if(other.d_ptr != 0)
+      CopyPtr<Type>::reset(other.d_ptr->clone());
+  }
+
+  template <typename Type>
+  ClonePtr<Type>::ClonePtr(ClonePtr &&tmp)
+  :
+    CopyPtr<Type>::CopyPtr(tmp.d_ptr)
+  {
+    tmp.d_ptr = 0;
+  }
+
+  template <typename Type>
+  ClonePtr<Type> &ClonePtr<Type>::operator=(ClonePtr const &other)
+  {
+    ClonePtr<Type> tmp(other);
+    std::swap(tmp.d_ptr, d_ptr);
+    return *this;
+  }
+
+  template <typename Type>
+  ClonePtr<Type> &ClonePtr<Type>::operator=(ClonePtr &&tmp)
+  {
+    std::swap(tmp.d_ptr, d_ptr);
+    return *this;
+  }
 
   template <typename Type>
   CopyPtr<Type>::CopyPtr()
@@ -67,9 +125,7 @@ namespace dim
     d_ptr(0)
   {
     if(other.d_ptr != 0)
-    {
       d_ptr = new Type(*other.d_ptr);
-    }
   }
 
   template <typename Type>
@@ -96,7 +152,13 @@ namespace dim
   }
 
   template <typename Type>
-  CopyPtr<Type>::operator Type*()
+  Type const *CopyPtr<Type>::get() const
+  {
+    return d_ptr;
+  }
+
+  template <typename Type>
+  Type *CopyPtr<Type>::get()
   {
     return d_ptr;
   }
@@ -109,6 +171,18 @@ namespace dim
 
   template <typename Type>
   Type *CopyPtr<Type>::operator->()
+  {
+    return d_ptr;
+  }
+
+  template <typename Type>
+  Type const &CopyPtr<Type>::operator*() const
+  {
+    return *d_ptr;
+  }
+
+  template <typename Type>
+  Type const *CopyPtr<Type>::operator->() const
   {
     return d_ptr;
   }

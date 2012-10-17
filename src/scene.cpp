@@ -124,9 +124,25 @@ namespace dim
     add(mesh, textures);
   }
 
+  DrawState &Scene::operator[](size_t idx)
+  {
+    return d_states[idx];
+  }
+
+  DrawState const &Scene::operator[](size_t idx) const
+  {
+    return d_states[idx];
+  }
+
+  size_t Scene::size() const
+  {
+    return d_states.size();
+  }
+
   void Scene::add(Mesh const &mesh, std::vector<pair<Texture<GLubyte>, string>> const &textures)
   {
     d_states.push_back(DrawState(mesh, textures));
+    sort(d_states.begin(), d_states.end());
   }
 
   namespace
@@ -274,5 +290,41 @@ namespace dim
     // load meshes
     for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
       d_states.push_back(DrawState(loadMesh(*scene, varNumOfElements, mesh, vertex, normal, texCoord, binormal, tangent), {}));
+
+    sort(d_states.begin(), d_states.end());
+  }
+
+  bool Scene::operator==(Scene const &other) const
+  {
+    if(size() != other.size())
+      return false;
+
+    for(size_t idx = 0; idx != size(); ++idx)
+    {
+      if(not (d_states[idx] == other.d_states[idx]))
+        return false;
+    }
+
+    return true;
+  }
+
+  bool Scene::operator<(Scene const &other) const
+  {
+    size_t minSize = min(size(), other.size());
+
+    for(size_t idx = 0; idx != minSize; ++idx)
+    {
+      if(d_states[idx] < other.d_states[idx])
+        return true;
+      if(not (d_states[idx] == other.d_states[idx]))
+        return false;
+    }
+
+    if(size() < other.size())
+      return true;
+    if(size() != other.size())
+      return false;
+
+    return false;
   }
 }

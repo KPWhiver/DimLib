@@ -96,7 +96,7 @@ namespace dim
       NodeStorageBase::iterator iter = d_storages[idx]->begin();
 
       if(iter != d_storages[idx]->end())
-        return iterator(IterType(iter, idx), this);
+        return iterator{CopyPtr<Iterable>(new Iterable(iter, idx, this))};
     }
 
     return end();
@@ -104,10 +104,10 @@ namespace dim
 
   SceneGraph::iterator SceneGraph::end()
   {
-    return iterator(IterType(d_storages.back()->end(), d_storages.size()), this);
+    return iterator{CopyPtr<Iterable>(new Iterable(d_storages.back()->end(), d_storages.size(), this))};
   }
 
-  SceneGraph::const_iterator SceneGraph::begin() const
+ /* SceneGraph::const_iterator SceneGraph::begin() const
   {
     for(size_t idx = 0; idx != d_storages.size(); ++idx)
     {
@@ -123,49 +123,62 @@ namespace dim
   SceneGraph::const_iterator SceneGraph::end() const
   {
     return const_iterator(IterType(d_storages.back()->end(), d_storages.size()), this);
+  }*/
+
+  SceneGraph::Iterable::Iterable(internal::NodeStorageBase::iterator iter, size_t idx, SceneGraph *container)
+  :
+      d_iterator(iter),
+      d_listIdx(idx),
+      d_container(container)
+  {
   }
 
-  void SceneGraph::increment(IterType *iter) const
+  void SceneGraph::Iterable::increment()
   {
-    NodeStorageBase::iterator iterate = iter->first;
-    ++iterate;
+    ++d_iterator;
 
-    if(iterate == d_storages[iter->second]->end())
+    if(d_iterator == d_container->d_storages[d_listIdx]->end())
     {
-      for(size_t idx = iter->second; idx != d_storages.size(); ++idx)
+      for(size_t idx = d_listIdx; idx != d_container->d_storages.size(); ++idx)
       {
-        iterate = d_storages[idx]->begin();
+        d_iterator = d_container->d_storages[idx]->begin();
 
-        if(iterate != d_storages[idx]->end())
-          return make_pair(iterate, idx);
+        if(d_iterator != d_container->d_storages[idx]->end())
+        {
+          d_listIdx = idx;
+          return;
+        }
       }
 
-      *iter = make_pair(iterate, d_storages.size());
+      d_listIdx = d_container->d_storages.size();
     }
-    else
-      *iter = make_pair(iterate, iter->second);
   }
 
-  DrawNodeBase &SceneGraph::dereference(IterType const &iter)
+  DrawNodeBase &SceneGraph::Iterable::dereference()
   {
-    return *iter.first;
+    return *d_iterator;
   }
 
-  DrawNodeBase const &SceneGraph::dereference(IterType const &iter) const
+  DrawNodeBase const &SceneGraph::Iterable::dereference() const
   {
-    return *iter.first;
+    return *d_iterator;
   }
 
-  bool SceneGraph::equal(IterType const &lhs, IterType const &rhs) const
+  bool SceneGraph::Iterable::equal(CopyPtr<Iterable> const &other) const
   {
-    return lhs == rhs;
+    return d_iterator == other.get()->d_iterator && d_listIdx == other.get()->d_listIdx;
+  }
+
+  void SceneGraph::Iterable::erase()
+  {
+    d_container->d_storages[d_listIdx]->del(d_iterator);
   }
 
   /* regular functions */
 
   void SceneGraph::add(ShaderScene const &state, NodeStorageBase *ptr)
   {
-    for(auto iter = d_drawStates.find(state); iter->first == state; ++iter)
+    for(auto iter = d_drawStates.find(state); iter != d_drawStates.end() && iter->first == state; ++iter)
     {
       if(iter->second == ptr)
         return;
@@ -181,19 +194,19 @@ namespace dim
       // TODO optimize optimize optimize
       ShaderScene const &state = element.first;
 
-      state.shader().use();
+      state.shader.use();
       
-      state.mesh().bind();
-      if(state.culling() == false)
+      state.state.mesh().bind();
+      if(state.state.culling() == false)
         glDisable(GL_CULL_FACE);
 
-      for(size_t tex = 0; tex != state.textures().size(); ++tex)
-        state.shader().set(state.mesh().textures()[tex].second, state.textures()[tex].first, tex);
+      for(size_t tex = 0; tex != state.state.textures().size(); ++tex)
+        state.shader.set(state.state.textures()[tex].second, state.state.textures()[tex].first, tex);
 
       element.second->draw(state);
       
-      state.mesh().unbind();
-      if(state.culling() == false)
+      state.state.mesh().unbind();
+      if(state.state.culling() == false)
         glEnable(GL_CULL_FACE);
     }
   }
@@ -203,7 +216,7 @@ namespace dim
     if(object == end())
       return;
 
-    d_storages[object.iter().second]->del(object.iter().first);
+    object.iterable()->erase();
   }
 
   SceneGraph::iterator SceneGraph::find(float x, float z)
@@ -212,7 +225,7 @@ namespace dim
     {
       auto iter = d_storages[idx]->find(x, z);
       if(iter != d_storages[idx]->end())
-        return iterator(make_pair(iter, idx), this);
+        return iterator(CopyPtr<Iterable>(new Iterable(iter, idx, this)));
     }
 
     return end();
@@ -237,7 +250,7 @@ namespace dim
     {
       auto iter = drawState->second->find(state, x, z);
       if(iter != drawState->second->end())
-        return iterator(IterType(iter, idx), this);
+        return iterator(CopyPtr<Iterable>(new Iterable(iter, idx, this)));
     }
 
     return end();

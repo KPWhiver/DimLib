@@ -28,16 +28,16 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <tuple>
 
 #include "dim/drawnode.hpp"
 #include "dim/iteratorbase.hpp"
 #include "dim/onepair.hpp"
-#include "dim/cloneptr.hpp"
+#include "dim/copyptr.hpp"
 
 namespace dim
 {
-namespace internal
-{
+
   struct ShaderScene
   {
     Shader shader;
@@ -62,6 +62,8 @@ namespace internal
     }
   };
 
+namespace internal
+{
   class NodeStorageBase
   {
       size_t d_ownerId;
@@ -76,39 +78,41 @@ namespace internal
       void copy(size_t dest);
 
     private:
-      virtual void v_copy(size_t dest) const = 0;
+      virtual void v_copy(size_t dest) = 0;
       virtual NodeStorageBase* v_clone() const = 0;
 
     public:
     // iterators
-      struct IterType
+      class Iterable
       {
-        virtual IterType* clone() const = 0;
+        public:
+        virtual Iterable* clone() const = 0;
+        virtual ~Iterable(){};
+
+        void increment();
+        DrawNodeBase &dereference();
+        DrawNodeBase const &dereference() const;
+        bool equal(ClonePtr<Iterable> const &other) const;
+
+        virtual void v_increment() = 0;
+        virtual DrawNodeBase &v_dereference() = 0;
+        virtual DrawNodeBase const &v_dereference() const = 0;
+        virtual bool v_equal(ClonePtr<Iterable> const &other) const = 0;
       };
 
-      typedef IteratorBase<DrawNodeBase, NodeStorageBase, ClonePtr<IterType>>  iterator;
-      typedef IteratorBase<DrawNodeBase const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
+      typedef IteratorBase<DrawNodeBase, NodeStorageBase, ClonePtr<Iterable>>  iterator;
+      //typedef IteratorBase<DrawNodeBase const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
 
       iterator begin();
       iterator end();
-      const_iterator begin() const;
-      const_iterator end() const;
-
-      void increment(ClonePtr<IterType> *iter) const;
-      DrawNodeBase &dereference(ClonePtr<IterType> const &iter);
-      DrawNodeBase const &dereference(ClonePtr<IterType> const &iter) const;
-      bool equal(ClonePtr<IterType> const &lhs, ClonePtr<IterType> const &rhs) const;
+      //const_iterator begin() const;
+      //const_iterator end() const;
 
     private:
-      virtual void v_increment(ClonePtr<IterType> *iter) const = 0;
-      virtual DrawNodeBase &v_dereference(ClonePtr<IterType> const &iter) = 0;
-      virtual DrawNodeBase const &v_dereference(ClonePtr<IterType> const &iter) const = 0;
-      virtual bool v_equal(ClonePtr<IterType> const &lhs, ClonePtr<IterType> const &rhs) const = 0;
-
       virtual iterator v_begin() = 0;
-      virtual const_iterator v_begin() const = 0;
+      //virtual const_iterator v_begin() const = 0;
       virtual iterator v_end() = 0;
-      virtual const_iterator v_end() const = 0;
+      //virtual const_iterator v_end() const = 0;
 
     public:
     // regular functions

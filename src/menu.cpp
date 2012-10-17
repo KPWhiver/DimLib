@@ -91,6 +91,9 @@ void Menu::add(MenuItem *item)
 {
   item->setSize(d_width, d_height);
   d_items.push_back(item);
+
+  if(d_context != 0)
+    item->setContext(d_context);
 }
 
 void Menu::setContext(Context *context)

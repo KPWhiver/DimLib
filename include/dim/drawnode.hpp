@@ -77,7 +77,7 @@ namespace dim
       public:
         virtual Shader const &shader() const
         {
-          return Shader::defaultShader();
+          return defaultShader();
         }
 
         virtual Scene const &scene() const
