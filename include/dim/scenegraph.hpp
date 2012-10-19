@@ -23,6 +23,7 @@
 #include "dim/nodegrid.hpp"
 #include "dim/scene.hpp"
 #include "dim/ptrvector.hpp"
+#include "dim/camera.hpp"
 
 #include <vector>
 #include <map>
@@ -112,7 +113,7 @@ namespace dim
       template<typename RefType>
       typename internal::NodeGrid<RefType>::iterator get(float x, float z);
 
-      void draw();
+      void draw(Camera camera);
 
     private:
       void add(ShaderScene const &state, internal::NodeStorageBase* ptr);
