@@ -26,42 +26,101 @@ using namespace std;
 
 namespace dim
 {
-  mat4 DrawNodeBase::matrix() const
+  NodeBase::NodeBase(NodeBase *parent)
+  :
+      d_parent(parent),
+      d_scale(vec3(1.0)),
+      d_modelMatrix(mat4(1.0)),
+      d_changed(false)
   {
-    mat4 modelMat;
-    modelMat = translate(modelMat, d_coor);
-    if(d_rot.x != 0)
-      modelMat = translate(modelMat, vec3(d_rot.x, 0, 0));
-    if(d_rot.y != 0)
-      modelMat = translate(modelMat, vec3(0, 0, d_rot.z));
-    if(d_rot.z != 0)
-      modelMat = translate(modelMat, vec3(0, d_rot.y, 0));
-
-    return modelMat;
   }
 
-  DrawNodeBase::DrawNodeBase(vec3 const &coor, vec3 const &rot, float radius)
-      : d_coor(coor), d_rot(rot), d_radius(radius)
+  NodeBase::NodeBase(NodeBase *parent, vec3 const &coor, vec3 const &rot, vec3 const &scale)
+  :
+      d_parent(parent),
+      d_coor(coor),
+      d_rot(rot),
+      d_scale(scale),
+      d_modelMatrix(mat4(1.0)),
+      d_changed(true)
+  {
+  }
+
+  glm::vec3 NodeBase::coor() const
+  {
+    return d_coor;
+  }
+
+  void NodeBase::setCoor(vec3 const &coor)
+  {
+    d_coor = coor;
+    d_changed = true;
+  }
+
+  glm::vec3 const &NodeBase::rotation() const
+  {
+    return d_rot;
+  }
+
+  void NodeBase::setRotation(vec3 const &rot)
+  {
+    d_rot = rot;
+    d_changed = true;
+  }
+
+  glm::vec3 const &NodeBase::scaling() const
+  {
+    return d_scale;
+  }
+
+  void NodeBase::setScaling(vec3 const &scale)
+  {
+    d_scale = scale;
+    d_changed = true;
+  }
+
+  void NodeBase::setChanged()
+  {
+    d_changed = true;
+  }
+
+  mat4 const &NodeBase::matrix() const
+  {
+    if(d_changed)
+    {
+      d_modelMatrix = translate(mat4(1.0), d_coor);
+      if(d_rot.x != 0)
+        d_modelMatrix = rotate(d_modelMatrix, d_rot.x, vec3(1.0, 0, 0));
+      if(d_rot.y != 0)
+        modd_modelMatrixelMat = rotate(d_modelMatrix, d_rot.z, vec3(0, 0, 1.0));
+      if(d_rot.z != 0)
+        d_modelMatrix = rotate(d_modelMatrix, d_rot.y, vec3(0, 1.0, 0));
+      if(d_scale != vec3(1.0))
+        d_modelMatrix = scale(d_modelMatrix, d_scale);
+
+      if(d_parent != 0)
+        d_modelMatrix *= d_parent->matrix();
+
+      d_changed = false;
+    }
+
+    return d_modelMatrix;
+  }
+
+  DrawNodeBase::DrawNodeBase(NodeBase *parent, vec3 const &coor, vec3 const &rot, float radius)
+      : NodeBase(parent, coor, rot, vec3(1.0)),
+        d_radius(radius)
+  {
+  }
+
+  DrawNodeBase::DrawNodeBase(NodeBase *parent)
+      : NodeBase(parent),
+        d_radius(0)
   {
   }
 
   DrawNodeBase::~DrawNodeBase()
   {
-  }
-
-  glm::vec3 DrawNodeBase::coor() const
-  {
-    return d_coor;
-  }
-
-  void DrawNodeBase::setCoor(const vec3 & coor)
-  {
-    d_coor = coor;
-  }
-
-  glm::vec3 const &DrawNodeBase::rot() const
-  {
-    return d_rot;
   }
 
   void DrawNodeBase::draw()

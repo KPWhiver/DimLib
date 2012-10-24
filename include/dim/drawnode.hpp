@@ -29,7 +29,37 @@
 
 namespace dim
 {
-  class DrawNodeBase
+  class NodeBase
+  {
+      NodeBase *d_parent;
+
+      glm::vec3 d_coor;
+      glm::vec3 d_rot;
+      glm::vec3 d_scale;
+
+      glm::mat4 d_modelMatrix;
+
+      bool d_changed;
+
+    public:
+      NodeBase(NodeBase *parent, glm::vec3 const &coor, glm::vec3 const &rot, glm::vec3 const &scale);
+      NodeBase(NodeBase *parent);
+
+      glm::vec3 coor() const;
+      void setCoor(glm::vec3 const &coor);
+
+      glm::vec3 const &rotation() const;
+      void setRotation(glm::vec3 const &rot);
+
+      glm::vec3 const &scaling() const;
+      void setScaling(glm::vec3 const &scale);
+
+      glm::mat4 const &matrix() const;
+
+      void setChanged();
+  };
+
+  class DrawNodeBase : NodeBase
   {
       friend class SceneGraph;
       template <typename RefType>
@@ -37,19 +67,11 @@ namespace dim
       friend std::ostream &operator<<(std::ostream &out, DrawNodeBase const &object);
       friend std::istream &operator>>(std::istream &in, DrawNodeBase &object);
 
-      glm::vec3 d_coor;
-      glm::vec3 d_rot;
-
       float d_radius;
 
     public:
-      DrawNodeBase() = default;
-      DrawNodeBase(glm::vec3 const &coor, glm::vec3 const &rot, float radius);
-
-      glm::vec3 coor() const;
-      void setCoor(glm::vec3 const &coor);
-
-      glm::vec3 const &rot() const;
+      DrawNodeBase(NodeBase *parent);
+      DrawNodeBase(NodeBase *parent, glm::vec3 const &coor, glm::vec3 const &rot, float radius);
 
       virtual Shader const &shader() const = 0;
       virtual Scene const &scene() const = 0;
@@ -59,9 +81,6 @@ namespace dim
       virtual ~DrawNodeBase();
 
       virtual DrawNodeBase *clone() const = 0;
-
-    protected:
-      glm::mat4 matrix() const;
     
     private:
       virtual void insert(std::ostream &out) const;

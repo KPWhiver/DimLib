@@ -118,7 +118,12 @@ namespace dim
   PtrVector<Type>::~PtrVector()
   {
     for(size_t idx = 0; idx != std::vector<Type*>::size(); ++idx)
-      delete std::vector<Type*>::at(idx);
+    {
+      if(std::vector<Type*>::operator[](idx) != 0)
+        delete std::vector<Type*>::operator[](idx);
+
+      std::vector<Type*>::operator[](idx) = 0;
+    }
   }
 } /* namespace dim */
 #endif /* PTRVECTOR_HPP_ */

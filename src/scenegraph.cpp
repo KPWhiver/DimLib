@@ -186,7 +186,7 @@ namespace dim
 
     d_drawStates.insert(make_pair(state, ptr));
   }
-D
+
   void SceneGraph::draw(Camera camera)
   {
     for(auto const &element: d_drawStates)
@@ -197,11 +197,7 @@ D
       state.shader.use();
       
       camera.setAtShader(state.shader, "in_mat_view", "in_mat_projection");
-<<<<<<< HEAD
-      
-=======
 
->>>>>>> 3b39c372447847f2f40554a24c41b03f33e45cfd
       state.state.mesh().bind();
       if(state.state.culling() == false)
         glDisable(GL_CULL_FACE);

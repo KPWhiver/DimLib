@@ -291,6 +291,31 @@ namespace dim
     for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
       d_states.push_back(DrawState(loadMesh(*scene, varNumOfElements, mesh, vertex, normal, texCoord, binormal, tangent), {}));
 
+    vector<vector<pair<Texture<GLubyte>, string>>> textures(scene->mNumMaterials);
+    string baseName("in_texture");
+
+    for(size_t material = 0; material != scene->mNumMaterials; ++material)
+    {
+      size_t texIdx = 0;
+      aiString relativePath;
+      aiReturn texFound;
+
+      while(true)
+      {
+        texFound = scene->mMaterials[material]->GetTexture(aiTextureType_DIFFUSE, texIdx, &relativePath);
+        if(texFound != AI_SUCCESS)
+          break;
+
+        string path = filename.substr(0, filename.find_last_of('/') + 1) + relativePath.data;
+
+        textures[material].push_back(make_pair(Texture<GLubyte>(path, Filtering::trilinear, false), baseName + static_cast<char>('0' + texIdx)));
+        ++texIdx;
+      }
+    }
+
+    for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
+      d_states[mesh].setTextures(textures[scene->mMeshes[mesh]->mMaterialIndex]);
+
     sort(d_states.begin(), d_states.end());
   }
 

@@ -200,6 +200,7 @@ namespace dim
   CopyPtr<Type>::~CopyPtr()
   {
     delete d_ptr;
+    d_ptr = 0;
   }
 
 } /* namespace dim */

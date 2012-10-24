@@ -33,8 +33,11 @@
 
 namespace dim
 {
+  class GroupNodeBase : public NodeBase
+  {
+  };
 
-  class SceneGraph
+  class SceneGraph : public GroupNodeBase
   {
       std::multimap<ShaderScene, internal::NodeStorageBase*> d_drawStates;
 
@@ -43,12 +46,6 @@ namespace dim
       size_t d_gridSize;//
 
     public:
-      //typedefs + iterators
-      //template <typename RefType>
-      //using iterator = typename internal::NodeGrid<RefType>::iterator;//
-      //template <typename RefType>
-      //using const_iterator = typename internal::NodeGrid<RefType>::const_iterator;//
-
     // iterators
       class Iterable
       {

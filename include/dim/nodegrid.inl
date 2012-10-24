@@ -290,6 +290,8 @@ namespace internal
         {
           if(node->scene()[idx] == scene.state)
           {
+            node->shader().set("in_mat_model", node->matrix());
+
             scene.state.mesh().draw();
             break;
           }
