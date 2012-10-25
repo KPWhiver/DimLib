@@ -31,6 +31,31 @@ using namespace glm;
 namespace dim
 {
   using namespace internal;
+  /* setChanged */
+  void SceneGraph::setRotation(vec3 const &rot)
+  {
+    for(DrawNodeBase &drawNode: *this)
+      drawNode.setChanged();
+      
+    GroupNodeBase::setRotation(rot);
+  }
+  void SceneGraph:;setScaling(vec3 const &scale)
+  {
+    for(DrawNodeBase &drawNode: *this)
+      drawNode.setChanged();
+      
+    GroupNodeBase::setScaling(scale);
+  
+  }
+  void SceneGraph::setCoor(vec3 const &coor)
+  {
+    for(DrawNodeBase &drawNode: *this)
+      drawNode.setChanged();
+      
+    GroupNodeBase::setCoor(coor);
+  
+  }
+  
   /* constructors */
   
   SceneGraph::SceneGraph(size_t gridSize)

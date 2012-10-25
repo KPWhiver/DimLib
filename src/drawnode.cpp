@@ -106,6 +106,11 @@ namespace dim
 
     return d_modelMatrix;
   }
+  
+  NodeBase * const NodeBase::parent()
+  {
+    return d_parent;
+  }
 
   DrawNodeBase::DrawNodeBase(NodeBase *parent, vec3 const &coor, vec3 const &rot, float radius)
       : NodeBase(parent, coor, rot, vec3(1.0)),

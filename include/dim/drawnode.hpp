@@ -57,6 +57,10 @@ namespace dim
       glm::mat4 const &matrix() const;
 
       void setChanged();
+      
+    protected:
+      NodeBase * const parent();
+      predraw(mat4 const &modelMatrix);
   };
 
   class DrawNodeBase : NodeBase
@@ -107,7 +111,7 @@ namespace dim
 
         virtual DrawNodeBase *clone() const
         {
-          return new DefaultDrawNode;
+          return new DefaultDrawNode(parent());
         }
     };
   }

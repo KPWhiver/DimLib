@@ -46,6 +46,11 @@ namespace dim
       size_t d_gridSize;//
 
     public:
+    // setChanged
+      void setRotation(vec3 const &rot);
+      void setScaling(vec3 const &scale);
+      void setCoor(vec3 const &coor);
+    
     // iterators
       class Iterable
       {
