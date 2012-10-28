@@ -32,6 +32,7 @@ namespace dim
   {
     Texture<GLubyte> d_button;
     Texture<GLubyte> d_buttonOverlay;
+    
     Texture<GLubyte> d_menuTop;
     Texture<GLubyte> d_menuMiddle;
     Texture<GLubyte> d_menuBottom;
@@ -39,6 +40,10 @@ namespace dim
     Texture<GLubyte> d_menuOverlayMiddle;
     Texture<GLubyte> d_menuOverlayBottom;
     Texture<GLubyte> d_menuOverlaySubmenu;
+    
+    Texture<GLubyte> d_switch;
+    Texture<GLubyte> d_switchPressed;
+    Texture<GLubyte> d_switchOverlay;
 
     Font d_font;
 
@@ -52,6 +57,7 @@ namespace dim
 
     Texture<GLubyte> const &buttonTexture() const;
     Texture<GLubyte> const &buttonOverlayTexture() const;
+    
     Texture<GLubyte> const &menuTopTexture() const;
     Texture<GLubyte> const &menuMiddleTexture() const;
     Texture<GLubyte> const &menuBottomTexture() const;
@@ -59,6 +65,10 @@ namespace dim
     Texture<GLubyte> const &menuOverlayMiddleTexture() const;
     Texture<GLubyte> const &menuOverlayBottomTexture() const;
     Texture<GLubyte> const &menuOverlaySubmenuTexture() const;
+    
+    Texture<GLubyte> const &switchTexture() const;
+    Texture<GLubyte> const &switchTexture() const;
+    Texture<GLubyte> const &switchOverlayTexture() const;
 
     glm::vec4 const &hoverColor() const;
     glm::vec4 const &disabledColor() const;
@@ -70,8 +80,12 @@ namespace dim
 
     void setButtonTexture(Texture<> const &button);
     void setButtonOverlayTexture(Texture<> const &overlay);
+    
     void setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom);
     void setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu);
+
+    void setSwitchTextures(Texture<> const &switchTexture, switchPressed);
+    void setSwitchOverlayTexture(Texture<> const &overlay);
 
     void setHoverColor(glm::vec4 const &color);
     void setDisabledColor(glm::vec4 const &color);

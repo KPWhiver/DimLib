@@ -39,6 +39,9 @@ namespace dim
          d_menuOverlayMiddle(zeroTexture()),
          d_menuOverlayBottom(zeroTexture()),
          d_menuOverlaySubmenu(zeroTexture()),
+         d_switch(defaultTexture),
+         d_switchPressed(defaultTexture),
+         d_switchOverlay(zeroTexture),
 				 d_font(font),
 				 d_hoverColor(0.3, 0.3, 0.3, 0.0),
 				 d_disabledColor(-0.3, -0.3, -0.3, 0.0)
@@ -68,6 +71,17 @@ namespace dim
     d_menuOverlayTop = overlayTop;
     d_menuOverlayMiddle = overlayMiddle;
     d_menuOverlayBottom = overlayBottom;
+  }
+  
+  void Context::setSwitchTexture(Texture<> const &switchTexture, Texture<> const &switchPressed)
+  {
+    d_switch = switchTexture;
+    d_switchPressed = switchPressed;
+  }
+
+  void Context::setSwitchOverlayTexture(Texture<> const &overlay)
+  {
+    d_switchOverlay = overlay;
   }
 
   void Context::setHoverColor(vec4 const &color)
@@ -133,6 +147,21 @@ namespace dim
   {
     return d_menuOverlaySubmenu;
   }
+  
+  Texture<GLubyte> const &Context::switchTexture() const
+	{
+		return d_switch;
+	}
+  
+  Texture<GLubyte> const &Context::switchPressedTexture() const
+	{
+		return d_switchPressed;
+	}
+
+	Texture<GLubyte> const &Context::switchOverlayTexture() const
+	{
+		return d_switchOverlay;
+	}
 	
   glm::vec4 const &Context::hoverColor() const
   {
