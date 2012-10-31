@@ -246,7 +246,7 @@ namespace dim
       // decide which data to use
       if(data == 0)
       {
-        if(not d_keepBuffered)
+        if(d_buffer.size() == 0)
           return;
         else
           data = &d_buffer[0];

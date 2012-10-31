@@ -22,8 +22,8 @@ namespace dim
 namespace internal
 {
   /* constructors */
-  template<typename RefType>
-  std::unordered_map<size_t, NodeGrid<RefType>*> NodeGrid<RefType>::s_map;
+  //template<typename RefType>
+  //std::unordered_map<size_t, NodeGrid<RefType>*> NodeGrid<RefType>::s_map;
 
   template<typename RefType>
   NodeGrid<RefType>::NodeGrid(size_t gridSize, size_t key)
@@ -31,22 +31,32 @@ namespace internal
         NodeStorageBase(key),
         d_gridSize(gridSize)
   {
-    s_map[key] = this;
+    instanceMap()[key] = this;
   }
 
   template<typename RefType>
   NodeGrid<RefType>::~NodeGrid()
   {
-    s_map.erase(ownerId());
+    instanceMap().erase(ownerId());
   }
 
   /* static access */
   
   template <typename RefType>
+  std::unordered_map<size_t, NodeGrid<RefType>*> &NodeGrid<RefType>::instanceMap()
+  {
+    static std::unordered_map<size_t, NodeGrid<RefType>*> map;
+    return map;
+  }
+
+  template <typename RefType>
   NodeGrid<RefType> *NodeGrid<RefType>::get(size_t key)
   {
-    auto iter = s_map.find(key);
-    if(iter != s_map.end())
+    //if(instanceMap().empty())
+    //  return 0;
+
+    auto iter = instanceMap().find(key);
+    if(iter != instanceMap().end())
       return iter->second;
 
     return 0;
@@ -55,7 +65,7 @@ namespace internal
   template <typename RefType>
   bool NodeGrid<RefType>::isPresent(size_t key)
   {
-    if(s_map.find(key) != s_map.end())
+    if(instanceMap().find(key) != instanceMap().end())
       return true;
       
     return false;
@@ -64,7 +74,7 @@ namespace internal
   template <typename RefType>
   void NodeGrid<RefType>::v_copy(size_t dest)
   {
-    s_map[dest] = this;
+    instanceMap()[dest] = this;
   }
   
   template <typename RefType>

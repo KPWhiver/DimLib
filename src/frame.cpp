@@ -80,33 +80,8 @@ namespace dim
 		}
 	}
 
-  void Frame::setButtonTexture(Texture<> const &button)
+  Context &Frame::context()
   {
-    d_context->setButtonTexture(button);
-  }
-
-  void Frame::setButtonOverlayTexture(Texture<> const &overlay)
-  {
-    d_context->setButtonOverlayTexture(overlay);
-  }
-
-  void Frame::setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom)
-  {
-    d_context->setMenuTextures(menuTop, menuMiddle, menuBottom);
-  }
-
-  void Frame::setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu)
-  {
-    d_context->setMenuOverlayTextures(overlayTop, overlayMiddle, overlayBottom, overlaySubmenu);
-  }
-
-  void Frame::setHoverColor(vec4 const &color)
-  {
-    d_context->setHoverColor(color);
-  }
-
-  void Frame::setDisabledColor(vec4 const &color)
-  {
-    d_context->setDisabledColor(color);
+    return *d_context;
   }
 }

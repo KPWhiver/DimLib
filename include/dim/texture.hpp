@@ -55,6 +55,8 @@ namespace dim
 
   enum class Format
   {
+    //RGBA2,
+    //RGBA4,
     RGBA8,
     RGBA16,
     RGBA32,
@@ -132,6 +134,8 @@ namespace dim
       Type value(uint x, uint y, uint channel, uint level = 0);
       Type *buffer(uint level = 0);
 
+
+
     protected:
       void init(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);
       GLuint externalFormat() const;
@@ -155,6 +159,7 @@ namespace dim
       using internal::TextureBase<Type>::width;
       using internal::TextureBase<Type>::height;
 
+      static Texture<Type> const &zeroTexture();
 
       Texture();
       Texture(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
@@ -171,6 +176,8 @@ namespace dim
     public:
       using internal::TextureBase<GLubyte>::width;
       using internal::TextureBase<GLubyte>::height;
+
+      static Texture<GLubyte> const &zeroTexture();
 
       Texture();
       Texture(std::string const &filename, Filtering filter, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
@@ -241,6 +248,19 @@ namespace dim
   };
   }
   /* ****************************** */
+
+  template<typename Type>
+  Texture<Type> const &Texture<Type>::zeroTexture()
+  {
+    static Type data[4]{0};
+    static Format format(
+        sizeof(Type) == 1 ? Format::RGBA8 :
+            (sizeof(Type) == 2 ? Format::RGBA16 : Format::RGBA32));
+
+
+    static Texture<Type> zero(data, Filtering::nearest, format, 1, 1, false);
+    return zero;
+  }
 
   template<typename Type>
   Texture<Type>::Texture()

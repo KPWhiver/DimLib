@@ -31,7 +31,7 @@ namespace dim
 {
   class Switch : public Component
   {
-    std::function<void(void)> d_listenerFunction;
+    std::function<void(bool)> d_listenerFunction;
 
     int d_x, d_y;
     size_t d_width, d_height;
@@ -42,13 +42,13 @@ namespace dim
     bool d_selected;
 
   public:
-    Button(int x, int y, size_t width, size_t height, std::string const &text);
-    Button();
+    Switch(int x, int y, size_t width, size_t height, std::string const &text);
+    Switch();
     //~Button();
     virtual void draw(int x, int y);
     virtual bool listen(int x, int y, dim::Mouse const &mouse);
 
-    void setListener(std::function<void(void)> const &listenerFunction);
+    void setListener(std::function<void(bool)> const &listenerFunction);
     virtual void setContext(Context *context);
     void enable(bool state);
     bool enabled() const;

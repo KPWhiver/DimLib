@@ -213,6 +213,15 @@ namespace dim
     png_destroy_write_struct(&pngPtr, &infoPtr);
   }
 
+  Texture<GLubyte> const &Texture<GLubyte>::zeroTexture()
+  {
+    static GLubyte data[4]{0};
+    static Format format(Format::RGBA8);
+
+
+    static Texture<GLubyte> zero(data, Filtering::nearest, format, 1, 1, false);
+    return zero;
+  }
 
   Texture<GLubyte>::Texture()
   {

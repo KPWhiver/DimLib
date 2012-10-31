@@ -137,7 +137,7 @@ namespace dim
 	  
 	  d_context->shader().set("in_color", vec4(0.0));
 	  d_context->shader().set("in_texture", d_context->buttonOverlayTexture(), 0);
-    d_context->shader().set("in_text", d_context->zeroTexture(), 1);
+    d_context->shader().set("in_text", Texture<>::zeroTexture(), 1);
 	  d_context->mesh().draw();
 	}
 

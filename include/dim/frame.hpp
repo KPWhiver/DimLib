@@ -56,25 +56,7 @@ namespace dim
 		void setCoords(int x, int y);
 		void setSize(size_t width, size_t height);
 
-		void setButtonTexture(Texture<> const &button);
-		void setButtonOverlayTexture(Texture<> const &overlay);
-		void setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom);
-		void setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu);
-
-		void setHoverColor(glm::vec4 const &color);
-		void setDisabledColor(glm::vec4 const &color);
-
-		//int x() const;
-		//int y() const;
-
-		//Mouse const &mouse() const;
-
-		//Texture const &buttonTexture() const;
-		//Texture const &buttonHoverTexture() const;
-		//Texture const &buttonDisableTexture() const;
-		//Font &font();
-
-		//Mesh const &mesh() const;
+    Context &context();
 	};
 }
 #endif /* CONTEXT_HPP_ */

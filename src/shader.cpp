@@ -154,7 +154,7 @@ namespace dim
     glGetFloatv(GL_MAX_TEXTURE_UNITS, &s_maxTextureUnits);
   }
 
-  Shader const &defaultShader()
+  Shader const &Shader::defaultShader()
   {
     static Shader shader("defaultShader", "#version 120\n"
                          "%-vertex-shader\n"
@@ -612,6 +612,68 @@ namespace dim
   {
     glUniform1uiv(variable, size, values);
   }
+
+// single values
+
+  void Shader::set(GLint variable, glm::vec3 const &value) const
+   {
+     glUniform3f(variable, value.x, value.y, value.z);
+   }
+
+   void Shader::set(GLint variable, glm::vec2 const &value) const
+   {
+     glUniform2f(variable, value.x, value.y);
+   }
+
+   void Shader::set(GLint variable, glm::vec4 const &value) const
+   {
+     glUniform4f(variable, value.x, value.y, value.z, value.w);
+   }
+
+   void Shader::set(GLint variable, glm::ivec3 const &value) const
+   {
+     glUniform3i(variable, value.x, value.y, value.z);
+   }
+
+   void Shader::set(GLint variable, glm::ivec2 const &value) const
+   {
+     glUniform2i(variable, value.x, value.y);
+   }
+
+   void Shader::set(GLint variable, glm::ivec4 const &value) const
+   {
+     glUniform4i(variable, value.x, value.y, value.z, value.w);
+   }
+
+   void Shader::set(GLint variable, glm::uvec3 const &value) const
+   {
+     glUniform3ui(variable, value.x, value.y, value.z);
+   }
+
+   void Shader::set(GLint variable, glm::uvec2 const &value) const
+   {
+     glUniform2ui(variable, value.x, value.y);
+   }
+
+   void Shader::set(GLint variable, glm::uvec4 const &value) const
+   {
+     glUniform4ui(variable, value.x, value.y, value.z, value.w);
+   }
+
+   void Shader::set(GLint variable, GLfloat value) const
+   {
+     glUniform1f(variable, value);
+   }
+
+   void Shader::set(GLint variable, GLint value) const
+   {
+     glUniform1i(variable, value);
+   }
+
+   void Shader::set(GLint variable, GLuint value) const
+   {
+     glUniform1ui(variable, value);
+   }
 
   GLuint Shader::id() const
   {

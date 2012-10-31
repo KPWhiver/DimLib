@@ -42,8 +42,8 @@ namespace dim
       bool d_changed;
 
     public:
-      NodeBase(NodeBase *parent, glm::vec3 const &coor, glm::vec3 const &rot, glm::vec3 const &scale);
-      NodeBase(NodeBase *parent);
+      NodeBase(glm::vec3 const &coor, glm::vec3 const &rot, glm::vec3 const &scale);
+      NodeBase();
 
       glm::vec3 coor() const;
       void setCoor(glm::vec3 const &coor);
@@ -54,16 +54,16 @@ namespace dim
       glm::vec3 const &scaling() const;
       void setScaling(glm::vec3 const &scale);
 
-      glm::mat4 const &matrix() const;
+      glm::mat4 const &matrix();
 
       void setChanged();
       
     protected:
+      void setParent(NodeBase *parent);
       NodeBase * const parent();
-      predraw(mat4 const &modelMatrix);
   };
 
-  class DrawNodeBase : NodeBase
+  class DrawNodeBase : public NodeBase
   {
       friend class SceneGraph;
       template <typename RefType>
@@ -74,8 +74,8 @@ namespace dim
       float d_radius;
 
     public:
-      DrawNodeBase(NodeBase *parent);
-      DrawNodeBase(NodeBase *parent, glm::vec3 const &coor, glm::vec3 const &rot, float radius);
+      DrawNodeBase();
+      DrawNodeBase(glm::vec3 const &coor, glm::vec3 const &rot, float radius);
 
       virtual Shader const &shader() const = 0;
       virtual Scene const &scene() const = 0;
@@ -88,7 +88,7 @@ namespace dim
     
     private:
       virtual void insert(std::ostream &out) const;
-      virtual void extract(std::istream &out);
+      virtual void extract(std::istream &in);
 
   };
 
@@ -100,7 +100,7 @@ namespace dim
       public:
         virtual Shader const &shader() const
         {
-          return defaultShader();
+          return Shader::defaultShader();
         }
 
         virtual Scene const &scene() const
@@ -111,7 +111,7 @@ namespace dim
 
         virtual DrawNodeBase *clone() const
         {
-          return new DefaultDrawNode(parent());
+          return new DefaultDrawNode();
         }
     };
   }

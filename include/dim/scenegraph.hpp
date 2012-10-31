@@ -47,9 +47,9 @@ namespace dim
 
     public:
     // setChanged
-      void setRotation(vec3 const &rot);
-      void setScaling(vec3 const &scale);
-      void setCoor(vec3 const &coor);
+      void setRotation(glm::vec3 const &rot);
+      void setScaling(glm::vec3 const &scale);
+      void setCoor(glm::vec3 const &coor);
     
     // iterators
       class Iterable
@@ -153,11 +153,11 @@ namespace dim
       return;
     }
 
-    RefType ref = new RefType;
+    RefType *ref = new RefType;
     while(file >> *ref)
     {
       //TODO room for optimization
-      add(true, ref);
+      add(false, ref);
       ref = new RefType;
     }
     delete ref;
@@ -169,6 +169,7 @@ namespace dim
   typename internal::NodeGrid<RefType>::iterator SceneGraph::add(bool saved, RefType *object)
   {
     internal::NodeGrid<RefType>* ptr = internal::NodeGrid<RefType>::get(key());
+    object->setParent(this);
 
     // Add the object
     if(ptr == 0)

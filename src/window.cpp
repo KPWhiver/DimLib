@@ -111,8 +111,10 @@ namespace dim
   }
 
   Window::Window(size_t width, size_t height, Window::Mode mode, string title)
-      : d_mode(mode),
-      d_maxRunFps(60)
+      :
+          d_maxRunFps(60),
+          d_mode(mode)
+
   {
     if(s_set == true)
       return;

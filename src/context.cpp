@@ -31,24 +31,24 @@ namespace dim
 	Context::Context(Texture<GLubyte> const &defaultTexture, Font const &font)
 			:
          d_button(defaultTexture),
-         d_buttonOverlay(zeroTexture()),
+         d_buttonOverlay(Texture<>::zeroTexture()),
          d_menuTop(defaultTexture),
          d_menuMiddle(defaultTexture),
          d_menuBottom(defaultTexture),
-         d_menuOverlayTop(zeroTexture()),
-         d_menuOverlayMiddle(zeroTexture()),
-         d_menuOverlayBottom(zeroTexture()),
-         d_menuOverlaySubmenu(zeroTexture()),
+         d_menuOverlayTop(Texture<>::zeroTexture()),
+         d_menuOverlayMiddle(Texture<>::zeroTexture()),
+         d_menuOverlayBottom(Texture<>::zeroTexture()),
+         d_menuOverlaySubmenu(Texture<>::zeroTexture()),
          d_switch(defaultTexture),
          d_switchPressed(defaultTexture),
-         d_switchOverlay(zeroTexture),
+         d_switchOverlay(Texture<>::zeroTexture()),
 				 d_font(font),
 				 d_hoverColor(0.3, 0.3, 0.3, 0.0),
 				 d_disabledColor(-0.3, -0.3, -0.3, 0.0)
 	{
 
 	}
-	
+
   void Context::setButtonTexture(Texture<> const &button)
   {
     d_button = button;
@@ -73,7 +73,7 @@ namespace dim
     d_menuOverlayBottom = overlayBottom;
   }
   
-  void Context::setSwitchTexture(Texture<> const &switchTexture, Texture<> const &switchPressed)
+  void Context::setSwitchTextures(Texture<> const &switchTexture, Texture<> const &switchPressed)
   {
     d_switch = switchTexture;
     d_switchPressed = switchPressed;
@@ -198,12 +198,4 @@ namespace dim
 
 	  return paletShader;
 	}
-
-	Texture<> const &Context::zeroTexture()
-  {
-	  static GLubyte data[4]{0};
-	  static Texture<> zeroTexture(data, Filtering::nearest, Format::RGBA8, 1, 1, false);
-	  return zeroTexture;
-  }
-
 }

@@ -39,7 +39,7 @@ namespace dim
       
     GroupNodeBase::setRotation(rot);
   }
-  void SceneGraph:;setScaling(vec3 const &scale)
+  void SceneGraph::setScaling(vec3 const &scale)
   {
     for(DrawNodeBase &drawNode: *this)
       drawNode.setChanged();
@@ -76,6 +76,9 @@ namespace dim
   {
     for(auto const &element: d_storages)
       element->copy(key());
+
+    for(DrawNodeBase &drawNode: *this)
+      drawNode.setParent(this);
   }
 
   SceneGraph::SceneGraph(SceneGraph &&tmp)
@@ -86,6 +89,9 @@ namespace dim
   {
     for(auto const &element: d_storages)
       element->copy(key());
+
+    for(DrawNodeBase &drawNode: *this)
+      drawNode.setParent(this);
   }
 
   SceneGraph &SceneGraph::operator=(SceneGraph const &other)
@@ -96,6 +102,9 @@ namespace dim
 
     for(auto const &element: d_storages)
       element->copy(key());
+
+    for(DrawNodeBase &drawNode: *this)
+      drawNode.setParent(this);
 
     return *this;
   }
@@ -108,6 +117,9 @@ namespace dim
 
     for(auto const &element: d_storages)
       element->copy(key());
+
+    for(DrawNodeBase &drawNode: *this)
+      drawNode.setParent(this);
 
     return *this;
   }

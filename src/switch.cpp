@@ -29,13 +29,6 @@ using namespace std;
 
 namespace dim
 {
-
-  //Button::Shared::Shared()
-  //:
-  //    d_menu(0)
-  //{
-  //}
-
 	Switch::Switch(int x, int y, size_t width, size_t height, string const &text)
 	:
 			d_x(x),
@@ -70,10 +63,7 @@ namespace dim
 	bool Switch::listen(int x, int y, dim::Mouse const &mouse)
 	{
 	  ivec2 mouseC = mouse.coor();
-	  
-	  if(d_menu.get() != 0 && d_menu->listen(x, y, mouse))
-	    return true;
-	  
+
 	  x += d_x;
 	  y += d_y;
 
@@ -81,11 +71,11 @@ namespace dim
 		{
 		  if(mouse.lRelease())
 		  {
+		    d_enabled = not d_enabled;
+
 		  	if(d_listenerFunction)
-		  		d_listenerFunction();
+		  		d_listenerFunction(d_enabled);
 		  		
-		  	d_enabled = not d_enabled;
-		  			
 		  	return true;
 		  }
 		  d_selected = true;
@@ -125,21 +115,21 @@ namespace dim
 	  
 	  d_context->shader().set("in_color", vec4(0.0));
 	  d_context->shader().set("in_texture", d_context->switchOverlayTexture(), 0);
-    d_context->shader().set("in_text", d_context->zeroTexture(), 1);
+    d_context->shader().set("in_text", Texture<>::zeroTexture(), 1);
 	  d_context->mesh().draw();
 	}
 	
-	bool enabled() const
+	bool Switch::enabled() const
 	{
 	  return d_enabled;
 	}
 	
-	void enable(bool state)
+	void Switch::enable(bool state)
 	{
 	  d_enabled = state;
 	}
 
-	void Switch::setListener(std::function<void()> const &listenerFunction)
+	void Switch::setListener(std::function<void(bool)> const &listenerFunction)
 	{
 		d_listenerFunction = listenerFunction;
 	}

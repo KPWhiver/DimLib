@@ -64,16 +64,13 @@ public:
   Shader(std::string const &name, std::string const &input);
 
   template<typename Type>
-  GLint set(std::string const &variable, Type const &value) const;  
+  GLint set(std::string const &variable, Type const &value) const;
   
   template<typename Type>
-  void set(std::string variable, Texture<Type> const &value, uint unit) const;
+  void set(std::string const &variable, Texture<Type> const &value, uint unit) const;
   
   template<typename Type>
-  GLint set(std::string variable, Type const *values, size_t size) const;
-
-  template<typename Type>
-  void set(GLint variable, Type const &value) const;
+  GLint set(std::string const &variable, Type const *values, size_t size) const;
 
   void set(GLint variable, glm::mat4 const &value) const;
   void set(GLint variable, glm::mat4x3 const &value) const;
@@ -98,13 +95,26 @@ public:
   void set(GLint variable, GLint const *values, size_t size) const;
   void set(GLint variable, GLuint const *values, size_t size) const;
   
+  void set(GLint variable, glm::vec4 const &value) const;
+  void set(GLint variable, glm::vec3 const &value) const;
+  void set(GLint variable, glm::vec2 const &value) const;
+  void set(GLint variable, glm::ivec4 const &value) const;
+  void set(GLint variable, glm::ivec3 const &value) const;
+  void set(GLint variable, glm::ivec2 const &value) const;
+  void set(GLint variable, glm::uvec4 const &value) const;
+  void set(GLint variable, glm::uvec3 const &value) const;
+  void set(GLint variable, glm::uvec2 const &value) const;
+  void set(GLint variable, GLfloat value) const;
+  void set(GLint variable, GLint value) const;
+  void set(GLint variable, GLuint value) const;
+
   void use() const;
 
   static Shader const &active();
 
   GLuint id() const;
 
-  //static void initialize();
+  static Shader const &defaultShader();
 
 private:
   void parseShader(std::istream &input, std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
@@ -114,22 +124,11 @@ private:
   GLint uniform(std::string const &variable) const;
 
   void init(std::istream &input);
-
-  //bool instanced;
-
 };
-
-Shader const &defaultShader();
 
 //
 // Using string
 //
-  template<typename Type>
-  void Shader::set(GLint variable, Type const &value) const
-  {
-    set(variable, &value, 1);
-  }
-
   template<typename Type>
   GLint Shader::set(std::string const &variable, Type const &value) const
   {
@@ -137,9 +136,9 @@ Shader const &defaultShader();
     set(loc, value);
     return loc;
   }
-  
+
   template<typename Type>
-  GLint Shader::set(std::string variable, Type const *values, size_t size) const
+  GLint Shader::set(std::string const &variable, Type const *values, size_t size) const
   {
     GLint loc = uniform(variable);
     set(loc, values, size);
@@ -147,7 +146,7 @@ Shader const &defaultShader();
   }
 
   template<typename Type>
-  void Shader::set(std::string variable, Texture<Type> const &texture, uint unit) const
+  void Shader::set(std::string const &variable, Texture<Type> const &texture, uint unit) const
   { 
     //TODO logica
     if(unit > s_maxTextureUnits)

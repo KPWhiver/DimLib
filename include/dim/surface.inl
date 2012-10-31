@@ -227,6 +227,12 @@ namespace dim
   }
 
   template<typename ...Types>
+  GLuint Surface<Types...>::id() const
+  {
+    return *d_buffers[0].d_id;
+  }
+
+  template<typename ...Types>
   uint Surface<Types...>::height() const
   {
     return std::get<0>(d_buffers[0].d_textures).height();

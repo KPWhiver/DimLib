@@ -67,7 +67,7 @@ namespace dim
     Texture<GLubyte> const &menuOverlaySubmenuTexture() const;
     
     Texture<GLubyte> const &switchTexture() const;
-    Texture<GLubyte> const &switchTexture() const;
+    Texture<GLubyte> const &switchPressedTexture() const;
     Texture<GLubyte> const &switchOverlayTexture() const;
 
     glm::vec4 const &hoverColor() const;
@@ -84,13 +84,11 @@ namespace dim
     void setMenuTextures(Texture<> const &menuTop, Texture<> const &menuMiddle, Texture<> const &menuBottom);
     void setMenuOverlayTextures(Texture<> const &overlayTop, Texture<> const &overlayMiddle, Texture<> const &overlayBottom, Texture<> const &overlaySubmenu);
 
-    void setSwitchTextures(Texture<> const &switchTexture, switchPressed);
+    void setSwitchTextures(Texture<> const &switchTexture, Texture<> const &switchPressed);
     void setSwitchOverlayTexture(Texture<> const &overlay);
 
     void setHoverColor(glm::vec4 const &color);
     void setDisabledColor(glm::vec4 const &color);
-
-    static Texture<> const &zeroTexture();
   };
 
 }

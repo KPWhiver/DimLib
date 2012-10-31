@@ -45,7 +45,7 @@ namespace internal
       
       Storage d_map;
 
-      static std::unordered_map<size_t, NodeGrid<RefType>*> s_map;
+      //static std::unordered_map<size_t, NodeGrid<RefType>*> s_map;
 
       size_t d_gridSize;
 
@@ -55,6 +55,10 @@ namespace internal
       ~NodeGrid();
       
     // static access
+    private:
+      static std::unordered_map<size_t, NodeGrid<RefType>*> &instanceMap();
+
+    public:
       static NodeGrid<RefType> *get(size_t key);
       static bool isPresent(size_t key);
 
