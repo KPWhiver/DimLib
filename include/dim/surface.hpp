@@ -55,12 +55,14 @@ namespace dim
   class Surface : public SurfaceBase__
   {
     typedef std::tuple<Texture<Types>...> TupleType;
+    typedef std::tuple<Texture<Types>*...> TuplePtrType;
 
-    uint d_depth;
+    //uint d_depth;
 
     struct FrameBuffer
     {
       TupleType d_textures;
+      TuplePtrType d_targets;
 
       std::shared_ptr<GLuint> d_id;
 
@@ -76,6 +78,9 @@ namespace dim
     bool d_depthComponent;
     bool d_colorComponent[4];
     
+    uint d_minWidth;
+    uint d_minHeight;
+    
     glm::vec4 d_clearColor;
     float d_clearDepth;
 
@@ -88,6 +93,7 @@ namespace dim
     
   public:
     Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
+    Surface(std::tuple_element<0, TuplePtrType>::type ptr, bool pingPingBuffer);
     Surface(Surface const &other) = delete;
 
     Surface(Surface &&tmp) = default;
@@ -97,6 +103,12 @@ namespace dim
     
     template<uint Index>
     void addTarget(Format format, Filtering filter = Filtering::linear);
+    
+    template<uint Index>
+    void addTarget(std::tuple_element<0, TuplePtrType>::type);
+    
+    template<uint Index>
+    void removeTarget();
 
     uint height() const;
     uint width() const;
@@ -110,7 +122,7 @@ namespace dim
     void clear();
     virtual void swapBuffers();
 
-    void renderTo();
+    void renderTo(bool clear = true, bool swapBuffers = true);
     void renderToPart(uint x, uint y, uint width, uint height, bool clear, bool swapBuffers);
 
     GLuint id() const;
@@ -145,7 +157,13 @@ namespace dim
   template<>
   class Surface<>
   {
-    static_assert(true, "Error: Surface needs at least one template argument");
+      std::shared_ptr<GLuint> d_id;
+    
+    public:
+      Surface(uint width, uint height);
+  
+  
+    //static_assert(true, "Error: Surface needs at least one template argument");
   };
 
   template<typename ...Types>

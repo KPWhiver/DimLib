@@ -37,5 +37,22 @@ namespace dim
     if(s_renderTarget == this)
       s_renderTarget = 0;
   }
+  
+  Surface<>::Surface(uint width, uint height)
+  :
+    d_id(new GLuint(0), [](GLuint *ptr){glDeleteFramebuffers(1, ptr); delete ptr;})
+  {
+    glGenFramebuffers(1, d_id.get());
+    glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
+    if(GLEW_ARB_framebuffer_no_attachment)
+    {
+      glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
+      glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
+    }
+    else
+      log(__FILE__, __LINE__, LogType::note, "Framebuffers with no attachments are not supported");
+      
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
 }
 
