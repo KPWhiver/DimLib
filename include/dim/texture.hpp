@@ -104,6 +104,10 @@ namespace dim
       uint d_width;
 
       Format d_format;
+      Filtering d_filter;
+      Wrapping d_wrapping;
+      
+      glm::vec4 d_borderColor
 
       /* local texture buffer */
       std::vector<Type> d_buffer;
@@ -124,6 +128,10 @@ namespace dim
       uint height() const;
       uint width() const;
       Format format() const;
+      Filtering filter() const;
+      Wrapping wrapping() const;
+      glm::vec4 const &borderColor() const;
+      bool buffered() const;
       
       void bind() const;
       
@@ -133,8 +141,6 @@ namespace dim
       
       Type value(uint x, uint y, uint channel, uint level = 0);
       Type *buffer(uint level = 0);
-
-
 
     protected:
       void init(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);
@@ -163,6 +169,8 @@ namespace dim
 
       Texture();
       Texture(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
+      
+      Texture<Type> copy() const;
   };
 
   /* Texture<GLubyte> */
@@ -182,6 +190,8 @@ namespace dim
       Texture();
       Texture(std::string const &filename, Filtering filter, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
       Texture(GLubyte *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
+
+      Texture<GLubyte> copy() const;
 
       void reset();
       void save(std::string filename = "");
@@ -272,6 +282,17 @@ namespace dim
   Texture<Type>::Texture(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
     init(data, filter, format, width, height, keepBuffered, wrap);
+  }
+  
+  template<typename Type>
+  Texture<Type> Texture<Type>::copy() const
+  {
+    Texture<Type> texture(buffer(), filter(), format(), width(), height(), buffered(), wrapping());  
+    
+    if(d_borderColor != vec4(0))
+      texture.setBorderColor(d_borderColor);
+
+    return texture;
   }
 }
 

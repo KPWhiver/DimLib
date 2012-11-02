@@ -29,6 +29,9 @@ namespace dim
             d_height(0),
             d_width(0),
             d_format(Format::R8),
+            d_filter(Filtering::nearest),
+            d_wrapping(Wrapping::repeat),
+            d_borderColor(0),
             d_keepBuffered(false),
             d_outdatedBuffer(false),
             d_bufferLevel(0)
@@ -36,7 +39,7 @@ namespace dim
       if(s_initialized == false)
         initialize();
     }
-
+    
     inline std::string internalFormatName(GLuint format)
     {
       switch(format)
@@ -166,6 +169,8 @@ namespace dim
     void TextureBase<Type>::init(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
     {
       d_format = format;
+      d_filter = filter;
+      d_wrapping = wrapping;
       d_width = width;
       d_height = height;
 
@@ -354,6 +359,8 @@ namespace dim
       glBindTexture(GL_TEXTURE_2D, *d_id);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap));
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap));
+      
+      d_wrapping = wrap;
     }
 
     template<typename Type>
@@ -379,6 +386,30 @@ namespace dim
     Format TextureBase<Type>::format() const
     {
       return d_format;
+    }
+    
+    template<typename Type>
+    Filtering TextureBase<Type>::filter() const
+    {
+      return d_filter;
+    }
+    
+    template<typename Type>
+    Wrapping TextureBase<Type>::wrapping() const
+    {
+      return d_wrapping;
+    }
+    
+    template<typename Type>
+    vec4 const &TextureBase<Type>::borderColor() const
+    {
+      return d_borderColor;
+    }
+         
+    template<typename Type>
+    bool TextureBase<Type>::buffered() const
+    {
+      return d_keepBuffered;
     }
     
     template<typename Type>

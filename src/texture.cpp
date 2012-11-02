@@ -262,6 +262,16 @@ namespace dim
 
     delete[] data;
   }
+  
+  Texture<GLubyte> Texture<GLubyte>::copy() const
+  {
+    Texture<GLubyte> texture(buffer(), filter(), format(), width(), height(), buffered(), wrapping());  
+    
+    if(d_borderColor != vec4(0))
+      texture.setBorderColor(d_borderColor);
+
+    return texture;
+  }
 
   void Texture<GLubyte>::reset()
   {
