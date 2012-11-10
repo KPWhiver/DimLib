@@ -141,7 +141,7 @@ namespace dim
     return data;
   }
 
-  void Texture<GLubyte>::savePNG(string const &filename, ostream &output, GLubyte* data)
+  void Texture<GLubyte>::savePNG(string const &filename, ostream &output, GLubyte* data) const
   {
     png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
     if(!pngPtr)
@@ -304,7 +304,7 @@ namespace dim
     delete[] data;
   }
 
-  void Texture<GLubyte>::save(string filename)
+  void Texture<GLubyte>::save(string filename) const
   {
     if(filename == "")
       filename = d_filename;

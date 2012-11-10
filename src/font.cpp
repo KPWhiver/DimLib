@@ -50,7 +50,7 @@ void Font::initialize()
     log(__FILE__, __LINE__, LogType::error, "Failed to initialize FreeType2");
 }
 
-Font::Font(string filename, size_t maxSize)
+Font::Font(string filename, uint maxSize)
 :
     d_heightAboveBaseLine(0),
     d_heightBelowBaseLine(0)
@@ -70,8 +70,9 @@ Font::Font(string filename, size_t maxSize)
 
 	// load glyphs
 	FT_Glyph glyphs[128];
+	uint totalWidth(0);
 
-	for (size_t ch = 0; ch != 128; ++ch)
+	for (uint ch = 0; ch != 128; ++ch)
 	{
 		if (FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT))
 		  log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
@@ -82,13 +83,20 @@ Font::Font(string filename, size_t maxSize)
     FT_Glyph_To_Bitmap(&glyphs[ch], ft_render_mode_normal, 0, 1);
     FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(glyphs[ch]);
 
-    d_heightAboveBaseLine = std::max(static_cast<size_t>(std::max(0, glyph->top)), d_heightAboveBaseLine);
-    d_heightBelowBaseLine = std::max(static_cast<size_t>(std::max(0, glyph->bitmap.rows - glyph->top)), d_heightBelowBaseLine);
+    d_heightAboveBaseLine = std::max(static_cast<uint>(std::max(0, glyph->top)), d_heightAboveBaseLine);
+    d_heightBelowBaseLine = std::max(static_cast<uint>(std::max(0, glyph->bitmap.rows - glyph->top)), d_heightBelowBaseLine);
+    
+    totalWidth += glyph->bitmap.width;
 	}
-  size_t height = d_heightAboveBaseLine + d_heightBelowBaseLine;
+  uint height = d_heightAboveBaseLine + d_heightBelowBaseLine;
 
 	// store glyphs
-	for(size_t ch = 0; ch != 128; ++ch)
+	uint mapHeight = nextPowerOf2((totalWidth / 1024 + 1) * height);
+	uint mapWidth = totalWidth >= 1024 ? 1024 : nextPowerOf2(totalWidth);
+	GLubyte *map = new GLubyte[mapHeight * mapWidth];
+	vec2 origin(0);
+	
+	for(uint ch = 0; ch != 128; ++ch)
 	{
 	  FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(glyphs[ch]);
     int verMove = d_heightAboveBaseLine - glyph->top;
@@ -98,51 +106,68 @@ Font::Font(string filename, size_t maxSize)
 
 	  d_glyphs[ch].width = glyph->bitmap.width;
 	  d_glyphs[ch].advance = glyph->left;
+	  d_glyphs[ch].origin = origin;
 
-    for(size_t x = 0; x != static_cast<size_t>(glyph->bitmap.width); ++x)
+    for(uint x = 0; x != static_cast<uint>(glyph->bitmap.width); ++x)
     {
-      for(size_t y = 0; y != static_cast<size_t>(glyph->bitmap.rows); ++y)
-        d_glyphs[ch].map.get()[(y + verMove) * d_glyphs[ch].width + x] = glyph->bitmap.buffer[y * d_glyphs[ch].width + x];
+      for(uint y = 0; y != static_cast<uint>(glyph->bitmap.rows); ++y)
+      {
+        //d_glyphs[ch].map.get()[(y + verMove) * d_glyphs[ch].width + x] = glyph->bitmap.buffer[y * d_glyphs[ch].width + x];
+        map[y + verMove + origin.y) * d_glyphs[ch].width + x + origin.x] = glyph->bitmap.buffer[y * d_glyphs[ch].width + x];
+      }
 	  }
     FT_Done_Glyph(glyphs[ch]);
-	}
+    
+    if(origin.x + d_glyphs[ch].width > 1024)
+    {
+      origin.x = 0;
+      origin.y += height;
+    }
+    else
+      origin.x += d_glyphs[ch].width;
+	} 
 
 	FT_Done_Face(face);
+	
+	d_fontMap = Texture<GLubyte>(map, Filtering::linear, Format::R8, mapWidth, mapHeight, true);
+  delete map;
 }
 
-Texture<> Font::generateTexture(string const &text, bool centered, size_t textureWidth, size_t textureHeight, Filtering filter) const
+Texture<> Font::generateTexture(string const &text, bool centered, uint textureWidth, uint textureHeight, Filtering filter) const
 {
-  size_t textHeight = d_heightAboveBaseLine + d_heightBelowBaseLine;
-  size_t textWidth = 0;
-  size_t unscaledTextureWidth = textureWidth * (static_cast<float>(textHeight) / textureHeight);
+  uint textHeight = d_heightAboveBaseLine + d_heightBelowBaseLine;
+  uint textWidth = 0;
+  uint unscaledTextureWidth = textureWidth * (static_cast<float>(textHeight) / textureHeight);
 
-  for(size_t letter = 0; letter != text.length(); ++letter)
+  for(uint letter = 0; letter != text.length(); ++letter)
   {
-  	size_t ch = text[letter];
+  	uint ch = text[letter];
     textWidth += d_glyphs[ch].width;
   }
 
   GLubyte *textMap = new GLubyte[textHeight * unscaledTextureWidth]{};
 
-  size_t xStart = 0;
+  uint xStart = 0;
   if(centered && textWidth < unscaledTextureWidth)
     xStart = (unscaledTextureWidth - textWidth) / 2;
 
 
-  for(size_t letter = 0; letter != text.length(); ++letter)
+  for(uint letter = 0; letter != text.length(); ++letter)
   {
-    size_t ch = text[letter];
+    uint ch = text[letter];
   	int horMove = d_glyphs[ch].advance;
 
-    for(size_t x = 0; x != d_glyphs[ch].width; ++x, ++xStart)
+    for(uint x = 0; x != d_glyphs[ch].width; ++x, ++xStart)
     {
       if(xStart + horMove >= unscaledTextureWidth)
         break;
 
-      for(size_t y = 0; y != textHeight; ++y)
+      for(uint y = 0; y != textHeight; ++y)
       {
       	if(textMap[y * unscaledTextureWidth + xStart + horMove] == 0)
-      		textMap[y * unscaledTextureWidth + xStart + horMove] = d_glyphs[ch].map.get()[y * d_glyphs[ch].width + x];
+      		textMap[y * unscaledTextureWidth + xStart + horMove] = 
+      		d_fontMap.buffer()[(y + d_glyphs[ch].origin.y) * d_glyphs[ch].width + x + d_glyphs[ch].origin.x];
+      	//d_glyphs[ch].map.get()[y * d_glyphs[ch].width + x];
       }
     }
   }
@@ -157,21 +182,60 @@ Texture<> Font::generateTexture(string const &text, bool centered, size_t textur
   return textTexture;
 }
 
-GLubyte *Font::scale(GLubyte *textMap, size_t oldWidth, size_t oldHeight, size_t newWidth, size_t newHeight) const
+Texture<GLubyte> const &Font::map() const
+{
+  return d_fontMap;
+}
+
+uint Font::height() const
+{
+  return d_heightAboveBaseLine + d_heightBelowBaseLine;
+}
+
+vec2 const &Font::origin(unsigned char ch) const
+{
+  return d_glyphs[ch].origin;
+}
+
+uint Font::width(unsigned char ch) const;
+{
+  return d_glyphs[ch].width;
+}
+
+uint Font::advance(unsigned char ch) const
+{
+  return d_glyphs[ch].advance;
+}
+
+uint Font::nextPowerOf2(uint number) const
+{
+  --number;
+  number |= number >> 1;
+  number |= number >> 2;
+  number |= number >> 4;
+  number |= number >> 8;
+  number |= number >> 16;
+  number |= number >> 32;
+  ++number;
+
+  return number;
+}
+
+GLubyte *Font::scale(GLubyte *textMap, uint oldWidth, uint oldHeight, uint newWidth, uint newHeight) const
 {
 
   GLubyte *texture = new GLubyte[newHeight * newWidth]{};
   float horScale = static_cast<float>(newWidth) / oldWidth;
   float verScale = static_cast<float>(newHeight) / oldHeight;
 
-  for(size_t x = 0; x != newWidth; ++x)
+  for(uint x = 0; x != newWidth; ++x)
   {
-    for(size_t y = 0; y != newHeight; ++y)
+    for(uint y = 0; y != newHeight; ++y)
     {
-      size_t x1(std::max(0, static_cast<int>(floor(x / horScale))));
-      size_t x2(std::min(x1 + 1, oldWidth - 1));
-      size_t y1(std::max(0, static_cast<int>(floor(y / verScale))));
-      size_t y2(std::min(y1 + 1, oldHeight - 1));
+      uint x1(std::max(0, static_cast<int>(floor(x / horScale))));
+      uint x2(std::min(x1 + 1, oldWidth - 1));
+      uint y1(std::max(0, static_cast<int>(floor(y / verScale))));
+      uint y2(std::min(y1 + 1, oldHeight - 1));
 
       GLubyte upLeft(textMap[y1 * oldWidth + x1]);
       GLubyte downLeft(textMap[y2 * oldWidth + x1]);

@@ -32,25 +32,35 @@ namespace dim
   {
     struct Glyph
     {
-      std::shared_ptr<GLubyte> map;
-      size_t width;
-      size_t advance;
+      //std::shared_ptr<GLubyte> map;
+      uint width;
+      uint advance;
+      vec2 origin;
     };
+    
+    Texture<GLubyte> d_fontMap;
 
     Glyph d_glyphs[128];
 
-    size_t d_heightAboveBaseLine;
-    size_t d_heightBelowBaseLine;
+    uint d_heightAboveBaseLine;
+    uint d_heightBelowBaseLine;
 
     static bool s_initialized;
 
   public:
-    Font(std::string filename, size_t maxSize);
+    Font(std::string filename, uint maxSize);
 
-    Texture<GLubyte> generateTexture(std::string const &text, bool centered, size_t width, size_t height, Filtering filter) const;
+    Texture<GLubyte> generateTexture(std::string const &text, bool centered, uint width, uint height, Filtering filter) const;
+    Texture<GLubyte> const &map() const;
+    
+    uint height() const;
+    
+    vec2 const &origin(unsigned char ch) const;
+    uint width(unsigned char ch) const;
+    uint advance(unsigned char ch) const;
 
   private:
-    GLubyte *scale(GLubyte *textMap, size_t oldWidth, size_t oldHeight, size_t newWidth, size_t newHeight) const;
+    GLubyte *scale(GLubyte *textMap, uint oldWidth, uint oldHeight, uint newWidth, uint newHeight) const;
 
     static void initialize();
   };
