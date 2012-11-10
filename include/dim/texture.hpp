@@ -107,13 +107,13 @@ namespace dim
       Filtering d_filter;
       Wrapping d_wrapping;
       
-      glm::vec4 d_borderColor
+      glm::vec4 d_borderColor;
 
-      /* local texture buffer */
-      std::vector<Type> d_buffer;
       bool d_keepBuffered;
-      bool d_outdatedBuffer;
-      uint d_bufferLevel;
+      /* local texture buffer */
+      mutable std::vector<Type> d_buffer;
+      mutable bool d_outdatedBuffer;
+      mutable uint d_bufferLevel;
 
     public:
       TextureBase();
@@ -137,13 +137,14 @@ namespace dim
       
       /* local texture buffer */
       void renewBuffer();
-      void update(Type *data = 0);
+      void update(Type const *data = 0);
       
-      Type value(uint x, uint y, uint channel, uint level = 0);
+      Type value(uint x, uint y, uint channel, uint level = 0) const;
+      Type const *buffer(uint level = 0) const;
       Type *buffer(uint level = 0);
 
     protected:
-      void init(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);
+      void init(Type const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);
       GLuint externalFormat() const;
 
     private:
@@ -164,11 +165,17 @@ namespace dim
     public:
       using internal::TextureBase<Type>::width;
       using internal::TextureBase<Type>::height;
+      using internal::TextureBase<Type>::buffer;
+      using internal::TextureBase<Type>::borderColor;
+      using internal::TextureBase<Type>::filter;
+      using internal::TextureBase<Type>::format;
+      using internal::TextureBase<Type>::wrapping;
+      using internal::TextureBase<Type>::buffered;
 
       static Texture<Type> const &zeroTexture();
 
       Texture();
-      Texture(Type *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
+      Texture(Type const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
       
       Texture<Type> copy() const;
   };
@@ -184,12 +191,18 @@ namespace dim
     public:
       using internal::TextureBase<GLubyte>::width;
       using internal::TextureBase<GLubyte>::height;
+      using internal::TextureBase<GLubyte>::buffer;
+      using internal::TextureBase<GLubyte>::borderColor;
+      using internal::TextureBase<GLubyte>::filter;
+      using internal::TextureBase<GLubyte>::format;
+      using internal::TextureBase<GLubyte>::wrapping;
+      using internal::TextureBase<GLubyte>::buffered;
 
       static Texture<GLubyte> const &zeroTexture();
 
       Texture();
       Texture(std::string const &filename, Filtering filter, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
-      Texture(GLubyte *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
+      Texture(GLubyte const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
 
       Texture<GLubyte> copy() const;
 
@@ -279,7 +292,7 @@ namespace dim
   }
 
   template<typename Type>
-  Texture<Type>::Texture(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  Texture<Type>::Texture(Type const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
     init(data, filter, format, width, height, keepBuffered, wrap);
   }
@@ -289,8 +302,8 @@ namespace dim
   {
     Texture<Type> texture(buffer(), filter(), format(), width(), height(), buffered(), wrapping());  
     
-    if(d_borderColor != vec4(0))
-      texture.setBorderColor(d_borderColor);
+    if(borderColor() != glm::vec4(0))
+      texture.setBorderColor(borderColor());
 
     return texture;
   }

@@ -29,7 +29,7 @@ namespace dim
   }
 
   template<typename ...Types>
-  Surface<Types...>::Surface(std::tuple_element<0, TuplePtrType>::type ptr, bool pingPingBuffer)
+  Surface<Types...>::Surface(typename std::tuple_element<0, TuplePtrType>::type ptr, bool pingPongBuffer)
       : 
         d_buffers(1 + pingPongBuffer),
         d_colorAttachments(0), 
@@ -39,8 +39,12 @@ namespace dim
         d_minHeight(ptr->height()),
         d_clearDepth(0)
   {
+    glGenFramebuffers(1, d_buffers[0].d_id.get());
     
-  
+    if(pingPongBuffer)
+      glGenFramebuffers(1, d_buffers[1].d_id.get());
+
+    addTarget<0>(ptr);
   }
 
   template<typename ...Types>
@@ -54,24 +58,12 @@ namespace dim
         d_minHeight(height),
         d_clearDepth(0)
   { 
-    ComponentType attachment = processFormat(format);
-    
     glGenFramebuffers(1, d_buffers[0].d_id.get());
-    addAttachment<0>(attachment, width, height, 0, format, filter);
-
-    if(attachment == depth)
-      d_attachments[0] = GL_NONE;
-    else
-      d_attachments[0] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
     
     if(pingPongBuffer)
-    {
       glGenFramebuffers(1, d_buffers[1].d_id.get());
-      addAttachment<0>(attachment, width, height, 1, format, filter);
-    }
 
-    if(attachment == color)
-      ++d_colorAttachments;
+    addTarget<0>(format, filter);
   }
   
   template<typename ...Types>
@@ -82,9 +74,39 @@ namespace dim
     if(d_buffers.size() == 2 && d_bufferToRenderTo == 0)
       idx = 1;
 
+    if(std::get<Index>(d_buffers[idx].d_targets) == 0)
+    {
+      log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
+      return;
+    }
+
     return *std::get<Index>(d_buffers[idx].d_targets);
   }
 
+  template<typename ...Types>
+  template<uint Index>
+  void Surface<Types...>::addTarget(typename std::tuple_element<0, TuplePtrType>::type ptr)
+  {
+    ComponentType attachment = processFormat(ptr->format());
+
+    addAttachment<Index>(attachment, 0, ptr);
+
+    if(attachment == depth)
+      d_attachments[Index] = GL_NONE;
+    else
+      d_attachments[Index] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
+
+    if(d_buffers.size() == 2)
+    {
+      typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
+      TextureType &tex = std::get<Index>(d_buffers[1].d_textures);
+      tex = ptr->copy();
+      addAttachment<Index>(attachment, 1, &tex);
+    }
+
+    if(attachment == color)
+      ++d_colorAttachments;
+  }
 
   template<typename ...Types>
   template<uint Index>
@@ -115,42 +137,35 @@ namespace dim
 
   template<typename ...Types>
   template<uint Index>
-  void Surface<Types...>::addAttachment(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter)
+  void Surface<Types...>::addAttachment(ComponentType attachment, uint buffer, typename std::tuple_element<0, TuplePtrType>::type ptr)
   {
-    if(width < d_minWidth)
-      d_minWidth = width;
-  
-    if(height < d_minHeight)
-      d_minHeight = height;
-  
-    // Create the texture
-    typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
-    
-    TextureType &tex = std::get<Index>(d_buffers[buffer].d_textures);
-    tex = TextureType(0, filter, format, width, height, false, Wrapping::borderClamp);
-    
-    std::get<Index>(d_buffers[buffer].d_targets) = &tex;
-    
-    
-    glBindTexture(GL_TEXTURE_2D, tex.id());
-    
+    if(ptr->width() < d_minWidth)
+      d_minWidth = ptr->width();
+
+    if(ptr->height() < d_minHeight)
+      d_minHeight = ptr->height();
+
+    std::get<Index>(d_buffers[buffer].d_targets) = ptr;
+
+    glBindTexture(GL_TEXTURE_2D, ptr->id());
+
     // Set some texture coefficients
     if(attachment == depth)
-      tex.setBorderColor(glm::vec4(1.0f));
-    
+      ptr->setBorderColor(glm::vec4(1.0f));
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, *d_buffers[buffer].d_id);
-    
+
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
     // Add the texture to the FBO
     if(attachment == depth)
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.id(), 0);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ptr->id(), 0);
     else
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + d_colorAttachments, GL_TEXTURE_2D, tex.id(), 0);
-    
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + d_colorAttachments, GL_TEXTURE_2D, ptr->id(), 0);
+
     // Check FBO
     GLenum fbo_status;
     fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -162,6 +177,26 @@ namespace dim
       log(__FILE__, __LINE__, LogType::error, ss.str());
     }
   }
+
+  template<typename ...Types>
+  template<uint Index>
+  void Surface<Types...>::addAttachment(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter)
+  {
+    // Create the texture
+    typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
+    
+    TextureType &tex = std::get<Index>(d_buffers[buffer].d_textures);
+    tex = TextureType(0, filter, format, width, height, false, Wrapping::borderClamp);
+    
+    addAttachment<Index>(attachment, buffer, &tex);
+  }
+
+  /*template<typename ...Types>
+  template<uint Index>
+  void Surface<Types...>::removeTarget()
+  {
+
+  }*/
 
   template<typename ...Types>
   typename Surface<Types...>::ComponentType Surface<Types...>::processFormat(Format format)
@@ -267,14 +302,14 @@ namespace dim
   uint Surface<Types...>::height() const
   {
     //return std::get<0>(d_buffers[0].d_textures).height();
-    return minHeight;
+    return d_minHeight;
   }
 
   template<typename ...Types>
   uint Surface<Types...>::width() const
   {
     //return std::get<0>(d_buffers[0].d_textures).width();
-    return minWidth;
+    return d_minWidth;
   }
 
   template<typename ...Types>
@@ -339,7 +374,7 @@ namespace dim
   template<typename ...Types>
   void Surface<Types...>::notifyTextures(uint buffer)
   {
-    TupleCaller<std::tuple_size<TupleType>::value - 1, TupleType> call(d_buffers[buffer].d_textures);
+    TupleCaller<std::tuple_size<TuplePtrType>::value - 1, TuplePtrType> call(d_buffers[buffer].d_targets);
   }
   
   template<typename ...Types>

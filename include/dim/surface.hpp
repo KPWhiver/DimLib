@@ -93,7 +93,7 @@ namespace dim
     
   public:
     Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
-    Surface(std::tuple_element<0, TuplePtrType>::type ptr, bool pingPingBuffer);
+    Surface(typename std::tuple_element<0, TuplePtrType>::type ptr, bool pingPingBuffer);
     Surface(Surface const &other) = delete;
 
     Surface(Surface &&tmp) = default;
@@ -105,10 +105,10 @@ namespace dim
     void addTarget(Format format, Filtering filter = Filtering::linear);
     
     template<uint Index>
-    void addTarget(std::tuple_element<0, TuplePtrType>::type);
+    void addTarget(typename std::tuple_element<0, TuplePtrType>::type ptr);
     
-    template<uint Index>
-    void removeTarget();
+    //template<uint Index>
+    //void removeTarget();
 
     uint height() const;
     uint width() const;
@@ -134,6 +134,9 @@ namespace dim
 
     template<uint Index>
     void addAttachment(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter);
+
+    template<uint Index>
+    void addAttachment(ComponentType attachment, uint buffer, typename std::tuple_element<0, TuplePtrType>::type ptr);
 
     //TupleCaller class
     template<uint Index, typename TupleCallType>
@@ -172,14 +175,14 @@ namespace dim
   :
     d_next(tuple)
   {
-    std::get<Index>(tuple).renewBuffer();
+    std::get<Index>(tuple)->renewBuffer();
   }
 
   template<typename ...Types>
   template<typename TupleCallType>
   Surface<Types...>::TupleCaller<0, TupleCallType>::TupleCaller(TupleCallType &tuple)
   {
-    std::get<0>(tuple).renewBuffer();
+    std::get<0>(tuple)->renewBuffer();
   }
 }
 

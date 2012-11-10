@@ -44,7 +44,7 @@ namespace dim
   {
     glGenFramebuffers(1, d_id.get());
     glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
-    if(GLEW_ARB_framebuffer_no_attachment)
+    if(GLEW_ARB_framebuffer_no_attachments)
     {
       glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
       glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);

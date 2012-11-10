@@ -166,11 +166,11 @@ namespace dim
     }
 
     template<typename Type>
-    void TextureBase<Type>::init(Type * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+    void TextureBase<Type>::init(Type const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
     {
       d_format = format;
       d_filter = filter;
-      d_wrapping = wrapping;
+      d_wrapping = wrap;
       d_width = width;
       d_height = height;
 
@@ -246,7 +246,7 @@ namespace dim
 
     /* local texture buffer */
     template<typename Type>
-    void TextureBase<Type>::update(Type *data)
+    void TextureBase<Type>::update(Type const *data)
     {
       // decide which data to use
       if(data == 0)
@@ -277,9 +277,9 @@ namespace dim
     }
 
     template<typename Type>
-    Type TextureBase<Type>::value(uint x, uint y, uint channel, uint level)
+    Type TextureBase<Type>::value(uint x, uint y, uint channel, uint level) const
     {
-      Type *source = buffer(level);
+      Type const *source = buffer(level);
 
       // calculate width and height based on the mipmap level
       uint bufferWidth = d_width / (1 << level);
@@ -318,6 +318,34 @@ namespace dim
     }
 
     template<typename Type>
+    Type const *TextureBase<Type>::buffer(uint level) const
+    {
+      // check wether level is too big
+      if(1 << level > s_maxTextureSize)
+      {
+        std::stringstream ss;
+        ss << "The texture level: " << level << " exceeds the maximum texture level of the biggest texture possible: " << s_maxTextureSize << "x"
+           << s_maxTextureSize;
+        log(__FILE__, __LINE__, LogType::warning, ss.str());
+      }
+
+      // update buffer if outdated
+      if(d_outdatedBuffer || d_bufferLevel != level || d_buffer.empty())
+      {
+        d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * components());
+
+        bind();
+        glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, &d_buffer[0]);
+
+        d_bufferLevel = level;
+
+        d_outdatedBuffer = false;
+      }
+
+      return &d_buffer[0];
+    }
+
+    template<typename Type>
     Type *TextureBase<Type>::buffer(uint level)
     {
       // check wether level is too big
@@ -351,6 +379,8 @@ namespace dim
     {
       bind();
       glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &color[0]);
+
+      d_borderColor = color;
     }
 
     template<typename Type>
@@ -401,7 +431,7 @@ namespace dim
     }
     
     template<typename Type>
-    vec4 const &TextureBase<Type>::borderColor() const
+    glm::vec4 const &TextureBase<Type>::borderColor() const
     {
       return d_borderColor;
     }

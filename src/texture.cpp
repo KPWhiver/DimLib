@@ -228,7 +228,7 @@ namespace dim
     init(0, Filtering::nearest, Format::R8, 0, 0, false, Wrapping::repeat);
   }
 
-  Texture<GLubyte>::Texture(GLubyte * data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  Texture<GLubyte>::Texture(GLubyte const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
     init(data, filter, format, width, height, keepBuffered, wrap);
   }
@@ -267,8 +267,8 @@ namespace dim
   {
     Texture<GLubyte> texture(buffer(), filter(), format(), width(), height(), buffered(), wrapping());  
     
-    if(d_borderColor != vec4(0))
-      texture.setBorderColor(d_borderColor);
+    if(borderColor() != vec4(0))
+      texture.setBorderColor(borderColor());
 
     return texture;
   }
