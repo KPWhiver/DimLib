@@ -207,11 +207,11 @@ namespace dim
       Texture<GLubyte> copy() const;
 
       void reset();
-      void save(std::string filename = "");
+      void save(std::string filename = "") const;
 
     private:
       GLubyte* loadPNG(std::istream &input, Format &format, uint &width, uint &height);
-      void savePNG(std::string const &filename, std::ostream &output, GLubyte* data);
+      void savePNG(std::string const &filename, std::ostream &output, GLubyte* data) const;
   };
 
   /* Some template meta-programming */
