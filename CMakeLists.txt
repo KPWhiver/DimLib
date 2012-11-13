@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 2.6)
+
+project(libdim)
+
+set(PACKAGE "libdim")
+set(PACKAGE_NAME ${PACKAGE})
+set(PACKAGE_VERSION_MAJOR "0")
+set(PACKAGE_VERSION_MINOR "1")
+set(PACKAGE_VERSION_PATCH "0")
+set(VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
+set(PACKAGE_VERSION ${VERSION})
+set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
+
+add_subdirectory(src)
+add_subdirectory(include/dim)

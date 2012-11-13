@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <algorithm>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -94,15 +95,14 @@ Font::Font(string filename, uint maxSize)
 	uint mapHeight = nextPowerOf2((totalWidth / 1024 + 1) * height);
 	uint mapWidth = totalWidth >= 1024 ? 1024 : nextPowerOf2(totalWidth);
 	GLubyte *map = new GLubyte[mapHeight * mapWidth];
-	vec2 origin(0);
+	fill_n(map, mapHeight * mapWidth, 0);
+	
+	ivec2 origin(0);
 	
 	for(uint ch = 0; ch != 128; ++ch)
 	{
 	  FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(glyphs[ch]);
     int verMove = d_heightAboveBaseLine - glyph->top;
-
-    if(glyph->bitmap.width > 0)
-      d_glyphs[ch].map.reset(new GLubyte[glyph->bitmap.width * height]{});
 
 	  d_glyphs[ch].width = glyph->bitmap.width;
 	  d_glyphs[ch].advance = glyph->left;
@@ -111,14 +111,11 @@ Font::Font(string filename, uint maxSize)
     for(uint x = 0; x != static_cast<uint>(glyph->bitmap.width); ++x)
     {
       for(uint y = 0; y != static_cast<uint>(glyph->bitmap.rows); ++y)
-      {
-        //d_glyphs[ch].map.get()[(y + verMove) * d_glyphs[ch].width + x] = glyph->bitmap.buffer[y * d_glyphs[ch].width + x];
-        map[y + verMove + origin.y) * d_glyphs[ch].width + x + origin.x] = glyph->bitmap.buffer[y * d_glyphs[ch].width + x];
-      }
+        map[(y + verMove + origin.y) * mapWidth + x + origin.x] = glyph->bitmap.buffer[y * d_glyphs[ch].width + x];
 	  }
     FT_Done_Glyph(glyphs[ch]);
     
-    if(origin.x + d_glyphs[ch].width > 1024)
+    if(origin.x + d_glyphs[ch].width >= mapWidth)
     {
       origin.x = 0;
       origin.y += height;
@@ -151,6 +148,7 @@ Texture<> Font::generateTexture(string const &text, bool centered, uint textureW
   if(centered && textWidth < unscaledTextureWidth)
     xStart = (unscaledTextureWidth - textWidth) / 2;
 
+  uint mapWidth = d_fontMap.width();
 
   for(uint letter = 0; letter != text.length(); ++letter)
   {
@@ -165,9 +163,7 @@ Texture<> Font::generateTexture(string const &text, bool centered, uint textureW
       for(uint y = 0; y != textHeight; ++y)
       {
       	if(textMap[y * unscaledTextureWidth + xStart + horMove] == 0)
-      		textMap[y * unscaledTextureWidth + xStart + horMove] = 
-      		d_fontMap.buffer()[(y + d_glyphs[ch].origin.y) * d_glyphs[ch].width + x + d_glyphs[ch].origin.x];
-      	//d_glyphs[ch].map.get()[y * d_glyphs[ch].width + x];
+      		textMap[y * unscaledTextureWidth + xStart + horMove] = d_fontMap.buffer()[(y + d_glyphs[ch].origin.y) * mapWidth + x + d_glyphs[ch].origin.x];
       }
     }
   }
@@ -192,12 +188,12 @@ uint Font::height() const
   return d_heightAboveBaseLine + d_heightBelowBaseLine;
 }
 
-vec2 const &Font::origin(unsigned char ch) const
+ivec2 const &Font::origin(unsigned char ch) const
 {
   return d_glyphs[ch].origin;
 }
 
-uint Font::width(unsigned char ch) const;
+uint Font::width(unsigned char ch) const
 {
   return d_glyphs[ch].width;
 }
@@ -215,7 +211,8 @@ uint Font::nextPowerOf2(uint number) const
   number |= number >> 4;
   number |= number >> 8;
   number |= number >> 16;
-  number |= number >> 32;
+  //if(sizeof(uint) == 8)
+  //  number |= number >> 32;
   ++number;
 
   return number;

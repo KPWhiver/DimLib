@@ -35,7 +35,7 @@ namespace dim
       //std::shared_ptr<GLubyte> map;
       uint width;
       uint advance;
-      vec2 origin;
+      glm::ivec2 origin;
     };
     
     Texture<GLubyte> d_fontMap;
@@ -55,7 +55,7 @@ namespace dim
     
     uint height() const;
     
-    vec2 const &origin(unsigned char ch) const;
+    glm::ivec2 const &origin(unsigned char ch) const;
     uint width(unsigned char ch) const;
     uint advance(unsigned char ch) const;
 
@@ -63,6 +63,7 @@ namespace dim
     GLubyte *scale(GLubyte *textMap, uint oldWidth, uint oldHeight, uint newWidth, uint newHeight) const;
 
     static void initialize();
+    uint nextPowerOf2(uint number) const;
   };
 
 

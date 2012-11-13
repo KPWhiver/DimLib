@@ -1,0 +1,37 @@
+set(CXXHEADERS
+  iteratorbase.hpp 
+  buffer.hpp 
+  button.hpp 
+  camera.hpp 
+  component.hpp 
+  context.hpp 
+  dim.hpp 
+  drawnode.hpp 
+  nodestoragebase.hpp 
+  nodegrid.hpp 
+  nodegrid.inl 
+  scenegraph.hpp 
+  scene.hpp 
+  font.hpp 
+  frame.hpp 
+  image2d.hpp 
+  light.hpp 
+  listenarea.hpp 
+  menu.hpp 
+  menuitem.hpp 
+  mesh.hpp 
+  mouse.hpp 
+  onepair.hpp 
+  shader.hpp 
+  surface.hpp 
+  surface.inl 
+  texture.hpp 
+  texture.inl 
+  tools.hpp 
+  window.hpp 
+  copyptr.hpp 
+  ptrvector.hpp 
+  switch.hpp
+)
+
+install(FILES ${CXXHEADERS} DESTINATION include/dim)

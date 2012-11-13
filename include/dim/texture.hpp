@@ -186,7 +186,7 @@ namespace dim
   class Texture<GLubyte>: public internal::TextureBase<GLubyte>
   {
       using internal::TextureBase<GLubyte>::externalFormat;
-      //unsigned int d_source;//
+
       std::string d_filename;
     public:
       using internal::TextureBase<GLubyte>::width;
@@ -211,7 +211,7 @@ namespace dim
 
     private:
       GLubyte* loadPNG(std::istream &input, Format &format, uint &width, uint &height);
-      void savePNG(std::string const &filename, std::ostream &output, GLubyte* data) const;
+      void savePNG(std::string const &filename, std::ostream &output, GLubyte const *data) const;
   };
 
   /* Some template meta-programming */

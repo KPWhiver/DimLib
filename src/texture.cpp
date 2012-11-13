@@ -20,6 +20,7 @@
 #include <png.h>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "dim/texture.hpp"
 
@@ -141,7 +142,7 @@ namespace dim
     return data;
   }
 
-  void Texture<GLubyte>::savePNG(string const &filename, ostream &output, GLubyte* data) const
+  void Texture<GLubyte>::savePNG(string const &filename, ostream &output, GLubyte const *data) const
   {
     png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
     if(!pngPtr)
@@ -159,8 +160,8 @@ namespace dim
     if(setjmp(png_jmpbuf(pngPtr)))
       log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
-    png_uint_32 color;
-    uint channels = 0;
+    png_uint_32 color = PNG_COLOR_TYPE_GRAY;
+    uint channels = 1;
 
     switch(externalFormat())
     {
@@ -191,12 +192,13 @@ namespace dim
 
     png_write_info(pngPtr, infoPtr);
 
-    png_bytep* rowPtrs = new png_bytep[height()];
+    png_bytep *rowPtrs = new png_bytep[height()];
 
     for(uint y = 0; y != height(); ++y)
     {
+      // A const_cast is used because libpng won't take anything else
       png_uint_32 offset = y * (width() * channels);
-      rowPtrs[y] = static_cast<png_bytep>(data) + offset;
+      rowPtrs[y] = static_cast<png_bytep>(const_cast<GLubyte*>(data)) + offset;
     }
 
     if(setjmp(png_jmpbuf(pngPtr)))
@@ -315,7 +317,7 @@ namespace dim
     if(not file.is_open())
       log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
 
-    GLubyte *data = buffer();
+    GLubyte const *data = buffer();
 
     savePNG(filename, file, data);
   }
