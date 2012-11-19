@@ -32,6 +32,7 @@ set(CXXHEADERS
   copyptr.hpp 
   ptrvector.hpp 
   switch.hpp
+  timer.hpp
 )
 
 install(FILES ${CXXHEADERS} DESTINATION include/dim)

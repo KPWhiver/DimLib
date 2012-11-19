@@ -24,6 +24,7 @@ set(CXXSOURCES
   surface.cpp 
   lex.cpp 
   switch.cpp
+  timer.cpp
 )
 
 include_directories(
@@ -46,7 +47,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 ## Add profile build type
-SET(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
+set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
 
 add_library(dim SHARED ${CXXSOURCES})
 target_link_libraries(dim X11 pthread GL png freetype assimp GLEW glfw)

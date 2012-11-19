@@ -23,73 +23,73 @@ using namespace std;
 
 namespace dim
 {
-  Timer::Timer()
+  Timer::Timer(bool timeGPU)
     :
-      d_time(),
+      d_id(0),
+      d_CPUtime(0),
+      d_startCPUtime(chrono::system_clock::now()),
+      d_GPUtime(0),
       d_running(false)
   {
+    if(timeGPU && GLEW_ARB_timer_query)
+      glGenQueries(1, &d_id);
   }
-      
+  
+  Timer::~Timer()
+  {
+    if(d_id != 0)
+      glDeleteQueries(1, &d_id);
+  }
+
   void Timer::start()
   {
     d_running = true;
+    if(d_id != 0)
+      glBeginQuery(GL_TIME_ELAPSED, d_id);
   }
   
   void Timer::stop()
   {
-    d_time = getTime();
-    d_running = false;
-  }
-       
-  time_t const &Timer::elapsedTime() const
-  {
-    if(d_running == true)
-      d_time = getTime();  
-      
-    return d_time;
-  }
-  
-  //********//
-  
-  GPUTimer::GPUTimer()
-    :
-      d_id(new GLuint(0), [](GLuint *ptr)
-      {
-        glDeleteQueries(1, d_id);
-        delete ptr;
-      }),
-      d_time(),
-      d_running(false)
-  {
-    glGenQueries(1, d_id);
-  }
-  
-  void GPUTimer::start()
-  {
-    d_running = true;
-    glBeginQuery(GL_TIME_ELAPSED, *d_id);
-  }
-  
-  void GPUTimer::stop()
-  {
     if(d_running == true)
     {
-      glEndQuery(GL_TIME_ELAPSED);
+      d_CPUtime = d_startCPUtime - chrono::system_clock::now();
+
+      if(d_id != 0)
+        glEndQuery(GL_TIME_ELAPSED);
+
       d_running = false;
     }
   }
       
-  time_t const &GPUTimer::elapsedTime() const
+  Timer::milliseconds const &Timer::elapsedCPUtime()
   {
     if(d_running == true)
-      log(__FILE__, __LINE__, LogType::error, "You need to call GPUTimer::stop() before calling GPUTimer::elapsedTime()"); 
+    {
+      d_CPUtime = d_startCPUtime - chrono::system_clock::now();
+    }
+
+    return d_CPUtime;
+  }
+
+  Timer::milliseconds const &Timer::elapsedGPUtime()
+  {
+    if(d_running == true)
+      log(__FILE__, __LINE__, LogType::note, "Calling Timer::elapsedGPUtime() before calling Timer::stop() will result in the time before starting");
+
+    if(GLEW_ARB_timer_query)
+      log(__FILE__, __LINE__, LogType::error, "GPUtime measurement not supported on this GPU");
       
-    GLuint time;
+    GLuint64 time;
       
-    glGetQueryObjectui64(*d_id, GL_QUERY_RESULT, &time);
+    glGetQueryObjectui64v(d_id, GL_QUERY_RESULT, &time);
     
-    d_time += time;
+    d_GPUtime = milliseconds(time / 1000000.0);
       
-    return d_time;
+    return d_GPUtime;
+  }
+
+  bool GPUtimeSupport()
+  {
+    return GLEW_ARB_timer_query;
   }
 }

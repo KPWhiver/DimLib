@@ -22,41 +22,38 @@
 
 #include "dim/dim.hpp"
 
+#include <chrono>
+
 namespace dim
 {
   class Timer
   {
-      std::time_t d_time;
-      bool d_running;
-      
-    public:
-      Timer();
-      
-      void start();
-      void stop();
-     
-      std::time_t const &elapsedTime() const; 
-  }
-  
-  class GPUTimer
-  {
-      std::shared_ptr d_id;
-      std::time_t d_time;
+      typedef std::chrono::duration<double, std::milli> milliseconds;
+
+      GLuint d_id;
+      milliseconds d_CPUtime;
+      std::chrono::time_point<std::chrono::system_clock, milliseconds> d_startCPUtime;
+      milliseconds d_GPUtime;
       bool d_running;
   
     public:
-      GPUTimer();
+      Timer(bool timeGPU = true);
       
-      GPUTimer(GPUTimer const &other) = delete;
-      GPUTimer(GPUTimer &&tmp) = default;
+      Timer(Timer const &other) = delete;
+      Timer(Timer &&tmp) = default;
       
-      GPUTimer &operator=(GPUTimer const &other) = delete;
-      GPUTimer &operator=(GPUTimer &&tmp) = default;
+      ~Timer();
+
+      Timer &operator=(Timer const &other) = delete;
+      Timer &operator=(Timer &&tmp) = default;
       
       void start();
       void stop();
       
-      std::time_t const &elapsedTime() const; 
-  }
+      milliseconds const &elapsedCPUtime();
+      milliseconds const &elapsedGPUtime();
+
+      static bool GPUtimeSupport();
+  };
 } /* namespace dim */
 #endif /* TIMER_HPP_ */
