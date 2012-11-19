@@ -45,8 +45,8 @@ namespace dim
       NodeBase(glm::vec3 const &coor, glm::vec3 const &rot, glm::vec3 const &scale);
       NodeBase();
 
-      glm::vec3 coor() const;
-      void setCoor(glm::vec3 const &coor);
+      glm::vec3 location() const;
+      void setLocation(glm::vec3 const &coor);
 
       glm::vec3 const &rotation() const;
       void setRotation(glm::vec3 const &rot);

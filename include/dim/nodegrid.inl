@@ -253,8 +253,8 @@ namespace internal
   typename NodeGrid<RefType>::iterator NodeGrid<RefType>::add(bool changing, RefType *object)
   {
     int xloc, zloc;
-    xloc = object->coor().x / d_gridSize;
-    zloc = object->coor().z / d_gridSize;
+    xloc = object->location().x / d_gridSize;
+    zloc = object->location().z / d_gridSize;
 
     auto list = d_map.find(Key(xloc, zloc));
     if(list == d_map.end())
@@ -345,7 +345,7 @@ namespace internal
 
     for(size_t idx = 0; DrawNodeBase->drawState() == state; ++DrawNodeBase, ++idx)
     {
-      glm::vec3 coor = mapPart->second[idx].coor();
+      glm::vec3 coor = mapPart->second[idx].location();
 
       if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < mapPart->second[idx].d_radius * mapPart->second[idx].d_radius)
         return typename NodeGrid<RefType>::iterator(make_pair(idx, mapPart->first), this);
@@ -356,7 +356,7 @@ namespace internal
   template<typename RefType>
   typename NodeGrid<RefType>::iterator NodeGrid<RefType>::find(float x, float z)
   {
-    /*int xloc, zloc;
+    int xloc, zloc;
     xloc = x / d_gridSize;
     zloc = z / d_gridSize;
 
@@ -366,11 +366,11 @@ namespace internal
 
     for(size_t idx = 0; idx != mapPart->second.size(); ++idx)
     {
-      glm::vec3 coor = mapPart->second[idx].coor();
+      glm::vec3 coor = mapPart->second[idx].location();
 
-      if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < mapPart->second[idx].d_radius * mapPart->second[idx].d_radius)
+      if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < 1)
         return typename NodeGrid<RefType>::iterator(make_pair(idx, mapPart), this);
-    }*/
+    }
     return end();
   }
 }

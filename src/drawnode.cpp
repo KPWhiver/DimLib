@@ -46,12 +46,12 @@ namespace dim
   {
   }
 
-  glm::vec3 NodeBase::coor() const
+  glm::vec3 NodeBase::location() const
   {
     return d_coor;
   }
 
-  void NodeBase::setCoor(vec3 const &coor)
+  void NodeBase::setLocation(vec3 const &coor)
   {
     d_coor = coor;
     d_changed = true;
@@ -150,7 +150,7 @@ namespace dim
 
   void DrawNodeBase::insert(ostream &out) const
   {
-	  out << coor().x << ' ' << coor().y << ' ' << coor().z << ' ' << rotation().x << ' ' << rotation().y << ' ' << rotation().z << '\n';
+	  out << location().x << ' ' << location().y << ' ' << location().z << ' ' << rotation().x << ' ' << rotation().y << ' ' << rotation().z << '\n';
     //out.write(reinterpret_cast<const char*>(&d_coor.x), 4);
     //out.write(reinterpret_cast<const char*>(&d_coor.y), 4);
     //out.write(reinterpret_cast<const char*>(&d_coor.z), 4);
