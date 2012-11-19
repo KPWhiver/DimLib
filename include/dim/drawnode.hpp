@@ -27,29 +27,34 @@
 #include "dim/shader.hpp"
 #include "dim/onepair.hpp"
 
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+
+#include <glm/gtc/quaternion.hpp>
+
 namespace dim
 {
+
+
   class NodeBase
   {
       NodeBase *d_parent;
 
+
       glm::vec3 d_coor;
-      glm::vec3 d_rot;
+      glm::quat d_orient;
       glm::vec3 d_scale;
-
       glm::mat4 d_modelMatrix;
-
       bool d_changed;
 
     public:
-      NodeBase(glm::vec3 const &coor, glm::vec3 const &rot, glm::vec3 const &scale);
+      NodeBase(glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale);
       NodeBase();
 
-      glm::vec3 coor() const;
-      void setCoor(glm::vec3 const &coor);
+      glm::vec3 location() const;
+      void setLocation(glm::vec3 const &coor);
 
-      glm::vec3 const &rotation() const;
-      void setRotation(glm::vec3 const &rot);
+      glm::quat const &orientation() const;
+      void setOrientation(glm::quat const &orient);
 
       glm::vec3 const &scaling() const;
       void setScaling(glm::vec3 const &scale);
@@ -63,6 +68,18 @@ namespace dim
       NodeBase * const parent();
   };
 
+  class MotionState : public btMotionState
+  {
+      NodeBase *d_node;
+    public:
+      MotionState(NodeBase *node);
+
+    private:
+      virtual void getWorldTransform(btTransform &worldTransform) const;
+
+      virtual void setWorldTransform(btTransform const &worldTransform);
+  };
+
   class DrawNodeBase : public NodeBase
   {
       friend class SceneGraph;
@@ -71,26 +88,34 @@ namespace dim
       friend std::ostream &operator<<(std::ostream &out, DrawNodeBase const &object);
       friend std::istream &operator>>(std::istream &in, DrawNodeBase &object);
 
-      float d_radius;
+      MotionState d_motionState;
 
     public:
       DrawNodeBase();
-      DrawNodeBase(glm::vec3 const &coor, glm::vec3 const &rot, float radius);
+      DrawNodeBase(glm::vec3 const &coor, glm::quat const &orient, float radius);
 
       virtual Shader const &shader() const = 0;
       virtual Scene const &scene() const = 0;
+
+      virtual btRigidBody *rigidBody() = 0;
 
       virtual void draw();
 
       virtual ~DrawNodeBase();
 
       virtual DrawNodeBase *clone() const = 0;
-    
+
+      MotionState *motionState();
+
     private:
       virtual void insert(std::ostream &out) const;
       virtual void extract(std::istream &in);
 
   };
+
+
+
+
 
   namespace internal
   {
@@ -105,8 +130,12 @@ namespace dim
 
         virtual Scene const &scene() const
         {
-
           return s_defaultScene;
+        }
+
+        virtual btRigidBody *rigidBody()
+        {
+          return 0;
         }
 
         virtual DrawNodeBase *clone() const

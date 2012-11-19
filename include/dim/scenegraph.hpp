@@ -31,6 +31,9 @@
 #include <iostream>
 #include <memory>
 
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
 namespace dim
 {
   class GroupNodeBase : public NodeBase
@@ -43,13 +46,22 @@ namespace dim
 
       PtrVector<internal::NodeStorageBase> d_storages;
 
-      size_t d_gridSize;//
+      size_t d_gridSize;
+
+      // bullet
+      btDbvtBroadphase d_broadphase;
+      btDefaultCollisionConfiguration d_collisionConfiguration;
+      btCollisionDispatcher d_dispatcher;
+      btSequentialImpulseConstraintSolver d_solver;
+
+      btDiscreteDynamicsWorld d_dynamicsWorld;
+
 
     public:
     // setChanged
-      void setRotation(glm::vec3 const &rot);
+      void setOrientation(glm::quat const &orient);
       void setScaling(glm::vec3 const &scale);
-      void setCoor(glm::vec3 const &coor);
+      void setLocation(glm::vec3 const &coor);
     
     // iterators
       class Iterable
@@ -100,6 +112,11 @@ namespace dim
       template<typename RefType>
       typename internal::NodeGrid<RefType>::iterator add(bool saved, RefType *object);
 
+      //btDiscreteDynamicsWorld *physicsWorld();
+      void addRigidBody(btRigidBody *rigidBody);
+      void addAction(btActionInterface *action);
+      void addGhost(btGhostObject *ghost);
+
       template<typename RefType>
       void load(std::string const &filename);
 
@@ -115,6 +132,7 @@ namespace dim
       template<typename RefType>
       typename internal::NodeGrid<RefType>::iterator get(float x, float z);
 
+      void physicsStep(float time);
       void draw(Camera camera);
 
     private:
@@ -183,6 +201,9 @@ namespace dim
     // Add the drawstate
     for(size_t idx = 0; idx != object->scene().size(); ++idx)
       add({object->shader(), object->scene()[idx]}, ptr);
+
+    if(object->rigidBody() != 0)
+      d_dynamicsWorld.addRigidBody(object->rigidBody());
 
     return iter;
   }

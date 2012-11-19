@@ -253,8 +253,8 @@ namespace internal
   typename NodeGrid<RefType>::iterator NodeGrid<RefType>::add(bool changing, RefType *object)
   {
     int xloc, zloc;
-    xloc = object->coor().x / d_gridSize;
-    zloc = object->coor().z / d_gridSize;
+    xloc = object->location().x / d_gridSize;
+    zloc = object->location().z / d_gridSize;
 
     auto list = d_map.find(Key(xloc, zloc));
     if(list == d_map.end())

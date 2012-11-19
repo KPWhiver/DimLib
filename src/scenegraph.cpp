@@ -32,12 +32,12 @@ namespace dim
 {
   using namespace internal;
   /* setChanged */
-  void SceneGraph::setRotation(vec3 const &rot)
+  void SceneGraph::setOrientation(quat const &orient)
   {
     for(DrawNodeBase &drawNode: *this)
       drawNode.setChanged();
       
-    GroupNodeBase::setRotation(rot);
+    GroupNodeBase::setOrientation(orient);
   }
   void SceneGraph::setScaling(vec3 const &scale)
   {
@@ -47,12 +47,12 @@ namespace dim
     GroupNodeBase::setScaling(scale);
   
   }
-  void SceneGraph::setCoor(vec3 const &coor)
+  void SceneGraph::setLocation(vec3 const &coor)
   {
     for(DrawNodeBase &drawNode: *this)
       drawNode.setChanged();
       
-    GroupNodeBase::setCoor(coor);
+    GroupNodeBase::setLocation(coor);
   
   }
   
@@ -61,18 +61,30 @@ namespace dim
   SceneGraph::SceneGraph(size_t gridSize)
       :
           d_storages([](NodeStorageBase* ptr){return ptr->clone();}),
-          d_gridSize(gridSize)
+          d_gridSize(gridSize),
+          d_dispatcher(&d_collisionConfiguration),
+          d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration)
   {
     // make sure there's at least one NodeGrid
     auto ptr = new NodeGrid<DefaultDrawNode>(d_gridSize, key());
     d_storages.push_back(ptr);
+
+    // bullet
+    d_dynamicsWorld.setGravity(btVector3(0, -10, 0));
+    d_dynamicsWorld.getDispatchInfo().m_allowedCcdPenetration=0.0001f;
+    d_dynamicsWorld.getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+
   }
 
   SceneGraph::SceneGraph(SceneGraph const &other)
   :
       d_drawStates(other.d_drawStates),
       d_storages(other.d_storages),
-      d_gridSize(other.d_gridSize)
+      d_gridSize(other.d_gridSize),
+      d_collisionConfiguration(other.d_collisionConfiguration),
+      d_dispatcher(other.d_dispatcher),
+      d_solver(other.d_solver),
+      d_dynamicsWorld(other.d_dynamicsWorld)
   {
     for(auto const &element: d_storages)
       element->copy(key());
@@ -85,7 +97,11 @@ namespace dim
   :
       d_drawStates(move(tmp.d_drawStates)),
       d_storages(move(tmp.d_storages)),
-      d_gridSize(move(tmp.d_gridSize))
+      d_gridSize(move(tmp.d_gridSize)),
+      d_collisionConfiguration(move(tmp.d_collisionConfiguration)),
+      d_dispatcher(move(tmp.d_dispatcher)),
+      d_solver(move(tmp.d_solver)),
+      d_dynamicsWorld(move(tmp.d_dynamicsWorld))
   {
     for(auto const &element: d_storages)
       element->copy(key());
@@ -213,6 +229,29 @@ namespace dim
 
   /* regular functions */
 
+  //btDiscreteDynamicsWorld *SceneGraph::physicsWorld()
+  //{
+  //  return &d_dynamicsWorld;
+  //}
+
+  void SceneGraph::addRigidBody(btRigidBody *rigidBody)
+  {
+    if(rigidBody != 0)
+      d_dynamicsWorld.addRigidBody(rigidBody);
+  }
+
+  void SceneGraph::addAction(btActionInterface *action)
+  {
+    if(action != 0)
+      d_dynamicsWorld.addAction(action);
+  }
+
+  void SceneGraph::addGhost(btGhostObject *ghost)
+  {
+    if(ghost != 0)
+      d_dynamicsWorld.addCollisionObject(ghost, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::AllFilter);
+  }
+
   void SceneGraph::add(ShaderScene const &state, NodeStorageBase *ptr)
   {
     for(auto iter = d_drawStates.find(state); iter != d_drawStates.end() && iter->first == state; ++iter)
@@ -222,6 +261,12 @@ namespace dim
     }
 
     d_drawStates.insert(make_pair(state, ptr));
+  }
+
+  void SceneGraph::physicsStep(float time)
+  {
+    uint substeps = std::max(1.0f, (1 / 60) / time) + 2;
+    d_dynamicsWorld.stepSimulation(time, substeps);
   }
 
   void SceneGraph::draw(Camera camera)
