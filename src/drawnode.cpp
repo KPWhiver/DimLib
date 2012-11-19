@@ -35,11 +35,11 @@ namespace dim
   {
   }
 
-  NodeBase::NodeBase(vec3 const &coor, vec3 const &rot, vec3 const &scale)
+  NodeBase::NodeBase(vec3 const &coor, quat const &orient, vec3 const &scale)
   :
       d_parent(0),
       d_coor(coor),
-      d_rot(rot),
+      d_orient(orient),
       d_scale(scale),
       d_modelMatrix(mat4(1.0)),
       d_changed(true)
@@ -57,14 +57,14 @@ namespace dim
     d_changed = true;
   }
 
-  glm::vec3 const &NodeBase::rotation() const
+  glm::quat const &NodeBase::orientation() const
   {
-    return d_rot;
+    return d_orient;
   }
 
-  void NodeBase::setRotation(vec3 const &rot)
+  void NodeBase::setOrientation(quat const &orient)
   {
-    d_rot = rot;
+    d_orient = orient;
     d_changed = true;
   }
 
@@ -89,12 +89,15 @@ namespace dim
     if(d_changed)
     {
       d_modelMatrix = translate(mat4(1.0), d_coor);
-      if(d_rot.x != 0)
-        d_modelMatrix = rotate(d_modelMatrix, d_rot.x, vec3(1.0, 0, 0));
-      if(d_rot.y != 0)
-        d_modelMatrix = rotate(d_modelMatrix, d_rot.z, vec3(0, 0, 1.0));
-      if(d_rot.z != 0)
-        d_modelMatrix = rotate(d_modelMatrix, d_rot.y, vec3(0, 1.0, 0));
+      //if(d_rot.x != 0)
+      //  d_modelMatrix = rotate(d_modelMatrix, d_rot.x, vec3(1.0, 0, 0));
+      //if(d_rot.y != 0)
+      //  d_modelMatrix = rotate(d_modelMatrix, d_rot.z, vec3(0, 0, 1.0));
+      //if(d_rot.z != 0)
+      //  d_modelMatrix = rotate(d_modelMatrix, d_rot.y, vec3(0, 1.0, 0));
+      if(d_orient != quat(0, 0, 0, 1))
+        d_modelMatrix *= mat4_cast(d_orient);
+
       if(d_scale != vec3(1.0))
         d_modelMatrix = scale(d_modelMatrix, d_scale);
 
@@ -117,15 +120,15 @@ namespace dim
     d_parent = parent;
   }
 
-  DrawNodeBase::DrawNodeBase(vec3 const &coor, vec3 const &rot, float radius)
-      : NodeBase(coor, rot, vec3(1.0)),
-        d_radius(radius)
+  DrawNodeBase::DrawNodeBase(vec3 const &coor, quat const &orient, float radius)
+      : NodeBase(coor, orient, vec3(1.0)),
+        d_motionState(this)
   {
   }
 
   DrawNodeBase::DrawNodeBase()
       :
-        d_radius(0)
+        d_motionState(this)
   {
   }
 
@@ -150,7 +153,9 @@ namespace dim
 
   void DrawNodeBase::insert(ostream &out) const
   {
-	  out << location().x << ' ' << location().y << ' ' << location().z << ' ' << rotation().x << ' ' << rotation().y << ' ' << rotation().z << '\n';
+    out << location().x << ' ' << location().y << ' ' << location().z << ' ' << orientation().x << ' '
+	      << orientation().y << ' ' << orientation().z << ' ' << orientation().w << '\n';
+
     //out.write(reinterpret_cast<const char*>(&d_coor.x), 4);
     //out.write(reinterpret_cast<const char*>(&d_coor.y), 4);
     //out.write(reinterpret_cast<const char*>(&d_coor.z), 4);
@@ -161,14 +166,14 @@ namespace dim
   void DrawNodeBase::extract(istream &in)
   {
     vec3 coor;
-    vec3 rot;
-	  in >> coor.x >> coor.y >> coor.z >> rot.x >> rot.y >> rot.z;
+    quat rot;
+	  in >> coor.x >> coor.y >> coor.z >> rot.x >> rot.y >> rot.z >> rot.w;
 
 	  coor/=100.0f;
 	  rot/=100;
 
-	  setCoor(coor);
-	  setRotation(rot);
+	  setLocation(coor);
+	  setOrientation(rot);
 
     //in.read(reinterpret_cast<char*>(&d_coor.x), 4);
     //in.read(reinterpret_cast<char*>(&d_coor.y), 4);
@@ -187,6 +192,33 @@ namespace dim
   {
     object.extract(in);
     return in;
+  }
+
+  MotionState *DrawNodeBase::motionState()
+  {
+    return &d_motionState;
+  }
+
+  MotionState::MotionState(NodeBase *node)
+  :
+      d_node(node)
+  {
+  }
+
+  void MotionState::getWorldTransform(btTransform &worldTransform) const
+  {
+    glm::quat const &orient = d_node->orientation();
+    glm::vec3 const &coor = d_node->location();
+    worldTransform = btTransform(btQuaternion(orient.x, orient.y, orient.z, orient.w), btVector3(coor.x, coor.y, coor.z));
+  }
+
+  void MotionState::setWorldTransform(btTransform const &worldTransform)
+  {
+    btQuaternion orient = worldTransform.getRotation();
+    btVector3 coor = worldTransform.getOrigin();
+    d_node->setOrientation(glm::quat(orient.w(), orient.x(), orient.y(), orient.z()));
+    d_node->setLocation(glm::vec3(coor.x(), coor.y(), coor.z()));
+    d_node->setChanged();
   }
 
 }

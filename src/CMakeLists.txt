@@ -31,9 +31,13 @@ include_directories(
   /usr/include/freetype2
 )
 
+if(CMAKE_CXX_COMPILER MATCHES ".*clang")
+  set(CMAKE_COMPILER_IS_CLANGXX 1)
+endif()
+
 ## Compiler flags
-if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "-std=c++0x -Wall")  ## Optimize
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+  set(CMAKE_CXX_FLAGS "-std=c++0x -Wall")
 endif()
 
 ## Default build type is release
