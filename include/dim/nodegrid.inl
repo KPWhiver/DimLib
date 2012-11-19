@@ -366,10 +366,10 @@ namespace internal
 
     for(size_t idx = 0; idx != mapPart->second.size(); ++idx)
     {
-      glm::vec3 coor = mapPart->second[idx].location();
+      glm::vec3 coor = mapPart->second[idx]->location();
 
       if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < 1)
-        return typename NodeGrid<RefType>::iterator(make_pair(idx, mapPart), this);
+        return typename NodeGrid<RefType>::iterator(CopyPtr<Iterable>(new NodeGrid::Iterable(idx, mapPart, this)));
     }
     return end();
   }
