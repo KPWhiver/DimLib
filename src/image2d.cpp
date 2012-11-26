@@ -29,7 +29,7 @@ namespace dim
   Texture<> Image2D::defaultTexture()
   {
     static GLubyte data(0);
-    static Texture<> texture(&data, Filtering::nearest, Format::R8, 1, 1, false);
+    static Texture<> texture(&data, Filtering::nearest, NormalizedFormat::R8, 1, 1, false);
     return texture;
   }
 

@@ -65,6 +65,25 @@ namespace dim
 
     addTarget<0>(format, filter);
   }
+
+  template<typename ...Types>
+  Surface<Types...>::Surface(uint width, uint height, NormalizedFormat format, bool pingPongBuffer, Filtering filter)
+      :
+        d_buffers(1 + pingPongBuffer),
+        d_colorAttachments(0),
+        d_depthComponent(false),
+        d_colorComponent{false},
+        d_minWidth(width),
+        d_minHeight(height),
+        d_clearDepth(0)
+  {
+    glGenFramebuffers(1, d_buffers[0].d_id.get());
+
+    if(pingPongBuffer)
+      glGenFramebuffers(1, d_buffers[1].d_id.get());
+
+    addTarget<0>(format, filter);
+  }
   
   template<typename ...Types>
   template<uint Index>
@@ -75,19 +94,16 @@ namespace dim
       idx = 1;
 
     if(std::get<Index>(d_buffers[idx].d_targets) == 0)
-    {
       log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
-      return;
-    }
 
     return *std::get<Index>(d_buffers[idx].d_targets);
   }
 
   template<typename ...Types>
   template<uint Index>
-  void Surface<Types...>::addTarget(typename std::tuple_element<0, TuplePtrType>::type ptr)
+  void Surface<Types...>::addTarget(typename std::tuple_element<Index, TuplePtrType>::type ptr)
   {
-    ComponentType attachment = processFormat(ptr->format());
+    ComponentType attachment = processFormat(ptr->externalFormat());
 
     addAttachment<Index>(attachment, 0, ptr);
 
@@ -112,16 +128,15 @@ namespace dim
   template<uint Index>
   void Surface<Types...>::addTarget(Format format, Filtering filter)
   {
-    //uint oldDepth = d_depth;
-    ComponentType attachment = processFormat(format);
+    // Create the texture
+    typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
 
-    //if(oldDepth != d_depth)
-    //{
-    //  d_depth = oldDepth;
-    //  log(__FILE__, __LINE__, LogType::error, "Addition of a extra render target to a framebuffer failed because the depth doesn't match");
-    //}
-    
-    addAttachment<Index>(attachment, width(), height(), 0, format, filter);
+    TextureType &tex = std::get<Index>(d_buffers[0].d_textures);
+    tex = TextureType(0, filter, format, width(), height(), false, Wrapping::borderClamp);
+
+    ComponentType attachment = processFormat(tex.externalFormat());
+
+    addAttachment<Index>(attachment, 0, &tex);
     
     if(attachment == depth)
       d_attachments[Index] = GL_NONE;
@@ -129,7 +144,12 @@ namespace dim
       d_attachments[Index] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
 
     if(d_buffers.size() == 2)
-      addAttachment<Index>(attachment, width(), height(), 1, format, filter);
+    {
+      TextureType &tex2 = std::get<Index>(d_buffers[0].d_textures);
+      tex2 = TextureType(0, filter, format, width(), height(), false, Wrapping::borderClamp);
+
+      addAttachment<Index>(attachment, 1, &tex2);
+    }
 
     if(attachment == color)
       ++d_colorAttachments;
@@ -137,7 +157,38 @@ namespace dim
 
   template<typename ...Types>
   template<uint Index>
-  void Surface<Types...>::addAttachment(ComponentType attachment, uint buffer, typename std::tuple_element<0, TuplePtrType>::type ptr)
+  void Surface<Types...>::addTarget(NormalizedFormat format, Filtering filter)
+  {
+    // Create the texture
+     typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
+
+     TextureType &tex = std::get<Index>(d_buffers[0].d_textures);
+     tex = TextureType(0, filter, format, width(), height(), false, Wrapping::borderClamp);
+
+     ComponentType attachment = processFormat(tex.externalFormat());
+
+     addAttachment<Index>(attachment, 0, &tex);
+
+     if(attachment == depth)
+       d_attachments[Index] = GL_NONE;
+     else
+       d_attachments[Index] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
+
+     if(d_buffers.size() == 2)
+     {
+       TextureType &tex2 = std::get<Index>(d_buffers[0].d_textures);
+       tex2 = TextureType(0, filter, format, width(), height(), false, Wrapping::borderClamp);
+
+       addAttachment<Index>(attachment, 1, &tex2);
+     }
+
+     if(attachment == color)
+       ++d_colorAttachments;
+  }
+
+  template<typename ...Types>
+  template<uint Index>
+  void Surface<Types...>::addAttachment(ComponentType attachment, uint buffer, typename std::tuple_element<Index, TuplePtrType>::type ptr)
   {
     if(ptr->width() < d_minWidth)
       d_minWidth = ptr->width();
@@ -170,25 +221,38 @@ namespace dim
     GLenum fbo_status;
     fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if(fbo_status != GL_FRAMEBUFFER_COMPLETE)
-    {
-      std::stringstream ss;
-      ss << "Creation of a framebuffer failed with error code: " << fbo_status;
-      log(__FILE__, __LINE__, LogType::error, ss.str());
-    }
-  }
 
-  template<typename ...Types>
-  template<uint Index>
-  void Surface<Types...>::addAttachment(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter)
-  {
-    // Create the texture
-    typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
-    
-    TextureType &tex = std::get<Index>(d_buffers[buffer].d_textures);
-    tex = TextureType(0, filter, format, width, height, false, Wrapping::borderClamp);
-    
-    addAttachment<Index>(attachment, buffer, &tex);
+    switch(fbo_status)
+    {
+      case GL_FRAMEBUFFER_COMPLETE:
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER");
+        break;
+      case GL_FRAMEBUFFER_UNSUPPORTED:
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_UNSUPPORTED");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE");
+        break;
+      case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS");
+        break;
+      default:
+        std::stringstream ss;
+        ss << "Creation of a framebuffer failed with error code: " << fbo_status;
+        log(__FILE__, __LINE__, LogType::error, ss.str());
+        break;
+    }
   }
 
   /*template<typename ...Types>
@@ -199,93 +263,29 @@ namespace dim
   }*/
 
   template<typename ...Types>
-  typename Surface<Types...>::ComponentType Surface<Types...>::processFormat(Format format)
+  typename Surface<Types...>::ComponentType Surface<Types...>::processFormat(GLuint format)
   {
     switch(format)
     {
-      case Format::R11G11B10:
-        //d_depth = 32;
-        d_colorComponent[0] = true;
-        d_colorComponent[1] = true;
-        d_colorComponent[2] = true;
-        return color;
-      
-      case Format::RGBA8:
-      case Format::sRGB8A8:
-        //d_depth = 32;
+      case GL_RGBA:
         d_colorComponent[0] = true;
         d_colorComponent[1] = true;
         d_colorComponent[2] = true;
         d_colorComponent[3] = true;
         return color;
-      case Format::RGB8:
-      case Format::sRGB8:
-        //d_depth = 24;
+      case GL_RGB:
         d_colorComponent[0] = true;
         d_colorComponent[1] = true;
         d_colorComponent[2] = true;
         return color;
-      case Format::RG8:
-        //d_depth = 16;
+      case GL_RG:
         d_colorComponent[0] = true;
         d_colorComponent[1] = true;
         return color;
-      case Format::R8:
-        //d_depth = 8;
+      case GL_RED:
         d_colorComponent[0] = true;
         return color;
-
-      case Format::RGBA16:
-        //d_depth = 64;
-        d_colorComponent[0] = true;
-        d_colorComponent[1] = true;
-        d_colorComponent[2] = true;
-        d_colorComponent[3] = true;
-        return color;
-      case Format::RGB16:
-        //d_depth = 48;
-        d_colorComponent[0] = true;
-        d_colorComponent[1] = true;
-        d_colorComponent[2] = true;
-        return color;
-      case Format::RG16:
-        //d_depth = 32;
-        d_colorComponent[0] = true;
-        d_colorComponent[1] = true;
-        return color;
-      case Format::R16:
-        //d_depth = 16;
-        d_colorComponent[0] = true;
-        return color;
-      case Format::D16:
-        //d_depth = 16;
-        d_depthComponent = true;
-        return depth;
-
-      case Format::RGBA32:
-        //d_depth = 128;
-        d_colorComponent[0] = true;
-        d_colorComponent[1] = true;
-        d_colorComponent[2] = true;
-        d_colorComponent[3] = true;
-        return color;
-      case Format::RGB32:
-        //d_depth = 96;
-        d_colorComponent[0] = true;
-        d_colorComponent[1] = true;
-        d_colorComponent[2] = true;
-        return color;
-      case Format::RG32:
-        //d_depth = 64;
-        d_colorComponent[0] = true;
-        d_colorComponent[1] = true;
-        return color;
-      case Format::R32:
-        //d_depth = 32;
-        d_colorComponent[0] = true;
-        return color;
-      case Format::D32:
-        //d_depth = 32;
+      case GL_DEPTH_COMPONENT:
         d_depthComponent = true;
         return depth;
     }

@@ -54,7 +54,7 @@ namespace dim
     }
   }
 
-  GLubyte* Texture<GLubyte>::loadPNG(istream &input, Format &format, uint &width, uint &height)
+  GLubyte* Texture<GLubyte>::loadPNG(istream &input, NormalizedFormat &format, uint &width, uint &height)
   {
     png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
 
@@ -86,19 +86,19 @@ namespace dim
         if (depth < 8)
           png_set_expand_gray_1_2_4_to_8(pngPtr);
         depth = 8;
-        format = Format::R8;
+        format = NormalizedFormat::R8;
         break;
       case PNG_COLOR_TYPE_GRAY_ALPHA:
-        format = Format::RG8;
+        format = NormalizedFormat::RG8;
         break;
       case PNG_COLOR_TYPE_PALETTE:
         png_set_palette_to_rgb(pngPtr);
         channels = 3;
       case PNG_COLOR_TYPE_RGB:
-        format = Format::RGB8;
+        format = NormalizedFormat::RGB8;
         break;
       case PNG_COLOR_TYPE_RGB_ALPHA:
-        format = Format::RGBA8;
+        format = NormalizedFormat::RGBA8;
         break;
     }
 
@@ -218,7 +218,7 @@ namespace dim
   Texture<GLubyte> const &Texture<GLubyte>::zeroTexture()
   {
     static GLubyte data[4]{0};
-    static Format format(Format::RGBA8);
+    static NormalizedFormat format(NormalizedFormat::RGBA8);
 
 
     static Texture<GLubyte> zero(data, Filtering::nearest, format, 1, 1, false);
@@ -227,10 +227,20 @@ namespace dim
 
   Texture<GLubyte>::Texture()
   {
-    init(0, Filtering::nearest, Format::R8, 0, 0, false, Wrapping::repeat);
+    init(0, Filtering::nearest, NormalizedFormat::R8, 0, 0, false, Wrapping::repeat);
   }
 
   Texture<GLubyte>::Texture(GLubyte const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  {
+    init(data, filter, format, width, height, keepBuffered, wrap);
+  }
+
+  Texture<GLubyte>::Texture(GLubyte const *data, Filtering filter, NormalizedFormat format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+  {
+    init(data, filter, format, width, height, keepBuffered, wrap);
+  }
+
+  Texture<GLubyte>::Texture(GLubyte const *data, Filtering filter, GLuint format, uint width, uint height, bool keepBuffered, Wrapping wrap)
   {
     init(data, filter, format, width, height, keepBuffered, wrap);
   }
@@ -251,7 +261,7 @@ namespace dim
     file.read(reinterpret_cast<char*>(header), 8);
 
     GLubyte *data = 0;
-    Format format = Format::R8;
+    NormalizedFormat format = NormalizedFormat::R8;
     uint width = 0;
     uint height = 0;
 
@@ -267,7 +277,7 @@ namespace dim
   
   Texture<GLubyte> Texture<GLubyte>::copy() const
   {
-    Texture<GLubyte> texture(buffer(), filter(), format(), width(), height(), buffered(), wrapping());  
+    Texture<GLubyte> texture(buffer(), filter(), internalFormat(), width(), height(), buffered(), wrapping());
     
     if(borderColor() != vec4(0))
       texture.setBorderColor(borderColor());
@@ -292,7 +302,7 @@ namespace dim
     file.read(header, 8);
 
     GLubyte *data = 0;
-    Format format = Format::R8;
+    NormalizedFormat format = NormalizedFormat::R8;
     uint width = 0;
     uint height = 0;
 

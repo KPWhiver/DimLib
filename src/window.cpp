@@ -82,6 +82,11 @@ namespace dim
 
     d_mouse.update();
 
+    logError();
+  }
+
+  void Window::logError() const
+  {
     int error = glGetError();
     switch(error)
     {
@@ -173,6 +178,9 @@ namespace dim
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LEQUAL);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
     swapBuffers();
   }
