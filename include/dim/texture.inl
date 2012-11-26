@@ -28,7 +28,7 @@ namespace dim
             { glDeleteTextures(1, ptr); delete ptr;}),
             d_height(0),
             d_width(0),
-            d_format(Format::R8),
+            d_internalFormat(GL_R8),
             d_filter(Filtering::nearest),
             d_wrapping(Wrapping::repeat),
             d_borderColor(0),
@@ -166,9 +166,150 @@ namespace dim
     }
 
     template<typename Type>
+    void TextureBase<Type>::init(Type const *data, Filtering filter, NormalizedFormat format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+    {
+      init(data, filter, static_cast<GLuint>(format), width, height, keepBuffered, wrap);
+    }
+
+    template<typename Type>
     void TextureBase<Type>::init(Type const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap)
     {
-      d_format = format;
+      if(std::is_floating_point<Type>::value)
+      {
+        switch(format)
+        {
+          case Format::RGBA16:
+            d_internalFormat = GL_RGBA16F;
+            break;
+          case Format::RGBA32:
+            d_internalFormat = GL_RGBA32F;
+            break;
+          case Format::RGB16:
+            d_internalFormat = GL_RGB16F;
+            break;
+          case Format::RGB32:
+            d_internalFormat = GL_RGB32F;
+            break;
+          case Format::RG16:
+            d_internalFormat = GL_RG16F;
+            break;
+          case Format::RG32:
+            d_internalFormat = GL_RG32F;
+            break;
+          case Format::R16:
+            d_internalFormat = GL_R16F;
+            break;
+          case Format::R32:
+            d_internalFormat = GL_R32F;
+            break;
+          case Format::R11G11B10:
+            d_internalFormat = GL_R11F_G11F_B10F;
+            break;
+          case Format::D32:
+            d_internalFormat = GL_DEPTH_COMPONENT32F;
+            break;
+          default:
+            log(__FILE__, __LINE__, LogType::error, "Floating point textures do not support 8-bit precision");
+            break;
+        }
+      }
+      else if(std::is_signed<Type>::value)
+      {
+        switch(format)
+        {
+          case Format::RGBA8:
+            d_internalFormat = GL_RGBA8I;
+            break;
+          case Format::RGBA16:
+            d_internalFormat = GL_RGBA16I;
+            break;
+          case Format::RGBA32:
+            d_internalFormat = GL_RGBA32I;
+            break;
+          case Format::RGB8:
+            d_internalFormat = GL_RGB8I;
+            break;
+          case Format::RGB16:
+            d_internalFormat = GL_RGB16I;
+            break;
+          case Format::RGB32:
+            d_internalFormat = GL_RGB32I;
+            break;
+          case Format::RG8:
+            d_internalFormat = GL_RG8I;
+            break;
+          case Format::RG16:
+            d_internalFormat = GL_RG16I;
+            break;
+          case Format::RG32:
+            d_internalFormat = GL_RG32I;
+            break;
+          case Format::R8:
+            d_internalFormat = GL_R8I;
+            break;
+          case Format::R16:
+            d_internalFormat = GL_R16I;
+            break;
+          case Format::R32:
+            d_internalFormat = GL_R32I;
+            break;
+          default:
+            log(__FILE__, __LINE__, LogType::error, "Integer textures do not support depth or R11G11B10");
+            break;
+        }
+      }
+      else
+      {
+        switch(format)
+        {
+          case Format::RGBA8:
+            d_internalFormat = GL_RGBA8UI;
+            break;
+          case Format::RGBA16:
+            d_internalFormat = GL_RGBA16UI;
+            break;
+          case Format::RGBA32:
+            d_internalFormat = GL_RGBA32UI;
+            break;
+          case Format::RGB8:
+            d_internalFormat = GL_RGB8UI;
+            break;
+          case Format::RGB16:
+            d_internalFormat = GL_RGB16UI;
+            break;
+          case Format::RGB32:
+            d_internalFormat = GL_RGB32UI;
+            break;
+          case Format::RG8:
+            d_internalFormat = GL_RG8UI;
+            break;
+          case Format::RG16:
+            d_internalFormat = GL_RG16UI;
+            break;
+          case Format::RG32:
+            d_internalFormat = GL_RG32UI;
+            break;
+          case Format::R8:
+            d_internalFormat = GL_R8UI;
+            break;
+          case Format::R16:
+            d_internalFormat = GL_R16UI;
+            break;
+          case Format::R32:
+            d_internalFormat = GL_R32UI;
+            break;
+          default:
+            log(__FILE__, __LINE__, LogType::error, "Integer textures do not support depth or R11G11B10");
+            break;
+        }
+      }
+      init(data, filter, d_internalFormat, width, height, keepBuffered, wrap);
+    }
+
+    template<typename Type>
+    void TextureBase<Type>::init(Type const *data, Filtering filter, GLuint format, uint width, uint height, bool keepBuffered, Wrapping wrap)
+    {
+      d_internalFormat = format;
       d_filter = filter;
       d_wrapping = wrap;
       d_width = width;
@@ -231,7 +372,7 @@ namespace dim
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap));
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap));
 
-      glTexImage2D(GL_TEXTURE_2D, 0, internalFormat(), d_width, d_height, 0, externalFormat(), DataType<Type>::value, data);
+      glTexImage2D(GL_TEXTURE_2D, 0, d_internalFormat, d_width, d_height, 0, externalFormat(), DataType<Type>::value, data);
 
       if(filter != Filtering::linear && filter != Filtering::nearest)
         glGenerateMipmap (GL_TEXTURE_2D);
@@ -397,7 +538,7 @@ namespace dim
     void TextureBase<Type>::generateMipmap()
     {
       bind();
-      glGenerateMipmap (GL_TEXTURE_2D);
+      glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     template<typename Type>
@@ -411,12 +552,6 @@ namespace dim
     {
       return d_width;
     }
-
-    template<typename Type>
-    Format TextureBase<Type>::format() const
-    {
-      return d_format;
-    }
     
     template<typename Type>
     Filtering TextureBase<Type>::filter() const
@@ -429,7 +564,7 @@ namespace dim
     {
       return d_wrapping;
     }
-    
+
     template<typename Type>
     glm::vec4 const &TextureBase<Type>::borderColor() const
     {
@@ -474,33 +609,62 @@ namespace dim
     template<typename Type>
     GLuint TextureBase<Type>::externalFormat() const
     {
-      switch(d_format)
+      switch(d_internalFormat)
       {
-        case Format::RGBA8:
-        case Format::sRGB8A8:
-        case Format::RGBA16:
-        case Format::RGBA32:
+        case GL_RGBA8:
+        case GL_SRGB8_ALPHA8:
+        case GL_RGBA16:
+        case GL_RGBA8I:
+        case GL_RGBA8UI:
+        case GL_RGBA16I:
+        case GL_RGBA16UI:
+        case GL_RGBA32I:
+        case GL_RGBA32UI:
+        case GL_RGBA16F:
+        case GL_RGBA32F:
           return GL_RGBA;
-        case Format::RGB8:
-        case Format::sRGB8:
-        case Format::RGB16:
-        case Format::RGB32:
-        case Format::R11G11B10:
+        case GL_RGB8:
+        case GL_SRGB8:
+        case GL_RGB16:
+        case GL_RGB8I:
+        case GL_RGB8UI:
+        case GL_RGB16I:
+        case GL_RGB16UI:
+        case GL_RGB32I:
+        case GL_RGB32UI:
+        case GL_RGB16F:
+        case GL_RGB32F:
+        case GL_R11F_G11F_B10F:
           return GL_RGB;
-        case Format::RG8:
-        case Format::RG16:
-        case Format::RG32:
+        case GL_RG8:
+        case GL_RG16:
+        case GL_RG8I:
+        case GL_RG8UI:
+        case GL_RG16I:
+        case GL_RG16UI:
+        case GL_RG32I:
+        case GL_RG32UI:
+        case GL_RG16F:
+        case GL_RG32F:
           return GL_RG;
-        case Format::R8:
-        case Format::R16:
-        case Format::R32:
+        case GL_R8:
+        case GL_R16:
+        case GL_R8I:
+        case GL_R8UI:
+        case GL_R16I:
+        case GL_R16UI:
+        case GL_R32I:
+        case GL_R32UI:
+        case GL_R16F:
+        case GL_R32F:
           return GL_RED;
-        case Format::D16:
-        case Format::D32:
+        case GL_DEPTH_COMPONENT16:
+        case GL_DEPTH_COMPONENT32:
+        case GL_DEPTH_COMPONENT32F:
           return GL_DEPTH_COMPONENT;
         default:
           std::stringstream ss;
-          ss << "Unknown Texture format used in TextureBase::externalFormat(): " << static_cast<int>(d_format);
+          ss << "Unknown Texture format used in TextureBase::externalFormat(): " << static_cast<int>(d_internalFormat);
           log(__FILE__, __LINE__, LogType::error, ss.str());
       }
       return 0;
@@ -509,152 +673,7 @@ namespace dim
     template<typename Type>
     GLuint TextureBase<Type>::internalFormat() const
     {
-      GLuint dataType = DataType<Type>::value;
-
-      switch(d_format)
-      {
-        /* 8-bit formats */
-        case Format::RGBA8:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_RGBA8I;
-            case GL_UNSIGNED_INT:
-              return GL_RGBA8UI;
-          }
-          return GL_RGBA8;
-        case Format::RGB8:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_RGB8I;
-            case GL_UNSIGNED_INT:
-              return GL_RGB8UI;
-          }
-          return GL_RGB8;
-        case Format::RG8:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_RG8I;
-            case GL_UNSIGNED_INT:
-              return GL_RG8UI;
-          }
-          return GL_RG8;
-        case Format::R8:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_R8I;
-            case GL_UNSIGNED_INT:
-              return GL_R8UI;
-          }
-          return GL_R8;
-        case Format::sRGB8A8:
-          return GL_SRGB8_ALPHA8;
-        case Format::sRGB8:
-          return GL_SRGB8;
-
-          /* 16-bit formats */
-        case Format::RGBA16:
-          switch(dataType)
-          {
-            case GL_FLOAT:
-              return GL_RGBA16F;
-            case GL_INT:
-              return GL_RGBA16I;
-            case GL_UNSIGNED_INT:
-              return GL_RGBA16UI;
-          }
-          return GL_RGBA16;
-        case Format::RGB16:
-          switch(dataType)
-          {
-            case GL_FLOAT:
-              return GL_RGB16F;
-            case GL_INT:
-              return GL_RGB16I;
-            case GL_UNSIGNED_INT:
-              return GL_RGB16UI;
-          }
-          return GL_RGB16;
-        case Format::RG16:
-          switch(dataType)
-          {
-            case GL_FLOAT:
-              return GL_RG16F;
-            case GL_INT:
-              return GL_RG16I;
-            case GL_UNSIGNED_INT:
-              return GL_RG16UI;
-          }
-          return GL_RG16;
-        case Format::R16:
-          switch(dataType)
-          {
-            case GL_FLOAT:
-              return GL_R16F;
-            case GL_INT:
-              return GL_R16I;
-            case GL_UNSIGNED_INT:
-              return GL_R16UI;
-          }
-          return GL_R16;
-        case Format::D16:
-          return GL_DEPTH_COMPONENT16;
-
-          /* 32-bit formats */
-        case Format::RGBA32:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_RGBA32I;
-            case GL_UNSIGNED_INT:
-              return GL_RGBA32UI;
-          }
-          return GL_RGBA32F;
-        case Format::RGB32:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_RGB32I;
-            case GL_UNSIGNED_INT:
-              return GL_RGB32UI;
-          }
-          return GL_RGB32F;
-        case Format::RG32:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_RG32I;
-            case GL_UNSIGNED_INT:
-              return GL_RG32UI;
-          }
-          return GL_RG32F;
-        case Format::R32:
-          switch(dataType)
-          {
-            case GL_INT:
-              return GL_R32I;
-            case GL_UNSIGNED_INT:
-              return GL_R32UI;
-          }
-          return GL_R32F;
-        case Format::D32:
-          if(dataType == GL_FLOAT)
-            return GL_DEPTH_COMPONENT32F;
-          else
-            return GL_DEPTH_COMPONENT32;
-
-        case Format::R11G11B10:
-          return GL_R11F_G11F_B10F;
-
-        default:
-          std::stringstream ss;
-          ss << "Unknown Texture format used in TextureBase::externalFormat(): " << static_cast<int>(d_format);
-          log(__FILE__, __LINE__, LogType::error, ss.str());
-      }
-      return 0;
+      return d_internalFormat;
     }
   }
 }

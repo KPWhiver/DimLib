@@ -82,6 +82,11 @@ namespace dim
 
     d_mouse.update();
 
+    logError();
+  }
+
+  void Window::logError() const
+  {
     int error = glGetError();
     switch(error)
     {
@@ -177,6 +182,10 @@ namespace dim
     glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE);
     glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE);
     glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
 
     swapBuffers();
   }

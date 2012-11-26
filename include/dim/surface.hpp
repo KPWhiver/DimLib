@@ -93,6 +93,7 @@ namespace dim
     
   public:
     Surface(uint width, uint height, Format format, bool pingPongBuffer, Filtering filter = Filtering::linear);
+    Surface(uint width, uint height, NormalizedFormat format, bool pingPongBuffer, Filtering filter = Filtering::linear);
     Surface(typename std::tuple_element<0, TuplePtrType>::type ptr, bool pingPingBuffer);
     Surface(Surface const &other) = delete;
 
@@ -105,7 +106,10 @@ namespace dim
     void addTarget(Format format, Filtering filter = Filtering::linear);
     
     template<uint Index>
-    void addTarget(typename std::tuple_element<0, TuplePtrType>::type ptr);
+    void addTarget(NormalizedFormat format, Filtering filter = Filtering::linear);
+
+    template<uint Index>
+    void addTarget(typename std::tuple_element<Index, TuplePtrType>::type ptr);
     
     //template<uint Index>
     //void removeTarget();
@@ -128,15 +132,12 @@ namespace dim
     GLuint id() const;
 
   private:
-	  Surface::ComponentType processFormat(Format format);
+	  Surface::ComponentType processFormat(GLuint format);
 
 	  void notifyTextures(uint buffer);
 
     template<uint Index>
-    void addAttachment(ComponentType attachment, uint width, uint height, uint buffer, Format format, Filtering filter);
-
-    template<uint Index>
-    void addAttachment(ComponentType attachment, uint buffer, typename std::tuple_element<0, TuplePtrType>::type ptr);
+    void addAttachment(ComponentType attachment, uint buffer, typename std::tuple_element<Index, TuplePtrType>::type ptr);
 
     //TupleCaller class
     template<uint Index, typename TupleCallType>

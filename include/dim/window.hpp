@@ -66,6 +66,8 @@ namespace dim
 
 		Mouse const &mouse() const;
 
+		void logError() const;
+
 		void setClearColor(glm::vec4 const &color);
 		void setCloseFunction(int (*closeFunction)());
 		void setChangeSizeFunction(void (*changeSizeFunction)(int, int));
