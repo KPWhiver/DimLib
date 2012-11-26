@@ -174,6 +174,10 @@ namespace dim
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LEQUAL);
 
+    glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE);
+    glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE);
+    glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE);
+
     swapBuffers();
   }
 

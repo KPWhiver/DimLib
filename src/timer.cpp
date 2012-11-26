@@ -74,16 +74,22 @@ namespace dim
   Timer::milliseconds const &Timer::elapsedGPUtime()
   {
     if(d_running == true)
+    {
       log(__FILE__, __LINE__, LogType::note, "Calling Timer::elapsedGPUtime() before calling Timer::stop() will result in the time before starting");
+      return d_GPUtime;
+    }
 
     if(GLEW_ARB_timer_query)
       log(__FILE__, __LINE__, LogType::error, "GPUtime measurement not supported on this GPU");
       
-    GLuint64 time;
+    if(d_id != 0)
+    {
+      GLuint64 time;
       
-    glGetQueryObjectui64v(d_id, GL_QUERY_RESULT, &time);
+      glGetQueryObjectui64v(d_id, GL_QUERY_RESULT, &time);
     
-    d_GPUtime = milliseconds(time / 1000000.0);
+      d_GPUtime = milliseconds(time / 1000000.0);
+    }
       
     return d_GPUtime;
   }
