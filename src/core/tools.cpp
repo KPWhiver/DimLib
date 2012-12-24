@@ -18,7 +18,7 @@
 // MA 02110-1301, USA.
 
 #include "dim/core/tools.hpp"
-#include "dim/scene/mesh.hpp"
+#include "dim/core/mesh.hpp"
 
 namespace dim
 {

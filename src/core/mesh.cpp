@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <sstream>
 
-#include "dim/scene/mesh.hpp"
+#include "dim/core/mesh.hpp"
 #include "dim/core/shader.hpp"
 
 using namespace glm;

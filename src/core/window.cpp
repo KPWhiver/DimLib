@@ -25,9 +25,6 @@
 #include <stdexcept>
 
 #include "dim/core/window.hpp"
-#include "dim/scene/mesh.hpp"
-#include "dim/core/font.hpp"
-#include "dim/core/texture.hpp"
 #include "dim/core/surface.hpp"
 
 using namespace std;
