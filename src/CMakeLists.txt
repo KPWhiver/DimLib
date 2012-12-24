@@ -1,35 +1,39 @@
 set(CXXSOURCES
-  textureproperties.cpp 
-  dim.cpp scene.cpp 
-  light.cpp 
-  scenegraph.cpp 
-  camera.cpp 
-  shader.cpp 
-  mesh.cpp 
-  window.cpp 
-  drawnode.cpp 
-  mouse.cpp 
-  button.cpp 
-  context.cpp 
-  menu.cpp 
-  menuitem.cpp 
-  listenarea.cpp 
-  component.cpp 
-  font.cpp 
-  image2d.cpp 
-  nodestoragebase.cpp 
-  frame.cpp 
-  tools.cpp 
-  texture.cpp 
-  surface.cpp 
-  lex.cpp 
-  switch.cpp
-  timer.cpp
+  core/textureproperties.cpp 
+  core/dim.cpp 
+  core/light.cpp   
+  core/camera.cpp 
+  core/shader.cpp   
+  core/mouse.cpp 
+  core/window.cpp 
+  core/font.cpp 
+  core/tools.cpp 
+  core/texture.cpp 
+  core/surface.cpp 
+  core/lex.cpp 
+  core/timer.cpp
+  core/mesh.cpp  
+
+  scene/scene.cpp 
+  scene/scenegraph.cpp 
+  scene/drawnode.cpp   
+  scene/nodestoragebase.cpp 
+
+  gui/button.cpp 
+  gui/context.cpp 
+  gui/menu.cpp 
+  gui/menuitem.cpp 
+  gui/listenarea.cpp 
+  gui/component.cpp 
+  gui/image2d.cpp 
+  gui/frame.cpp 
+  gui/switch.cpp
 )
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   /usr/include/freetype2
+  /usr/local/include/bullet
 )
 
 if(CMAKE_CXX_COMPILER MATCHES ".*clang")
