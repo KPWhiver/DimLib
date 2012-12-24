@@ -157,10 +157,10 @@ namespace dim
   Shader const &Shader::defaultShader()
   {
     static Shader shader("defaultShader", "#version 120\n"
-                         "%-vertex-shader\n"
+                         "vertex:\n"
                          "layout(location = dim_vertex) attribute vec4 in_position;\n"
                          "void main(){gl_Position = in_position;}\n"
-                         "%-fragment-shader\n"
+                         "fragment:\n"
                          "void main(){gl_FragColor = vec4(1.0);}\n");
 
     return shader;

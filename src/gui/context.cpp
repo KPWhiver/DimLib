@@ -181,13 +181,13 @@ namespace dim
 	Shader const &Context::shader() const
 	{
 	  static Shader paletShader("guiShader", "#version 120\n"
-	                            "%-vertex-shader\n"
+	                            "vertex:\n"
 	                            "uniform mat4 in_mat_projection;\n uniform mat4 in_mat_view;\n uniform mat4 in_mat_model;\n"
 	                            "layout(location = dim_vertex) attribute vec2 in_position;\n layout(location = dim_texCoord) attribute vec2 in_texcoord;\n"
 	                            "varying vec2 pass_texcoord;\n"
 	                            "void main(){pass_texcoord = in_texcoord;\n"
 	                            "gl_Position = in_mat_projection * in_mat_model * in_mat_view * vec4(in_position, vec2(1.0));}\n"
-	                            "%-fragment-shader\n"
+	                            "fragment:\n"
 	                            "uniform sampler2D in_texture;\n"
 	                            "uniform sampler2D in_text;\n"
 	                            "uniform vec4 in_color;\n"
