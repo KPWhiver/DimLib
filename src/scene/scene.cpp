@@ -232,7 +232,19 @@ namespace dim
     }
   }
 
+  namespace
+  {
+    TextureManager stdManager(Filtering::trilinear);
+  }
+
   Scene::Scene(std::string const &filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
+               Attribute const &binormal, Attribute const &tangent)
+  :
+      Scene(filename, stdManager, vertex, normal, texCoord, binormal, tangent)
+  {
+  }
+
+  Scene::Scene(std::string const &filename, TextureManager &resources, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
                Attribute const &binormal, Attribute const &tangent)
   {
     // set flags
@@ -308,7 +320,8 @@ namespace dim
 
         string path = filename.substr(0, filename.find_last_of('/') + 1) + relativePath.data;
 
-        textures[material].push_back(make_pair(Texture<GLubyte>(path, Filtering::trilinear, false), baseName + static_cast<char>('0' + texIdx)));
+        //textures[material].push_back(make_pair(Texture<GLubyte>(path, Filtering::trilinear, false), baseName + static_cast<char>('0' + texIdx)));
+        textures[material].emplace_back(resources.request(path), baseName + static_cast<char>('0' + texIdx));
         ++texIdx;
       }
     }

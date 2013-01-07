@@ -116,6 +116,7 @@ namespace dim
       void addRigidBody(btRigidBody *rigidBody);
       void addAction(btActionInterface *action);
       void addGhost(btGhostObject *ghost);
+      void addBulletFile(std::string const &filename);
 
       template<typename RefType>
       void load(std::string const &filename);

@@ -5,7 +5,12 @@ set(CXXHEADERS_SCENE
   scene/nodegrid.hpp 
   scene/nodegrid.inl 
   scene/scenegraph.hpp 
-  scene/scene.hpp 
+  scene/scene.hpp
+  scene/filedrawnode.hpp
+  scene/texturemanager.hpp
+  scene/shadermanager.hpp
+  scene/scenemanager.hpp
+  scene/bulletmanager.hpp
 )
 
 set(CXXHEADERS_CORE

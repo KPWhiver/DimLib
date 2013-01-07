@@ -24,6 +24,7 @@
 
 #include "dim/core/mesh.hpp"
 #include "dim/core/texture.hpp"
+#include "dim/scene/texturemanager.hpp"
 
 namespace dim
 {
@@ -52,13 +53,13 @@ class DrawState
 
 class Scene
 {
-
-
   std::vector<DrawState> d_states;
 
 public:
   Scene() = default;
 	Scene(std::string const &filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
+        Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
+  Scene(std::string const &filename, TextureManager &resources, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
         Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
 	Scene(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
 	void add(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});

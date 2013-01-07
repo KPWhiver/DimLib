@@ -21,6 +21,7 @@
 
 #include "dim/scene/scenegraph.hpp"
 #include "dim/core/shader.hpp"
+#include "btBulletWorldImporter.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -250,6 +251,12 @@ namespace dim
   {
     if(ghost != 0)
       d_dynamicsWorld.addCollisionObject(ghost, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::AllFilter);
+  }
+
+  void SceneGraph::addBulletFile(std::string const &filename)
+  {
+    static btBulletWorldImporter fileLoader(&d_dynamicsWorld);
+    fileLoader.loadFile(filename.c_str());
   }
 
   void SceneGraph::add(ShaderScene const &state, NodeStorageBase *ptr)

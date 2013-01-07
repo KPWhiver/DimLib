@@ -127,7 +127,7 @@ Font::Font(string filename, uint maxSize)
 	FT_Done_Face(face);
 	
 	d_fontMap = Texture<GLubyte>(map, Filtering::linear, NormalizedFormat::R8, mapWidth, mapHeight, true);
-  delete map;
+  delete[] map;
 }
 
 Texture<> Font::generateTexture(string const &text, bool centered, uint textureWidth, uint textureHeight, Filtering filter) const
