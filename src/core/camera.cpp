@@ -30,21 +30,18 @@ namespace dim
 {
 
 Camera::Camera()
+:
+    Camera(Camera::perspective, 0, 0)
 {
-	init(Camera::perspective, 0, 0, vec3(0.0f), vec3(1.0f, 0.0f, 0.0f));
 }
 
 Camera::Camera(Camera::projection mode, float width, float height)
+:
+    Camera(mode, width, height, vec3(0.0f), vec3(1.0f, 0.0f, 0.0f))
 {
-  init(mode, width, height, vec3(0.0f), vec3(1.0f, 0.0f, 0.0f));
 }
 
 Camera::Camera(Camera::projection mode, float width, float height, vec3 coorFrom, vec3 coorTo)
-{
-  init(mode, width, height, coorFrom, coorTo);
-}
-
-void Camera::init(Camera::projection mode, float width, float height, vec3 coorFrom, vec3 coorTo)
 {
   d_coorFrom = coorFrom;
   d_coorTo = coorTo;

@@ -51,7 +51,7 @@ namespace dim
   {
     std::get<0>(d_textures) = obj;
     glGenFramebuffers(1, d_id.get());
-    addTarget<0>(&obj);
+    addTarget<0>(&std::get<0>(d_textures));
   }
 
   template<typename ...Types>

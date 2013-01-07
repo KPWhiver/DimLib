@@ -69,9 +69,8 @@ public:
   void setAtShader(Shader const &shader, std::string const &viewMatrix = "viewMatrix", std::string const &projectionMatrix = "projectionMatrix");
   void editmode();
   bool frustum(float ox, float oy);
-private:
-  void init(Camera::projection mode, float width, float height, glm::vec3 coorFrom, glm::vec3 coorTo);
 
+private:
   void setProjection();
   void setView();
   

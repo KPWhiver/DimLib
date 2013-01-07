@@ -24,7 +24,7 @@ namespace dim
     template<typename Type>
     TextureBase<Type>::TextureBase()
         :
-            d_id(new GLuint, [](GLuint *ptr)
+            d_id(new GLuint(0), [](GLuint *ptr)
             { glDeleteTextures(1, ptr); delete ptr;}),
             d_height(0),
             d_width(0),

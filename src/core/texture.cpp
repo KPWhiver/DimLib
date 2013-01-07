@@ -278,12 +278,10 @@ namespace dim
   Texture<GLubyte> Texture<GLubyte>::copy() const
   {
     Texture<GLubyte> texture(buffer(), filter(), internalFormat(), width(), height(), buffered(), wrapping());
-    std::cerr << texture.id() << '\n';
     
     if(borderColor() != vec4(0))
       texture.setBorderColor(borderColor());
 
-    std::cerr << texture.id() << '\n';
     return texture;
   }
 
