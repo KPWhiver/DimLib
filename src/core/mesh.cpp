@@ -112,7 +112,7 @@ namespace dim
     }
   }
 
-  Mesh::Mesh(GLfloat* buffer, vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx)
+  Mesh::Mesh(GLfloat const *buffer, vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx)
       :
           d_interleavedVBO(0, 0),
           d_indexVBO(0, 0),
@@ -131,7 +131,7 @@ namespace dim
     addBuffer(buffer, idx);
   }
 
-  void Mesh::addBuffer(GLfloat* buffer, size_t idx)
+  void Mesh::addBuffer(GLfloat const *buffer, size_t idx)
   {
     uint varNumOfElements = numOfElements();
 
@@ -152,12 +152,11 @@ namespace dim
       // Make a new buffer
       if(d_interleavedVBO.size() == 0)
       {
-        GLfloat *array = new GLfloat[d_numOfVertices * varNumOfElements];
+        vector<GLfloat> array(d_numOfVertices * varNumOfElements);
 
-        updateBuffer(array, buffer, varNumOfElements, idx);
+        updateBuffer(array.data(), buffer, varNumOfElements, idx);
 
-        d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, array);
-        delete[] array;
+        d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, array.data());
       }
       // Paste into the old buffer
       else
@@ -167,7 +166,7 @@ namespace dim
     }
   }
 
-  void Mesh::updateBuffer(GLfloat* buffer, size_t idx)
+  void Mesh::updateBuffer(GLfloat const *buffer, size_t idx)
   {
     uint varNumOfElements = numOfElements();
 
@@ -192,7 +191,7 @@ namespace dim
     }
   }
 
-  void Mesh::updateBuffer(GLfloat *target, GLfloat *source, uint varNumOfElements, size_t idx)
+  void Mesh::updateBuffer(GLfloat *target, GLfloat const *source, uint varNumOfElements, size_t idx)
   {
     for(size_t vert = 0; vert != d_numOfVertices; ++vert)
     {
@@ -215,7 +214,7 @@ namespace dim
     }
   }
 
-  void Mesh::addElementBuffer(GLushort* buffer, size_t numOfTriangles)
+  void Mesh::addElementBuffer(GLushort const *buffer, size_t numOfTriangles)
   {
     d_numOfTriangles = numOfTriangles;
 
@@ -228,7 +227,7 @@ namespace dim
     d_indexVBO = Buffer<GLushort>(d_numOfTriangles * 3, buffer);
   }
 
-  void Mesh::addInstanceBuffer(GLfloat* buffer, size_t locations, Attribute const &attrib)
+  void Mesh::addInstanceBuffer(GLfloat const *buffer, size_t locations, Attribute const &attrib)
   {
     if(d_instancingVBO.size() != 0)
     {
@@ -242,7 +241,7 @@ namespace dim
     d_instancingVBO = Buffer<GLfloat>(d_maxLocations * 3, buffer);
   }
 
-  void Mesh::updateElementBuffer(GLushort* buffer)
+  void Mesh::updateElementBuffer(GLushort const *buffer)
   {
     if(d_indexVBO.size() == 0)
     {
@@ -253,7 +252,7 @@ namespace dim
     d_indexVBO.update(d_numOfTriangles * 3, buffer);
   }
 
-  void Mesh::updateInstanceBuffer(GLfloat* buffer, size_t locations)
+  void Mesh::updateInstanceBuffer(GLfloat const *buffer, size_t locations)
   {
     if(d_instancingVBO.size() == 0)
     {

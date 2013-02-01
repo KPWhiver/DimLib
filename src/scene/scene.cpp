@@ -147,7 +147,7 @@ namespace dim
 
   namespace
   {
-    void addAttributeToBuffer(Attribute const &attrib, GLfloat *array, size_t offset, aiVector3D const &vector)
+    void addAttributeToBuffer(Attribute const &attrib, vector<GLfloat> &array, size_t offset, aiVector3D const &vector)
     {
       array[offset] = vector.x;
 
@@ -175,7 +175,7 @@ namespace dim
       // allocate buffer
       size_t numOfVertices = scene.mMeshes[mesh]->mNumVertices;
 
-      GLfloat *array = new GLfloat[numOfVertices * varNumOfElements];
+      vector<GLfloat> array(numOfVertices * varNumOfElements);
 
       // fill buffer
       for(size_t vert = 0; vert != numOfVertices; ++vert)
@@ -211,11 +211,9 @@ namespace dim
         }
       }
 
-      Mesh model(array, attributes, numOfVertices, Mesh::triangle, Mesh::interleaved);
+      Mesh model(array.data(), attributes, numOfVertices, Mesh::triangle, Mesh::interleaved);
 
-      delete[] array;
-
-      GLushort *indexArray = new GLushort[scene.mMeshes[mesh]->mNumFaces * 3];
+      vector<GLushort> indexArray(scene.mMeshes[mesh]->mNumFaces * 3);
 
       for(size_t idx = 0; idx != scene.mMeshes[mesh]->mNumFaces; ++idx)
       {
@@ -224,9 +222,7 @@ namespace dim
         indexArray[0 + idx * 3 + 2] = scene.mMeshes[mesh]->mFaces[idx].mIndices[2];
       }
 
-      model.addElementBuffer(indexArray, scene.mMeshes[mesh]->mNumFaces);
-
-      delete[] indexArray;
+      model.addElementBuffer(indexArray.data(), scene.mMeshes[mesh]->mNumFaces);
 
       return model;
     }

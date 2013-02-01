@@ -22,6 +22,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "dim/core/texture.hpp"
 
@@ -60,7 +61,7 @@ namespace dim
     uint advance(unsigned char ch) const;
 
   private:
-    GLubyte *scale(GLubyte *textMap, uint oldWidth, uint oldHeight, uint newWidth, uint newHeight) const;
+    std::vector<GLubyte> scale(std::vector<GLubyte> const &textMap, uint oldWidth, uint oldHeight, uint newWidth, uint newHeight) const;
 
     static void initialize();
     uint nextPowerOf2(uint number) const;

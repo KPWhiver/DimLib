@@ -41,7 +41,6 @@ namespace dim
   template<typename Type>
   class Buffer
   {
-
       std::shared_ptr<GLuint> d_id;
       size_t d_size;
 
@@ -72,10 +71,10 @@ namespace dim
         stream = GL_STREAM_DRAW,
       };
 
-      Buffer(size_t size, Type* buffer);
+      Buffer(size_t size, Type const *buffer);
 
       void bind(Mode mode) const;
-      void update(size_t bytes, Type* buffer);
+      void update(size_t bytes, Type const *buffer);
 
       Type* map(Access access);
       bool unmap();
@@ -88,7 +87,7 @@ namespace dim
   };
 
   template<typename Type>
-  Buffer<Type>::Buffer(size_t size, Type* buffer)
+  Buffer<Type>::Buffer(size_t size, Type const *buffer)
       :
           d_id(new GLuint(0), [](GLuint *ptr)
           { glDeleteBuffers(1, ptr);
@@ -120,7 +119,7 @@ namespace dim
   }
 
   template<typename Type>
-  void Buffer<Type>::update(size_t size, Type *buffer)
+  void Buffer<Type>::update(size_t size, Type const *buffer)
   {
     d_size = size;
     glBindBuffer(data, id());

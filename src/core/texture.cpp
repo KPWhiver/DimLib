@@ -54,7 +54,7 @@ namespace dim
     }
   }
 
-  GLubyte* Texture<GLubyte>::loadPNG(istream &input, NormalizedFormat &format, uint &width, uint &height)
+  vector<GLubyte> Texture<GLubyte>::loadPNG(istream &input, NormalizedFormat &format, uint &width, uint &height)
   {
     png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
 
@@ -123,26 +123,24 @@ namespace dim
     if(setjmp(png_jmpbuf(pngPtr)))
       log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
 
-    png_bytep* rowPtrs = new png_bytep[height];
+    vector<png_bytep> rowPtrs(height);
 
-    GLubyte* data = new GLubyte[height * width * channels];
+    vector<GLubyte> data(height * width * channels);
 
     for(uint y = 0; y != height; ++y)
     {
       png_uint_32 offset = y * (width * channels);
-      rowPtrs[y] = static_cast<png_bytep>(data) + offset;
+      rowPtrs.at(y) = static_cast<png_bytep>(data.data()) + offset;
     }
 
-    png_read_image(pngPtr, rowPtrs);
-
-    delete[] rowPtrs;
+    png_read_image(pngPtr, rowPtrs.data());
 
     png_destroy_read_struct(&pngPtr, &infoPtr, 0);
 
     return data;
   }
 
-  void Texture<GLubyte>::savePNG(string const &filename, ostream &output, GLubyte const *data) const
+  void Texture<GLubyte>::savePNG(string const &filename, ostream &output, vector<GLubyte> const &data) const
   {
     png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
     if(!pngPtr)
@@ -192,32 +190,31 @@ namespace dim
 
     png_write_info(pngPtr, infoPtr);
 
-    png_bytep *rowPtrs = new png_bytep[height()];
+    vector<png_bytep> rowPtrs(height());
 
     for(uint y = 0; y != height(); ++y)
     {
       // A const_cast is used because libpng won't take anything else
       png_uint_32 offset = y * (width() * channels);
-      rowPtrs[y] = static_cast<png_bytep>(const_cast<GLubyte*>(data)) + offset;
+      rowPtrs.at(y) = static_cast<png_bytep>(const_cast<GLubyte*>(data.data())) + offset;
     }
 
     if(setjmp(png_jmpbuf(pngPtr)))
       log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
-    png_write_image(pngPtr, rowPtrs);
+    png_write_image(pngPtr, rowPtrs.data());
 
     if(setjmp(png_jmpbuf(pngPtr)))
       log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
     png_write_end(pngPtr, 0);
 
-    delete[] rowPtrs;
     png_destroy_write_struct(&pngPtr, &infoPtr);
   }
 
   Texture<GLubyte> const &Texture<GLubyte>::zeroTexture()
   {
-    static GLubyte data[4]{0};
+    static GLubyte data[4]{0, 0, 0, 0};
     static NormalizedFormat format(NormalizedFormat::RGBA8);
 
 
@@ -260,7 +257,7 @@ namespace dim
 
     file.read(reinterpret_cast<char*>(header), 8);
 
-    GLubyte *data = 0;
+    vector<GLubyte> data;
     NormalizedFormat format = NormalizedFormat::R8;
     uint width = 0;
     uint height = 0;
@@ -270,14 +267,12 @@ namespace dim
     else
       log(__FILE__, __LINE__, LogType::error, filename + " is not a valid .png file");
 
-    init(data, filter, format, width, height, keepBuffered, wrap);
-
-    delete[] data;
+    init(data.data(), filter, format, width, height, keepBuffered, wrap);
   }
   
   Texture<GLubyte> Texture<GLubyte>::copy() const
   {
-    Texture<GLubyte> texture(buffer(), filter(), internalFormat(), width(), height(), buffered(), wrapping());
+    Texture<GLubyte> texture(buffer().data(), filter(), internalFormat(), width(), height(), buffered(), wrapping());
     
     if(borderColor() != vec4(0))
       texture.setBorderColor(borderColor());
@@ -301,7 +296,7 @@ namespace dim
 
     file.read(header, 8);
 
-    GLubyte *data = 0;
+    vector<GLubyte> data;
     NormalizedFormat format = NormalizedFormat::R8;
     uint width = 0;
     uint height = 0;
@@ -311,9 +306,7 @@ namespace dim
     else
       log(__FILE__, __LINE__, LogType::error, d_filename + " is not a valid .png file");
 
-    update(data);
-
-    delete[] data;
+    update(data.data());
   }
 
   void Texture<GLubyte>::save(string filename) const
@@ -327,8 +320,6 @@ namespace dim
     if(not file.is_open())
       log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
 
-    GLubyte const *data = buffer();
-
-    savePNG(filename, file, data);
+    savePNG(filename, file, buffer());
   }
 }

@@ -94,8 +94,8 @@ Font::Font(string filename, uint maxSize)
 	// store glyphs
 	uint mapHeight = nextPowerOf2((totalWidth / 1024 + 1) * height);
 	uint mapWidth = totalWidth >= 1024 ? 1024 : nextPowerOf2(totalWidth);
-	GLubyte *map = new GLubyte[mapHeight * mapWidth];
-	fill_n(map, mapHeight * mapWidth, 0);
+	vector<GLubyte> map(mapHeight * mapWidth);
+	//fill_n(map, mapHeight * mapWidth, 0);
 	
 	ivec2 origin(0);
 	
@@ -126,8 +126,7 @@ Font::Font(string filename, uint maxSize)
 
 	FT_Done_Face(face);
 	
-	d_fontMap = Texture<GLubyte>(map, Filtering::linear, NormalizedFormat::R8, mapWidth, mapHeight, true);
-  delete[] map;
+	d_fontMap = Texture<GLubyte>(map.data(), Filtering::linear, NormalizedFormat::R8, mapWidth, mapHeight, true);
 }
 
 Texture<> Font::generateTexture(string const &text, bool centered, uint textureWidth, uint textureHeight, Filtering filter) const
@@ -142,7 +141,7 @@ Texture<> Font::generateTexture(string const &text, bool centered, uint textureW
     textWidth += d_glyphs[ch].width;
   }
 
-  GLubyte *textMap = new GLubyte[textHeight * unscaledTextureWidth]{};
+  vector<GLubyte> textMap(textHeight * unscaledTextureWidth);
 
   uint xStart = 0;
   if(centered && textWidth < unscaledTextureWidth)
@@ -168,12 +167,9 @@ Texture<> Font::generateTexture(string const &text, bool centered, uint textureW
     }
   }
 
-  GLubyte *texture = scale(textMap, unscaledTextureWidth, textHeight, textureWidth, textureHeight);
+  vector<GLubyte> texture = scale(textMap, unscaledTextureWidth, textHeight, textureWidth, textureHeight);
 
-  Texture<> textTexture(texture, filter, NormalizedFormat::R8, textureWidth, textureHeight, false);
-
-  delete[] textMap;
-  delete[] texture;
+  Texture<> textTexture(texture.data(), filter, NormalizedFormat::R8, textureWidth, textureHeight, false);
 
   return textTexture;
 }
@@ -218,10 +214,10 @@ uint Font::nextPowerOf2(uint number) const
   return number;
 }
 
-GLubyte *Font::scale(GLubyte *textMap, uint oldWidth, uint oldHeight, uint newWidth, uint newHeight) const
+vector<GLubyte> Font::scale(vector<GLubyte> const &textMap, uint oldWidth, uint oldHeight, uint newWidth, uint newHeight) const
 {
 
-  GLubyte *texture = new GLubyte[newHeight * newWidth]{};
+  vector<GLubyte> texture(newHeight * newWidth);
   float horScale = static_cast<float>(newWidth) / oldWidth;
   float verScale = static_cast<float>(newHeight) / oldHeight;
 
@@ -234,14 +230,14 @@ GLubyte *Font::scale(GLubyte *textMap, uint oldWidth, uint oldHeight, uint newWi
       uint y1(std::max(0, static_cast<int>(floor(y / verScale))));
       uint y2(std::min(y1 + 1, oldHeight - 1));
 
-      GLubyte upLeft(textMap[y1 * oldWidth + x1]);
-      GLubyte downLeft(textMap[y2 * oldWidth + x1]);
-      GLubyte upRight(textMap[y1 * oldWidth + x2]);
-      GLubyte downRight(textMap[y2 * oldWidth + x2]);
+      GLubyte upLeft(textMap.at(y1 * oldWidth + x1));
+      GLubyte downLeft(textMap.at(y2 * oldWidth + x1));
+      GLubyte upRight(textMap.at(y1 * oldWidth + x2));
+      GLubyte downRight(textMap.at(y2 * oldWidth + x2));
 
       vec2 uv(x / horScale, y / verScale);
       vec2 frac(fract(uv));
-      texture[y * newWidth + x] = mix(mix(upLeft, upRight, frac.x), mix(downLeft, downRight, frac.x), frac.y);
+      texture.at(y * newWidth + x) = mix(mix(upLeft, upRight, frac.x), mix(downLeft, downRight, frac.x), frac.y);
     }
   }
   return texture;

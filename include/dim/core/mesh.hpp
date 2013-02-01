@@ -104,19 +104,19 @@ namespace dim
       };
       static size_t const interleaved = std::numeric_limits<size_t>::max();
 
-      Mesh(GLfloat* buffer, std::vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx);
-      void addBuffer(GLfloat* buffer, size_t idx);
+      Mesh(GLfloat const *buffer, std::vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx);
+      void addBuffer(GLfloat const *buffer, size_t idx);
 
-      void addElementBuffer(GLushort* buffer, size_t numOfPolygons);
-      void addInstanceBuffer(GLfloat* buffer, size_t numOfLocations, Attribute const &attrib);
+      void addElementBuffer(GLushort const *buffer, size_t numOfPolygons);
+      void addInstanceBuffer(GLfloat const *buffer, size_t numOfLocations, Attribute const &attrib);
 
       Buffer<GLfloat> const &buffer();
       Buffer<GLushort> const &elementBuffer();
       Buffer<GLfloat> const &instanceBuffer();
 
-      void updateBuffer(GLfloat* buffer, size_t idx);
-      void updateElementBuffer(GLushort* buffer);
-      void updateInstanceBuffer(GLfloat* buffer, size_t locations);
+      void updateBuffer(GLfloat const *buffer, size_t idx);
+      void updateElementBuffer(GLushort const *buffer);
+      void updateInstanceBuffer(GLfloat const *buffer, size_t locations);
 
       void bind() const;
       void unbind() const;
@@ -135,7 +135,7 @@ namespace dim
       Attribute d_instanceAttribute;
 
       static void initialize();
-      void updateBuffer(GLfloat *target, GLfloat *source, GLuint varNumOfElements, size_t idx);
+      void updateBuffer(GLfloat *target, GLfloat const *source, GLuint varNumOfElements, size_t idx);
 
       uint numOfElements() const;
   };

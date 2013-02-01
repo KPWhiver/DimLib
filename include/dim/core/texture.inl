@@ -395,7 +395,7 @@ namespace dim
         if(d_buffer.size() == 0)
           return;
         else
-          data = &d_buffer[0];
+          data = d_buffer.data();
       }
 
       bind();
@@ -407,7 +407,7 @@ namespace dim
         d_buffer = std::vector<Type>();
         renewBuffer();
       }
-      else if(data != &d_buffer[0])
+      else if(data != d_buffer.data())
         d_buffer.assign(data, data + d_width * d_height * components());
     }
 
@@ -420,7 +420,7 @@ namespace dim
     template<typename Type>
     Type TextureBase<Type>::value(uint x, uint y, uint channel, uint level) const
     {
-      Type const *source = buffer(level);
+      std::vector<Type> const &source = buffer(level);
 
       // calculate width and height based on the mipmap level
       uint bufferWidth = d_width / (1 << level);
@@ -437,19 +437,19 @@ namespace dim
         case GL_RED:
         case GL_DEPTH_COMPONENT:
           if(channel == 0)
-            return source[(y * bufferWidth + x)];
+            return source.at((y * bufferWidth + x));
           break;
         case GL_RG:
           if(channel < 2)
-            return source[(y * bufferWidth + x) * 2 + channel];
+            return source.at((y * bufferWidth + x) * 2 + channel);
           break;
         case GL_RGB:
           if(channel < 3)
-            return source[(y * bufferWidth + x) * 3 + channel];
+            return source.at((y * bufferWidth + x) * 3 + channel);
           break;
         case GL_RGBA:
           if(channel < 4)
-            return source[(y * bufferWidth + x) * 4 + channel];
+            return source.at((y * bufferWidth + x) * 4 + channel);
           break;
       }
 
@@ -459,7 +459,7 @@ namespace dim
     }
 
     template<typename Type>
-    Type const *TextureBase<Type>::buffer(uint level) const
+    std::vector<Type> const &TextureBase<Type>::buffer(uint level) const
     {
       // check wether level is too big
       if(1 << level > s_maxTextureSize)
@@ -476,18 +476,18 @@ namespace dim
         d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * components());
 
         bind();
-        glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, &d_buffer[0]);
+        glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, d_buffer.data());
 
         d_bufferLevel = level;
 
         d_outdatedBuffer = false;
       }
 
-      return &d_buffer[0];
+      return d_buffer;
     }
 
     template<typename Type>
-    Type *TextureBase<Type>::buffer(uint level)
+    std::vector<Type> &TextureBase<Type>::buffer(uint level)
     {
       // check wether level is too big
       if(1 << level > s_maxTextureSize)
@@ -504,14 +504,14 @@ namespace dim
         d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * components());
 
         bind();
-        glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, &d_buffer[0]);
+        glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, d_buffer.data());
 
         d_bufferLevel = level;
 
         d_outdatedBuffer = false;
       }
 
-      return &d_buffer[0];
+      return d_buffer;
     }
 
     /* texture properties */

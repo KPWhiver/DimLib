@@ -159,8 +159,8 @@ namespace dim
       void update(Type const *data = 0);
       
       Type value(uint x, uint y, uint channel, uint level = 0) const;
-      Type const *buffer(uint level = 0) const;
-      Type *buffer(uint level = 0);
+      std::vector<Type> const &buffer(uint level = 0) const;
+      std::vector<Type> &buffer(uint level = 0);
 
     protected:
       void init(Type const *data, Filtering filter, Format format, uint width, uint height, bool keepBuffered, Wrapping wrap);
@@ -240,8 +240,8 @@ namespace dim
       void save(std::string filename = "") const;
 
     private:
-      GLubyte* loadPNG(std::istream &input, NormalizedFormat &format, uint &width, uint &height);
-      void savePNG(std::string const &filename, std::ostream &output, GLubyte const *data) const;
+      std::vector<GLubyte> loadPNG(std::istream &input, NormalizedFormat &format, uint &width, uint &height);
+      void savePNG(std::string const &filename, std::ostream &output, std::vector<GLubyte> const &data) const;
 
       Texture(GLubyte const *data, Filtering filter, GLuint format, uint width, uint height, bool keepBuffered, Wrapping wrap = Wrapping::repeat);
   };
@@ -331,7 +331,7 @@ namespace dim
   template<typename Type>
   Texture<Type> Texture<Type>::copy() const
   {
-    Texture<Type> texture(buffer(), filter(), internalFormat(), width(), height(), buffered(), wrapping());
+    Texture<Type> texture(buffer().data(), filter(), internalFormat(), width(), height(), buffered(), wrapping());
     
     if(borderColor() != glm::vec4(0))
       texture.setBorderColor(borderColor());
