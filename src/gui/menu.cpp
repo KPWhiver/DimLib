@@ -107,9 +107,11 @@ void Menu::activate(int x, int y)
 {
 	d_x = x;
 	d_y = y;
-  d_active = true;
+
   if(s_active != 0)
     s_active->deactivate();
+
+  d_active = true;
 
   s_active = this;
 }

@@ -426,7 +426,7 @@ namespace dim
       uint bufferWidth = d_width / (1 << level);
       uint bufferHeight = d_width / (1 << level);
 
-      // TODO make wrapping behaviour based on Wrapping flag
+      // TODO make wrapping behavior based on Wrapping flag
 
       // wrap coordinates
       x %= bufferWidth;
