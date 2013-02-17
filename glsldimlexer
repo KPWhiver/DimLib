@@ -1,7 +1,7 @@
-%class-header="include/dim/scanner.hpp"
-%baseclass-header="include/dim/scannerbase.hpp"
-%lex-source="src/lex.cpp"
-%implementation-header="src/scanner.ih"
+%class-header="include/dim/core/scanner.hpp"
+%baseclass-header="include/dim/core/scannerbase.hpp"
+%lex-source="src/core/lex.cpp"
+%implementation-header="src/core/scanner.ih"
 %namespace=dim
 
 %x string include comment
