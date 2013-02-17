@@ -33,40 +33,7 @@
 
 namespace dim
 {
-
-
-  class NodeBase
-  {
-      NodeBase *d_parent;
-
-
-      glm::vec3 d_coor;
-      glm::quat d_orient;
-      glm::vec3 d_scale;
-      glm::mat4 d_modelMatrix;
-      bool d_changed;
-
-    public:
-      NodeBase(glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale);
-      NodeBase();
-
-      glm::vec3 location() const;
-      void setLocation(glm::vec3 const &coor);
-
-      glm::quat const &orientation() const;
-      void setOrientation(glm::quat const &orient);
-
-      glm::vec3 const &scaling() const;
-      void setScaling(glm::vec3 const &scale);
-
-      glm::mat4 const &matrix();
-
-      void setChanged();
-
-    protected:
-      void setParent(NodeBase *parent);
-      NodeBase * const parent();
-  };
+  class NodeBase;
 
   class MotionState : public btMotionState
   {
@@ -80,16 +47,68 @@ namespace dim
       virtual void setWorldTransform(btTransform const &worldTransform);
   };
 
-  class DrawNodeBase : public NodeBase
+  class NodeBase
   {
       friend class SceneGraph;
       template <typename RefType>
       friend class NodeGrid;
-      friend std::ostream &operator<<(std::ostream &out, DrawNodeBase const &object);
-      friend std::istream &operator>>(std::istream &in, DrawNodeBase &object);
+      friend std::ostream &operator<<(std::ostream &out, NodeBase const &object);
+      friend std::istream &operator>>(std::istream &in, NodeBase &object);
 
       MotionState d_motionState;
 
+      NodeBase *d_parent;
+
+      glm::vec3 d_coor;
+      glm::quat d_orient;
+      glm::vec3 d_scale;
+      glm::mat4 d_modelMatrix;
+      bool d_changed;
+
+    public:
+      NodeBase(glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale);
+      NodeBase();
+
+      virtual ~NodeBase();
+
+      virtual NodeBase *clone() const = 0;
+
+      virtual Shader const &shader() const = 0;
+      virtual Scene const &scene() const = 0;
+
+      virtual btRigidBody *rigidBody() = 0;
+
+      virtual void updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to){};
+
+      glm::vec3 location() const;
+      void setLocation(glm::vec3 const &coor);
+
+      glm::quat const &orientation() const;
+      void setOrientation(glm::quat const &orient);
+
+      glm::vec3 const &scaling() const;
+      void setScaling(glm::vec3 const &scale);
+
+      glm::mat4 const &matrix();
+
+      MotionState *motionState();
+
+      void setChanged();
+
+      virtual void draw();
+
+    protected:
+      void setParent(NodeBase *parent);
+      NodeBase * const parent();
+
+      virtual void insert(std::ostream &out) const;
+      virtual void extract(std::istream &in);
+  };
+
+
+
+  /*class DrawNodeBase : public NodeBase
+  {
     public:
       DrawNodeBase();
       DrawNodeBase(glm::vec3 const &coor, glm::quat const &orient, float radius);
@@ -99,27 +118,16 @@ namespace dim
 
       virtual btRigidBody *rigidBody() = 0;
 
-      virtual void draw();
+
 
       virtual ~DrawNodeBase();
 
       virtual DrawNodeBase *clone() const = 0;
-
-      MotionState *motionState();
-
-    private:
-      virtual void insert(std::ostream &out) const;
-      virtual void extract(std::istream &in);
-
-  };
-
-
-
-
+  };*/
 
   namespace internal
   {
-    class DefaultDrawNode : public DrawNodeBase
+    class DefaultNode : public NodeBase
     {
       static Scene s_defaultScene;
       public:
@@ -138,9 +146,9 @@ namespace dim
           return 0;
         }
 
-        virtual DrawNodeBase *clone() const
+        virtual NodeBase *clone() const
         {
-          return new DefaultDrawNode();
+          return new DefaultNode();
         }
     };
   }

@@ -17,7 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include "dim/scene/drawnode.hpp"
+#include "dim/scene/nodebase.hpp"
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -26,8 +26,11 @@ using namespace std;
 
 namespace dim
 {
+  Scene internal::DefaultNode::s_defaultScene;
+
   NodeBase::NodeBase()
   :
+      d_motionState(this),
       d_parent(0),
       d_scale(vec3(1.0)),
       d_modelMatrix(mat4(1.0)),
@@ -37,6 +40,7 @@ namespace dim
 
   NodeBase::NodeBase(vec3 const &coor, quat const &orient, vec3 const &scale)
   :
+      d_motionState(this),
       d_parent(0),
       d_coor(coor),
       d_orient(orient),
@@ -53,8 +57,12 @@ namespace dim
 
   void NodeBase::setLocation(vec3 const &coor)
   {
+    vec3 oldCoor(d_coor);
     d_coor = coor;
     d_changed = true;
+
+    if(d_parent != 0)
+      d_parent->updateNode(this, oldCoor, coor);
   }
 
   glm::quat const &NodeBase::orientation() const
@@ -120,23 +128,11 @@ namespace dim
     d_parent = parent;
   }
 
-  DrawNodeBase::DrawNodeBase(vec3 const &coor, quat const &orient, float radius)
-      : NodeBase(coor, orient, vec3(1.0)),
-        d_motionState(this)
+  NodeBase::~NodeBase()
   {
   }
 
-  DrawNodeBase::DrawNodeBase()
-      :
-        d_motionState(this)
-  {
-  }
-
-  DrawNodeBase::~DrawNodeBase()
-  {
-  }
-
-  void DrawNodeBase::draw()
+  void NodeBase::draw()
   {
     shader().use();
 
@@ -151,7 +147,7 @@ namespace dim
     }
   }
 
-  void DrawNodeBase::insert(ostream &out) const
+  void NodeBase::insert(ostream &out) const
   {
     out << location().x << ' ' << location().y << ' ' << location().z << ' ' << orientation().x << ' '
 	      << orientation().y << ' ' << orientation().z << ' ' << orientation().w << '\n';
@@ -163,7 +159,7 @@ namespace dim
     //out.write(reinterpret_cast<const char*>(&d_yRot), 4);
   }
 
-  void DrawNodeBase::extract(istream &in)
+  void NodeBase::extract(istream &in)
   {
     vec3 coor;
     quat rot;
@@ -182,19 +178,19 @@ namespace dim
     //in.read(reinterpret_cast<char*>(&d_yRot), 4);
   }
 
-  ostream &operator<<(ostream &out, DrawNodeBase const &object)
+  ostream &operator<<(ostream &out, NodeBase const &object)
   {
     object.insert(out);
     return out;
   }
 
-  istream &operator>>(istream &in, DrawNodeBase &object)
+  istream &operator>>(istream &in, NodeBase &object)
   {
     object.extract(in);
     return in;
   }
 
-  MotionState *DrawNodeBase::motionState()
+  MotionState *NodeBase::motionState()
   {
     return &d_motionState;
   }

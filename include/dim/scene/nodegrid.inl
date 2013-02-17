@@ -215,13 +215,13 @@ namespace internal
   }
 
   template<typename RefType>
-  DrawNodeBase &NodeGrid<RefType>::Iterable::v_dereference()
+  NodeBase &NodeGrid<RefType>::Iterable::v_dereference()
   {
     return dereference();
   }
 
   template<typename RefType>
-  DrawNodeBase const &NodeGrid<RefType>::Iterable::v_dereference() const
+  NodeBase const &NodeGrid<RefType>::Iterable::v_dereference() const
   {
     return dereference();
   }
@@ -266,7 +266,7 @@ namespace internal
     //RefType tmp(object);
     //tmp.d_id = id;
 
-    auto iter = lower_bound(list->second.begin(), list->second.end(), object, [](DrawNodeBase const *lhs, DrawNodeBase const *rhs) -> bool
+    auto iter = lower_bound(list->second.begin(), list->second.end(), object, [](NodeBase const *lhs, NodeBase const *rhs) -> bool
                             {
                               GLuint id1 = lhs->shader().id();
                               GLuint id2 = rhs->shader().id();
@@ -294,7 +294,7 @@ namespace internal
     //TODO optimize optimize optimize
     for(auto mapPart : d_map)
     {
-      for(DrawNodeBase *node : mapPart.second)
+      for(NodeBase *node : mapPart.second)
       {
         for(size_t idx = 0; idx != node->scene().size(); ++idx)
         {
@@ -338,12 +338,12 @@ namespace internal
     if(mapPart == d_map.end())
       return end();
 
-    auto DrawNodeBase = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](DrawNodeBase const *lhs, DrawState const &rhs)
+    auto NodeBase = lower_bound(mapPart.second.begin(), mapPart.second.end(), state, [](NodeBase const *lhs, DrawState const &rhs)
                             {
                               return lhs->drawState() < rhs;
                             });
 
-    for(size_t idx = 0; DrawNodeBase->drawState() == state; ++DrawNodeBase, ++idx)
+    for(size_t idx = 0; NodeBase->drawState() == state; ++NodeBase, ++idx)
     {
       glm::vec3 coor = mapPart->second[idx].location();
 
@@ -351,6 +351,26 @@ namespace internal
         return typename NodeGrid<RefType>::iterator(make_pair(idx, mapPart->first), this);
     }*/
     return v_end();
+  }
+
+  template<typename RefType>
+  typename NodeStorageBase::iterator NodeGrid<RefType>::v_find(NodeBase* node)
+  {
+    int xloc, zloc;
+    xloc = node->location().x / d_gridSize;
+    zloc = node->location().z / d_gridSize;
+
+    auto mapPart = d_map.find(Key(xloc, zloc));
+    if(mapPart == d_map.end())
+      return NodeStorageBase::end();
+
+    for(size_t idx = 0; idx != mapPart->second.size(); ++idx)
+    {
+      if(mapPart->second[idx] == node)
+        return NodeStorageBase::iterator(ClonePtr<NodeStorageBase::Iterable>(new NodeGrid::Iterable(idx, mapPart, this)));
+    }
+
+    return NodeStorageBase::end();
   }
 
   template<typename RefType>
@@ -372,6 +392,33 @@ namespace internal
         return typename NodeGrid<RefType>::iterator(CopyPtr<Iterable>(new NodeGrid::Iterable(idx, mapPart, this)));
     }
     return end();
+  }
+
+  template<typename RefType>
+  bool NodeGrid<RefType>::v_updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to)
+  {
+    // check if we have to delete from this
+    int xloc, zloc;
+    xloc = from.x / d_gridSize;
+    zloc = from.z / d_gridSize;
+
+    auto mapPart = d_map.find(Key(xloc, zloc));
+    if(mapPart == d_map.end())
+      return false; // it is not in this nodegrid
+
+    for(size_t idx = 0; idx != mapPart->second.size(); ++idx)
+    {
+      if(mapPart->second[idx] == node)
+      {
+        mapPart->second.erase(mapPart->second.begin() + idx);
+
+        add(true, reinterpret_cast<RefType *>(node));
+
+        return true; // it is here
+      }
+    }
+
+    return false;
   }
 }
 }

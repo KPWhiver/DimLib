@@ -23,25 +23,60 @@
 
 namespace dim
 {
-  using namespace internal;
+  namespace internal
+  {
 
-  SurfaceBase* SurfaceBase::s_renderTarget(0);
-  
-  GLint SurfaceBase::s_maxAttachment(0);
+    SurfaceBase* SurfaceBase::s_renderTarget(0);
 
-  SurfaceBase::SurfaceBase()
-  {
-    glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_maxAttachment);
-  }
+    GLint SurfaceBase::s_maxAttachment(0);
   
-  SurfaceBase::~SurfaceBase()
-  {
-    if(s_renderTarget == this)
-      s_renderTarget = 0;
-  }
-  
-  void SurfaceBase::finishRendering()
-  {
+    SurfaceBase::SurfaceBase()
+    {
+      glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_maxAttachment);
+    }
+
+    SurfaceBase::~SurfaceBase()
+    {
+      if(s_renderTarget == this)
+        s_renderTarget = 0;
+    }
+
+    void SurfaceBase::finishRendering()
+    {
+    }
+
+    void setViewport(int x, int y, int width, int height)
+    {
+      static int currentX(0);
+      static int currentY(0);
+      static int currentWidth(-1);
+      static int currentHeight(-1);
+
+      if(currentX != x || currentY != y || currentWidth != width || currentHeight != height)
+      {
+        glViewport(x, y, width, height);
+
+        currentX = x;
+        currentY = y;
+        currentWidth = width;
+        currentHeight = height;
+      }
+    }
+
+    void setBlending(bool blending)
+    {
+      static bool currentBlending(false);
+
+      if(blending != currentBlending)
+      {
+        if(blending)
+          glEnable(GL_BLEND);
+        else
+          glDisable(GL_BLEND);
+
+        currentBlending = blending;
+      }
+    }
   }
 
   Surface<>::Surface(uint width, uint height)
@@ -60,5 +95,6 @@ namespace dim
       
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
+
 }
 

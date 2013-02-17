@@ -59,6 +59,11 @@ namespace internal
     v_draw(state);
   }  
   
+  NodeStorageBase::iterator NodeStorageBase::find(NodeBase* node)
+  {
+    return v_find(node);
+  }
+
   NodeStorageBase::iterator NodeStorageBase::find(float x, float z)
   {
     return v_find(x, z);
@@ -74,18 +79,23 @@ namespace internal
     v_del(object);
   }
 
+  bool NodeStorageBase::updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to)
+  {
+    return v_updateNode(node, from, to);
+  }
+
   /* iterators */
   void NodeStorageBase::Iterable::increment()
   {
     return v_increment();
   }
 
-  DrawNodeBase &NodeStorageBase::Iterable::dereference()
+  NodeBase &NodeStorageBase::Iterable::dereference()
   {
     return v_dereference();
   }
 
-  DrawNodeBase const &NodeStorageBase::Iterable::dereference() const
+  NodeBase const &NodeStorageBase::Iterable::dereference() const
   {
     return v_dereference();
   }

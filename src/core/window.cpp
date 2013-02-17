@@ -171,7 +171,7 @@ namespace dim
     //initialize opengl stuff
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
+    internal::setBlending(true);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LEQUAL);
@@ -217,7 +217,9 @@ namespace dim
   {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glViewport(x, y, width, height);
+    internal::setBlending(true);
+
+    internal::setViewport(x, y, width, height);
 
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(internal::SurfaceBase::s_renderTarget != 0)

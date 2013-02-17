@@ -31,29 +31,31 @@ using namespace glm;
 
 namespace dim
 {
+  Scene SceneGraph::s_defaultScene;
+
   using namespace internal;
   /* setChanged */
   void SceneGraph::setOrientation(quat const &orient)
   {
-    for(DrawNodeBase &drawNode: *this)
+    for(NodeBase &drawNode: *this)
       drawNode.setChanged();
       
-    GroupNodeBase::setOrientation(orient);
+    NodeBase::setOrientation(orient);
   }
   void SceneGraph::setScaling(vec3 const &scale)
   {
-    for(DrawNodeBase &drawNode: *this)
+    for(NodeBase &drawNode: *this)
       drawNode.setChanged();
       
-    GroupNodeBase::setScaling(scale);
+    NodeBase::setScaling(scale);
   
   }
   void SceneGraph::setLocation(vec3 const &coor)
   {
-    for(DrawNodeBase &drawNode: *this)
+    for(NodeBase &drawNode: *this)
       drawNode.setChanged();
       
-    GroupNodeBase::setLocation(coor);
+    NodeBase::setLocation(coor);
   
   }
   
@@ -67,7 +69,7 @@ namespace dim
           d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration)
   {
     // make sure there's at least one NodeGrid
-    auto ptr = new NodeGrid<DefaultDrawNode>(d_gridSize, key());
+    auto ptr = new NodeGrid<DefaultNode>(d_gridSize, key());
     d_storages.push_back(ptr);
 
     // bullet
@@ -90,7 +92,7 @@ namespace dim
     for(auto const &element: d_storages)
       element->copy(key());
 
-    for(DrawNodeBase &drawNode: *this)
+    for(NodeBase &drawNode: *this)
       drawNode.setParent(this);
   }
 
@@ -107,7 +109,7 @@ namespace dim
     for(auto const &element: d_storages)
       element->copy(key());
 
-    for(DrawNodeBase &drawNode: *this)
+    for(NodeBase &drawNode: *this)
       drawNode.setParent(this);
   }
 
@@ -120,7 +122,7 @@ namespace dim
     for(auto const &element: d_storages)
       element->copy(key());
 
-    for(DrawNodeBase &drawNode: *this)
+    for(NodeBase &drawNode: *this)
       drawNode.setParent(this);
 
     return *this;
@@ -135,7 +137,7 @@ namespace dim
     for(auto const &element: d_storages)
       element->copy(key());
 
-    for(DrawNodeBase &drawNode: *this)
+    for(NodeBase &drawNode: *this)
       drawNode.setParent(this);
 
     return *this;
@@ -208,12 +210,12 @@ namespace dim
     }
   }
 
-  DrawNodeBase &SceneGraph::Iterable::dereference()
+  NodeBase &SceneGraph::Iterable::dereference()
   {
     return *d_iterator;
   }
 
-  DrawNodeBase const &SceneGraph::Iterable::dereference() const
+  NodeBase const &SceneGraph::Iterable::dereference() const
   {
     return *d_iterator;
   }
@@ -328,9 +330,39 @@ namespace dim
       element->clear();
   }
 
+  void SceneGraph::updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to)
+  {
+    if(static_cast<size_t>(from.x / d_gridSize) == static_cast<size_t>(to.x / d_gridSize))
+    {
+      if(static_cast<size_t>(from.z / d_gridSize) == static_cast<size_t>(to.z / d_gridSize))
+        return;
+    }
+
+    for(auto &storage : d_storages)
+    {
+      if(storage->updateNode(node, from, to))
+        return;
+    }
+  }
+
   SceneGraph::iterator SceneGraph::get(float x, float z)
   {
     return find(x, z);
+  }
+
+  SceneGraph::iterator SceneGraph::get(NodeBase *node)
+  {
+    if(node == 0)
+      return end();
+
+    for(size_t idx = 0; idx != d_storages.size(); ++idx)
+    {
+      auto iter = d_storages[idx]->find(node);
+      if(iter != d_storages[idx]->end())
+        return iterator(CopyPtr<Iterable>(new Iterable(iter, idx, this)));
+    }
+
+    return end();
   }
 
   SceneGraph::iterator SceneGraph::get(ShaderScene const &state, float x, float z)

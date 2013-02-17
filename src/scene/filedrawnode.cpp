@@ -30,10 +30,9 @@ namespace dim
 
   FileDrawNode::FileDrawNode(string const &filename, glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale)
   :
-      DrawNodeBase(coor, orient, 1),
+      NodeBase(coor, orient, scale),
       d_index(0)
   {
-    setScaling(scale);
     bool present = false;
 
     for(size_t idx = 0; idx != s_objects.size(); ++idx)
@@ -146,7 +145,7 @@ namespace dim
     //return &s_objects[d_index].rigidBody;
   }
 
-  DrawNodeBase *FileDrawNode::clone() const
+  NodeBase *FileDrawNode::clone() const
   {
     return new FileDrawNode(*this);
   }

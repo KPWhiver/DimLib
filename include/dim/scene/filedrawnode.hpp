@@ -23,7 +23,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "dim/scene/drawnode.hpp"
+#include "dim/scene/nodebase.hpp"
 #include "dim/scene/scene.hpp"
 #include "dim/scene/texturemanager.hpp"
 #include "dim/scene/scenemanager.hpp"
@@ -36,7 +36,7 @@
 namespace dim
 {
 
-  class FileDrawNode : public DrawNodeBase
+  class FileDrawNode : public NodeBase
   {
       struct Object
       {
@@ -58,7 +58,7 @@ namespace dim
 
       btRigidBody *rigidBody() override;
 
-      DrawNodeBase *clone() const override;
+      NodeBase *clone() const override;
 
       static void load(std::string const &filename, TextureManager &texRes, SceneManager &sceneRes, ShaderManager &shaderRes, BulletManager &bulletRes);
   };

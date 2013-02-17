@@ -44,11 +44,12 @@ namespace dim
         SurfaceBase();
         virtual ~SurfaceBase();
 
-
-
       public:
         virtual void finishRendering();
     };
+
+    void setViewport(int x, int y, int width, int height);
+    void setBlending(bool blend);
   }
 
   template<typename ...Types>
@@ -77,6 +78,8 @@ namespace dim
     
     glm::vec4 d_clearColor;
     float d_clearDepth;
+
+    bool d_blending;
 
     enum ComponentType
     {
@@ -116,6 +119,8 @@ namespace dim
 
     void setClearColor(glm::vec4 const &color);
     void setClearDepth(float depth);
+
+    void setBlending(bool blending);
 
     void clear();
 

@@ -16,7 +16,7 @@ set(CXXSOURCES
 
   scene/scene.cpp 
   scene/scenegraph.cpp 
-  scene/drawnode.cpp
+  scene/nodebase.cpp
   scene/filedrawnode.cpp
   scene/nodestoragebase.cpp 
   scene/resourcemanager.cpp

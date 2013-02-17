@@ -31,7 +31,8 @@ namespace dim
         d_colorComponent{false}, 
         d_minWidth(ptr->width()),
         d_minHeight(ptr->height()),
-        d_clearDepth(0)
+        d_clearDepth(0),
+        d_blending(true)
   {
     glGenFramebuffers(1, d_id.get());
     addTarget<0>(ptr);
@@ -47,7 +48,8 @@ namespace dim
         d_colorComponent{false},
         d_minWidth(obj.width()),
         d_minHeight(obj.height()),
-        d_clearDepth(0)
+        d_clearDepth(0),
+        d_blending(true)
   {
     std::get<0>(d_textures) = obj;
     glGenFramebuffers(1, d_id.get());
@@ -64,7 +66,8 @@ namespace dim
         d_colorComponent{false}, 
         d_minWidth(width),
         d_minHeight(height),
-        d_clearDepth(0)
+        d_clearDepth(0),
+        d_blending(true)
   { 
     glGenFramebuffers(1, d_id.get());
     addTarget<0>(format, filter);
@@ -80,7 +83,8 @@ namespace dim
         d_colorComponent{false},
         d_minWidth(width),
         d_minHeight(height),
-        d_clearDepth(0)
+        d_clearDepth(0),
+        d_blending(true)
   {
     glGenFramebuffers(1, d_id.get());
     addTarget<0>(format, filter);
@@ -252,6 +256,7 @@ namespace dim
         d_colorComponent[1] = true;
         d_colorComponent[2] = true;
         d_colorComponent[3] = true;
+        d_blending = false;
         return color;
       case GL_RGB:
         d_colorComponent[0] = true;
@@ -291,6 +296,12 @@ namespace dim
   }
 
   template<typename ...Types>
+  void Surface<Types...>::setBlending(bool blending)
+  {
+    d_blending = blending;
+  }
+
+  template<typename ...Types>
   void Surface<Types...>::renderTo(bool clearBuffer)
   {
     renderToPart(0, 0, width(), height(), clearBuffer);
@@ -299,27 +310,37 @@ namespace dim
   template<typename ...Types>
   void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer)
   {    
+    internal::setBlending(d_blending);
+
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(s_renderTarget != 0)
       s_renderTarget->finishRendering();
     
     //s_renderTarget = this;
 
-    // Clear the buffer before drawing (this also binds it)
+    internal::setViewport(x, y, width, height);
+
     if(clearBuffer)
       clear();
+    else
+    {
+      glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
+
+      glDrawBuffer(GL_COLOR_ATTACHMENT0);
+      glReadBuffer(GL_COLOR_ATTACHMENT0);
+    }
 
     // TODO change this to glDrawBuffers
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
+
     //glDrawBuffers(d_colorAttachments - 1, d_attachments);
 
-    glViewport(x, y, width, height);
     
+
     // Tell the attached textures that they might be changed
     notifyTextures();
 
     //glColorMask(d_colorComponent[0], d_colorComponent[1], d_colorComponent[2], d_colorComponent[3]);
+    // Clear the buffer before drawing (this also binds it)
 
   }
   
@@ -334,12 +355,15 @@ namespace dim
   {
     glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+
     if(d_clearDepth != 0 && d_depthComponent)
       glClearDepth(d_clearDepth);
-    if(d_clearColor != glm::vec4() && (d_colorComponent[0] || d_colorComponent[3]))
+    if(d_clearColor != glm::vec4() && d_colorComponent[0])
       glClearColor(d_clearColor.r, d_clearColor.g, d_clearColor.b, d_clearColor.a);
 
-    if(d_depthComponent && (d_colorComponent[0] || d_colorComponent[3]))
+    if(d_depthComponent && d_colorComponent[0])
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     else if(d_depthComponent)
       glClear(GL_DEPTH_BUFFER_BIT);
@@ -348,7 +372,7 @@ namespace dim
 
     if(d_clearDepth != 0 && d_depthComponent)
       glClearDepth(0);
-    if(d_clearColor != glm::vec4() && (d_colorComponent[0] || d_colorComponent[3]))
+    if(d_clearColor != glm::vec4() && d_colorComponent[0])
       glClearColor(0, 0, 0, 0);
   }
   

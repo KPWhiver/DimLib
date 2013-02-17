@@ -36,11 +36,11 @@
 
 namespace dim
 {
-  class GroupNodeBase : public NodeBase
-  {
-  };
+  //class GroupNodeBase : public NodeBase
+  //{
+  //};
 
-  class SceneGraph : public GroupNodeBase
+  class SceneGraph : public NodeBase
   {
       std::multimap<ShaderScene, internal::NodeStorageBase*> d_drawStates;
 
@@ -48,7 +48,7 @@ namespace dim
 
       size_t d_gridSize;
 
-      // bullet
+    // bullet
       btDbvtBroadphase d_broadphase;
       btDefaultCollisionConfiguration d_collisionConfiguration;
       btCollisionDispatcher d_dispatcher;
@@ -56,8 +56,30 @@ namespace dim
 
       btDiscreteDynamicsWorld d_dynamicsWorld;
 
+    // NodeBase
+      static Scene s_defaultScene;
 
     public:
+      virtual Shader const &shader() const
+      {
+        return Shader::defaultShader();
+      }
+
+      virtual Scene const &scene() const
+      {
+        return s_defaultScene;
+      }
+
+      virtual btRigidBody *rigidBody()
+      {
+        return 0;
+      }
+
+      virtual NodeBase *clone() const
+      {
+        return new SceneGraph(*this);
+      }
+
     // setChanged
       void setOrientation(glm::quat const &orient);
       void setScaling(glm::vec3 const &scale);
@@ -76,14 +98,14 @@ namespace dim
         void erase();
 
         void increment();
-        DrawNodeBase &dereference();
-        DrawNodeBase const &dereference() const;
+        NodeBase &dereference();
+        NodeBase const &dereference() const;
         bool equal(CopyPtr<Iterable> const &other) const;
       };
       friend Iterable;
 
-      typedef internal::IteratorBase<DrawNodeBase, SceneGraph, CopyPtr<Iterable>> iterator;
-      //typedef internal::IteratorBase<DrawNodeBase const, Iterable> const_iterator;
+      typedef internal::IteratorBase<NodeBase, SceneGraph, CopyPtr<Iterable>> iterator;
+      //typedef internal::IteratorBase<NodeBase const, Iterable> const_iterator;
 
       template<typename RefType>
       typename internal::NodeGrid<RefType>::iterator begin();//
@@ -125,10 +147,14 @@ namespace dim
       void save(std::string const &filename);
       void clear();
 
+      void updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to) override;
+
       void del(SceneGraph::iterator object);
       SceneGraph::iterator get(float x, float z);
 
       SceneGraph::iterator get(ShaderScene const &state, float x, float z);
+
+      SceneGraph::iterator get(NodeBase *node);
 
       template<typename RefType>
       typename internal::NodeGrid<RefType>::iterator get(float x, float z);

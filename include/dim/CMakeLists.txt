@@ -1,6 +1,6 @@
 set(CXXHEADERS_SCENE
   scene/iteratorbase.hpp   
-  scene/drawnode.hpp 
+  scene/nodebase.hpp 
   scene/nodestoragebase.hpp 
   scene/nodegrid.hpp 
   scene/nodegrid.inl 

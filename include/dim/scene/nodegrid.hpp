@@ -87,8 +87,8 @@ namespace internal
         void erase();
 
         virtual void v_increment();
-        virtual DrawNodeBase &v_dereference();
-        virtual DrawNodeBase const &v_dereference() const;
+        virtual NodeBase &v_dereference();
+        virtual NodeBase const &v_dereference() const;
         virtual bool v_equal(ClonePtr<NodeStorageBase::Iterable> const &other) const;
       };
       friend Iterable;
@@ -112,11 +112,13 @@ namespace internal
       iterator find(float x, float z);
 
     private:
-      virtual void v_clear();
-      virtual void v_draw(ShaderScene const &state);
-      virtual NodeStorageBase::iterator v_find(float x, float z);
-      virtual NodeStorageBase::iterator v_find(ShaderScene const &state, float x, float z);
-      virtual void v_del(NodeStorageBase::iterator &object);
+      void v_clear() override;
+      void v_draw(ShaderScene const &state) override;
+      NodeStorageBase::iterator v_find(NodeBase *node) override;
+      NodeStorageBase::iterator v_find(float x, float z) override;
+      NodeStorageBase::iterator v_find(ShaderScene const &state, float x, float z) override;
+      void v_del(NodeStorageBase::iterator &object) override;
+      bool v_updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to) override;
 
     // private functions
       size_t count() const;

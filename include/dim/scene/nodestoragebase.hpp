@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <tuple>
 
-#include "dim/scene/drawnode.hpp"
+#include "dim/scene/nodebase.hpp"
 #include "dim/scene/iteratorbase.hpp"
 #include "dim/util/onepair.hpp"
 #include "dim/util/copyptr.hpp"
@@ -90,18 +90,18 @@ namespace internal
         virtual ~Iterable(){};
 
         void increment();
-        DrawNodeBase &dereference();
-        DrawNodeBase const &dereference() const;
+        NodeBase &dereference();
+        NodeBase const &dereference() const;
         bool equal(ClonePtr<Iterable> const &other) const;
 
         virtual void v_increment() = 0;
-        virtual DrawNodeBase &v_dereference() = 0;
-        virtual DrawNodeBase const &v_dereference() const = 0;
+        virtual NodeBase &v_dereference() = 0;
+        virtual NodeBase const &v_dereference() const = 0;
         virtual bool v_equal(ClonePtr<Iterable> const &other) const = 0;
       };
 
-      typedef IteratorBase<DrawNodeBase, NodeStorageBase, ClonePtr<Iterable>>  iterator;
-      //typedef IteratorBase<DrawNodeBase const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
+      typedef IteratorBase<NodeBase, NodeStorageBase, ClonePtr<Iterable>>  iterator;
+      //typedef IteratorBase<NodeBase const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
 
       iterator begin();
       iterator end();
@@ -120,14 +120,18 @@ namespace internal
       void draw(ShaderScene const &state);
       iterator find(ShaderScene const &state, float x, float z);
       iterator find(float x, float z);
+      iterator find(NodeBase* node);
       void del(iterator &object);
+      bool updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to);
 
     private:
       virtual void v_clear() = 0;
       virtual void v_draw(ShaderScene const &state) = 0;
+      virtual iterator v_find(NodeBase *node) = 0;
       virtual iterator v_find(float x, float z) = 0;
       virtual iterator v_find(ShaderScene const &state, float x, float z) = 0;
       virtual void v_del(iterator &object) = 0;
+      virtual bool v_updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to) = 0;
 
     protected:
     // private functions
