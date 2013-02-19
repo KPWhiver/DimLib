@@ -30,11 +30,13 @@
 
 namespace dim
 {
+  class Window;
+
   namespace internal
   {
     class SurfaceBase
     {
-      friend class Window;
+      friend class dim::Window;
 
       protected:
         static SurfaceBase* s_renderTarget;
