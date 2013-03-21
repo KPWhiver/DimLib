@@ -48,10 +48,12 @@ namespace internal
       //static std::unordered_map<size_t, NodeGrid<RefType>*> s_map;
 
       size_t d_gridSize;
+      
+      size_t d_numOfShaders;
 
     public:
     // constuctors
-      NodeGrid(size_t gridSize, size_t key);
+      NodeGrid(size_t gridSize, size_t key, size_t numOfShaders);
       ~NodeGrid();
       
     // static access
@@ -113,7 +115,7 @@ namespace internal
 
     private:
       void v_clear() override;
-      void v_draw(ShaderScene const &state) override;
+      void v_draw(ShaderScene const &state, size_t renderMode) override;
       NodeStorageBase::iterator v_find(NodeBase *node) override;
       NodeStorageBase::iterator v_find(float x, float z) override;
       NodeStorageBase::iterator v_find(ShaderScene const &state, float x, float z) override;

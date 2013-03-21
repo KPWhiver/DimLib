@@ -53,7 +53,7 @@ namespace dim
     public:
       FileDrawNode(std::string const &filename, glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale);
 
-      Shader const &shader() const override;
+      Shader const &shader(size_t idx) const override;
       Scene const &scene() const override;
 
       btRigidBody *rigidBody() override;

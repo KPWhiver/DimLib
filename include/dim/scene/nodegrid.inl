@@ -26,10 +26,11 @@ namespace internal
   //std::unordered_map<size_t, NodeGrid<RefType>*> NodeGrid<RefType>::s_map;
 
   template<typename RefType>
-  NodeGrid<RefType>::NodeGrid(size_t gridSize, size_t key)
+  NodeGrid<RefType>::NodeGrid(size_t gridSize, size_t key, size_t numOfShaders)
       :
         NodeStorageBase(key),
-        d_gridSize(gridSize)
+        d_gridSize(gridSize),
+        d_numOfShaders(numOfShaders)
   {
     instanceMap()[key] = this;
   }
@@ -266,13 +267,17 @@ namespace internal
     //RefType tmp(object);
     //tmp.d_id = id;
 
-    auto iter = lower_bound(list->second.begin(), list->second.end(), object, [](NodeBase const *lhs, NodeBase const *rhs) -> bool
+    auto iter = lower_bound(list->second.begin(), list->second.end(), object, [&](NodeBase const *lhs, NodeBase const *rhs) -> bool
                             {
+                              for(size_t shader = 0; shader != d_numOfShaders; ++shader)
+                              {
+                                if(lhs->shader(shader).id() < rhs->shader(shader).id())
+                                  return true;
+                                if(not lhs->shader(shader).id() == rhs->shader(shader).id())
+                                  return false;
+                              }
 
-                              GLuint id1 = lhs->shader().id();
-                              GLuint id2 = rhs->shader().id();
-
-                              return std::tie(id1, lhs->scene()) < std::tie(id2, rhs->scene());
+                              return lhs->scene() < rhs->scene();
                             });
 
     iter = list->second.insert(iter, object);
@@ -290,7 +295,7 @@ namespace internal
   }
 
   template<typename RefType>
-  void NodeGrid<RefType>::v_draw(ShaderScene const &scene)
+  void NodeGrid<RefType>::v_draw(ShaderScene const &scene, size_t renderMode)
   {
     //TODO optimize optimize optimize
     for(auto mapPart : d_map)
@@ -299,11 +304,11 @@ namespace internal
       {
         for(size_t idx = 0; idx != node->scene().size(); ++idx)
         {
-          if(node->scene()[idx] == scene.state)
+          if(node->scene()[idx] == scene.state())
           {
-            node->shader().set("in_mat_model", node->matrix());
+            node->shader(renderMode).set("in_mat_model", node->matrix());
 
-            scene.state.mesh().draw();
+            scene.state().mesh().draw();
             break;
           }
         }

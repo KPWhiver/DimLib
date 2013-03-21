@@ -61,16 +61,16 @@ namespace dim
   
   /* constructors */
   
-  SceneGraph::SceneGraph(vector<Shader> const &renderModes, size_t gridSize)
+  SceneGraph::SceneGraph(size_t numOfRenderModes, size_t gridSize)
       :
           d_storages([](NodeStorageBase* ptr){return ptr->clone();}),
           d_gridSize(gridSize),
+          d_numOfRenderModes(numOfRenderModes),
           d_dispatcher(&d_collisionConfiguration),
-          d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration),
-          d_renderModes(renderModes)
+          d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration)
   {
     // make sure there's at least one NodeGrid
-    auto ptr = new NodeGrid<DefaultNode>(d_gridSize, key());
+    auto ptr = new NodeGrid<DefaultNode>(d_gridSize, key(), d_numOfRenderModes);
     d_storages.push_back(ptr);
 
     // bullet
@@ -85,6 +85,7 @@ namespace dim
       d_drawStates(other.d_drawStates),
       d_storages(other.d_storages),
       d_gridSize(other.d_gridSize),
+      d_numOfRenderModes(other.d_numOfRenderModes),
       d_collisionConfiguration(other.d_collisionConfiguration),
       d_dispatcher(other.d_dispatcher),
       d_solver(other.d_solver),
@@ -102,6 +103,7 @@ namespace dim
       d_drawStates(move(tmp.d_drawStates)),
       d_storages(move(tmp.d_storages)),
       d_gridSize(move(tmp.d_gridSize)),
+      d_numOfRenderModes(tmp.d_numOfRenderModes),
       d_collisionConfiguration(move(tmp.d_collisionConfiguration)),
       d_dispatcher(move(tmp.d_dispatcher)),
       d_solver(move(tmp.d_solver)),
@@ -281,7 +283,7 @@ namespace dim
     d_dynamicsWorld.stepSimulation(time, substeps);
   }
 
-  void SceneGraph::draw(Camera camera)
+  void SceneGraph::draw(Camera camera, size_t renderMode)
   {
     for(auto const &element: d_drawStates)
     {
@@ -289,21 +291,21 @@ namespace dim
       // TODO optimize optimize optimize
       ShaderScene const &state = element.first;
 
-      state.shader.use();
+      state.shader(renderMode).use();
       
-      camera.setAtShader(state.shader, "in_mat_view", "in_mat_projection");
+      camera.setAtShader(state.shader(renderMode), "in_mat_view", "in_mat_projection");
 
-      state.state.mesh().bind();
-      if(state.state.culling() == false)
+      state.state().mesh().bind();
+      if(state.state().culling() == false)
         glDisable(GL_CULL_FACE);
 
-      for(size_t tex = 0; tex != state.state.textures().size(); ++tex)
-        state.shader.set(state.state.textures()[tex].second, state.state.textures()[tex].first, tex);
+      for(size_t tex = 0; tex != state.state().textures().size(); ++tex)
+        state.shader(renderMode).set(state.state().textures()[tex].second, state.state().textures()[tex].first, tex);
 
-      element.second->draw(state);
+      element.second->draw(state, renderMode);
       
-      state.state.mesh().unbind();
-      if(state.state.culling() == false)
+      state.state().mesh().unbind();
+      if(state.state().culling() == false)
         glEnable(GL_CULL_FACE);
     }
 

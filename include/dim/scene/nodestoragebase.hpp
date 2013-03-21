@@ -38,28 +38,96 @@
 namespace dim
 {
 
-  struct ShaderScene
+  class ShaderScene
   {
-    std::vector<Shader> shaders;
-    DrawState state;
+    private:
+      std::vector<GLuint> d_shaderIds;
+      
+      static std::unordered_map<GLuint, Shader> s_shaderMap;
+      
+      DrawState d_state;
 
-    bool operator==(ShaderScene const &other) const
-    {
-      return shader.id() == other.shader.id() && state == other.state;
-    }
+    public:
+      ShaderScene(NodeBase const &node, size_t sceneIdx, size_t numOfShaders)
+      :
+        d_shaderIds(),
+        d_state(node.scene()[sceneIdx])
+      {
+        for(size_t shader = 0; shader != numOfShaders; ++shader)
+        {
+          GLuint shaderId = node.shader(shader).id();
+        
+          d_shaderIds.push_back(shaderId); // Will this work?
+          if(s_shaderMap.find(shaderId) == s_shaderMap.end())
+            s_shaderMap.insert(std::make_pair(shaderId, node.shader(shader)));
+        }
+      }
+    
+      size_t numOfShaders() const
+      {
+        return d_shaderIds.size();
+      }
+      
+      Shader &shader(size_t idx)
+      {
+        auto iter = s_shaderMap.find(d_shaderIds.at(idx));
+        if(iter == s_shaderMap.end())
+          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+        
+        return iter->second;
+      }
+      
+      Shader const &shader(size_t idx) const
+      {
+        auto iter = s_shaderMap.find(d_shaderIds.at(idx));
+        if(iter == s_shaderMap.end())
+          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+        
+        return iter->second;
+      }
+      
+      DrawState &state()
+      {
+        return d_state;
+      }
+      
+      DrawState const &state() const
+      {
+        return d_state;
+      }
 
-    bool operator<(ShaderScene const &other) const
-    {
-      if(shader.id() < other.shader.id())
-        return true;
-      if(shader.id() > other.shader.id())
+      bool operator==(ShaderScene const &other) const
+      {
+        if(other.numOfShaders() != numOfShaders())
+          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+      
+        for(size_t shader = 0; shader != numOfShaders(); ++shader)
+        {
+          if(d_shaderIds[shader] != other.d_shaderIds[shader])
+            return false;
+        }
+      
+        return d_state == other.d_state;
+      }
+
+      bool operator<(ShaderScene const &other) const
+      {
+        if(other.numOfShaders() != numOfShaders())
+          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+      
+        for(size_t shader = 0; shader != numOfShaders(); ++shader)
+        {
+          if(d_shaderIds[shader] < other.d_shaderIds[shader])
+            return true;
+          if(not d_shaderIds[shader] == other.d_shaderIds[shader])
+            return false;
+        }
+
+        if(d_state < other.d_state)
+          return true;
+
         return false;
-
-      if(state < other.state)
-        return true;
-
-      return false;
-    }
+      }
   };
 
 namespace internal
@@ -117,7 +185,7 @@ namespace internal
     public:
     // regular functions
       void clear();
-      void draw(ShaderScene const &state);
+      void draw(ShaderScene const &state, size_t renderMode);
       iterator find(ShaderScene const &state, float x, float z);
       iterator find(float x, float z);
       iterator find(NodeBase* node);
@@ -126,7 +194,7 @@ namespace internal
 
     private:
       virtual void v_clear() = 0;
-      virtual void v_draw(ShaderScene const &state) = 0;
+      virtual void v_draw(ShaderScene const &state, size_t renderMode) = 0;
       virtual iterator v_find(NodeBase *node) = 0;
       virtual iterator v_find(float x, float z) = 0;
       virtual iterator v_find(ShaderScene const &state, float x, float z) = 0;

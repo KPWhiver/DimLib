@@ -134,14 +134,14 @@ namespace dim
 
   void NodeBase::draw()
   {
-    shader().use();
+    shader(0).use();
 
-    shader().set("in_mat_model", matrix());
+    shader(0).set("in_mat_model", matrix());
 
     for(size_t mesh = 0; mesh != scene().size(); ++mesh)
     {
       for(size_t idx = 0; idx != scene()[mesh].textures().size(); ++idx)
-        shader().set(scene()[mesh].textures()[idx].second, scene()[mesh].textures()[idx].first, idx);
+        shader(0).set(scene()[mesh].textures()[idx].second, scene()[mesh].textures()[idx].first, idx);
 
       scene()[mesh].mesh().draw();
     }
