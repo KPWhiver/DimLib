@@ -42,19 +42,16 @@ Camera::Camera(Camera::projection mode, float width, float height)
 }
 
 Camera::Camera(Camera::projection mode, float width, float height, vec3 coorFrom, vec3 coorTo)
+:
+    d_coorFrom(coorFrom),
+    d_coorTo(coorTo),
+    d_height(height),
+    d_width(width),
+    d_fov(60),
+    d_zNear(0.5),
+    d_zFar(1000),
+    d_mode(mode)
 {
-  d_coorFrom = coorFrom;
-  d_coorTo = coorTo;
-
-  d_height = height;
-  d_width = width;
-
-  d_fov = 60;
-  d_zNear = 0.5;
-  d_zFar = 1000;
-
-  d_mode = mode;
-
   setView();
 
   setProjection();

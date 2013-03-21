@@ -48,6 +48,7 @@ set(CXXHEADERS_GUI
 set(CXXHEADERS_UTIL 
   util/copyptr.hpp 
   util/ptrvector.hpp  
+  util/sortedvector.hpp
   util/onepair.hpp 
 )
 

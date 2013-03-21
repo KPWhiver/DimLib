@@ -61,12 +61,13 @@ namespace dim
   
   /* constructors */
   
-  SceneGraph::SceneGraph(size_t gridSize)
+  SceneGraph::SceneGraph(vector<Shader> const &renderModes, size_t gridSize)
       :
           d_storages([](NodeStorageBase* ptr){return ptr->clone();}),
           d_gridSize(gridSize),
           d_dispatcher(&d_collisionConfiguration),
-          d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration)
+          d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration),
+          d_renderModes(renderModes)
   {
     // make sure there's at least one NodeGrid
     auto ptr = new NodeGrid<DefaultNode>(d_gridSize, key());
@@ -263,7 +264,9 @@ namespace dim
 
   void SceneGraph::add(ShaderScene const &state, NodeStorageBase *ptr)
   {
-    for(auto iter = d_drawStates.find(state); iter != d_drawStates.end() && iter->first == state; ++iter)
+    auto range = d_drawStates.equal_range(state);
+
+    for(auto iter = range.first; iter != range.second; ++iter)
     {
       if(iter->second == ptr)
         return;
@@ -282,6 +285,7 @@ namespace dim
   {
     for(auto const &element: d_drawStates)
     {
+      //std::cerr << "SceneGraph::draw()\n";
       // TODO optimize optimize optimize
       ShaderScene const &state = element.first;
 
@@ -302,6 +306,8 @@ namespace dim
       if(state.state.culling() == false)
         glEnable(GL_CULL_FACE);
     }
+
+    //std::cerr << "\n\n";
   }
 
   void SceneGraph::del(SceneGraph::iterator object)

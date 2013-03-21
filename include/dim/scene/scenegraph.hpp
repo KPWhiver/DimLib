@@ -48,6 +48,8 @@ namespace dim
 
       size_t d_gridSize;
 
+      std::vector<Shader> d_renderModes;
+
     // bullet
       btDbvtBroadphase d_broadphase;
       btDefaultCollisionConfiguration d_collisionConfiguration;
@@ -122,7 +124,7 @@ namespace dim
       //const_iterator end() const;
 
     // constructors
-      explicit SceneGraph(size_t gridSize = 64);
+      explicit SceneGraph(std::vector const &renderModes, size_t gridSize = 64);
       
       SceneGraph(SceneGraph const &other);
       SceneGraph(SceneGraph &&tmp);
@@ -160,7 +162,7 @@ namespace dim
       typename internal::NodeGrid<RefType>::iterator get(float x, float z);
 
       void physicsStep(float time);
-      void draw(Camera camera);
+      void draw(Camera camera, RenderMode mode);
 
     private:
       void add(ShaderScene const &state, internal::NodeStorageBase* ptr);

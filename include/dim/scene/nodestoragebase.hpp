@@ -40,7 +40,7 @@ namespace dim
 
   struct ShaderScene
   {
-    Shader shader;
+    std::vector<Shader> shaders;
     DrawState state;
 
     bool operator==(ShaderScene const &other) const
@@ -52,7 +52,7 @@ namespace dim
     {
       if(shader.id() < other.shader.id())
         return true;
-      if(not shader.id() == other.shader.id())
+      if(shader.id() > other.shader.id())
         return false;
 
       if(state < other.state)

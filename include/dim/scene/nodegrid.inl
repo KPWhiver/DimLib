@@ -268,6 +268,7 @@ namespace internal
 
     auto iter = lower_bound(list->second.begin(), list->second.end(), object, [](NodeBase const *lhs, NodeBase const *rhs) -> bool
                             {
+
                               GLuint id1 = lhs->shader().id();
                               GLuint id2 = rhs->shader().id();
 

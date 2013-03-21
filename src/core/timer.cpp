@@ -46,26 +46,30 @@ namespace dim
     d_running = true;
     if(d_id != 0)
       glBeginQuery(GL_TIME_ELAPSED, d_id);
+
+    d_startCPUtime = chrono::system_clock::now();
   }
   
   void Timer::stop()
   {
     if(d_running == true)
     {
-      d_CPUtime = d_startCPUtime - chrono::system_clock::now();
+      d_CPUtime = chrono::system_clock::now() - d_startCPUtime;
 
       if(d_id != 0)
         glEndQuery(GL_TIME_ELAPSED);
 
       d_running = false;
     }
+    else
+      log(__FILE__, __LINE__, LogType::note, "Calling Timer::stop() while the timer is not running");
   }
       
   Timer::milliseconds const &Timer::elapsedCPUtime()
   {
     if(d_running == true)
     {
-      d_CPUtime = d_startCPUtime - chrono::system_clock::now();
+      d_CPUtime = chrono::system_clock::now() - d_startCPUtime;
     }
 
     return d_CPUtime;
@@ -79,7 +83,7 @@ namespace dim
       return d_GPUtime;
     }
 
-    if(GLEW_ARB_timer_query)
+    if(not GLEW_ARB_timer_query)
       log(__FILE__, __LINE__, LogType::error, "GPUtime measurement not supported on this GPU");
       
     if(d_id != 0)

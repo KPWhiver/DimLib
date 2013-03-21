@@ -97,18 +97,18 @@ namespace dim
     {
       if(d_textures[idx].first.id() < other.d_textures[idx].first.id())
         return true;
-      if(not d_textures[idx].first.id() == other.d_textures[idx].first.id())
+      if(d_textures[idx].first.id() > other.d_textures[idx].first.id())
         return false;
     }
 
     if(d_textures.size() < other.d_textures.size())
       return true;
-    if(not d_textures.size() == other.d_textures.size())
+    if(d_textures.size() > other.d_textures.size())
       return false;
 
     if(d_mesh.id() < other.d_mesh.id())
       return true;
-    if(not d_mesh.id() == other.d_mesh.id())
+    if(d_mesh.id() > other.d_mesh.id())
       return false;
 
     if(d_culling < other.d_culling)
@@ -356,7 +356,7 @@ namespace dim
 
     if(size() < other.size())
       return true;
-    if(size() != other.size())
+    if(size() > other.size())
       return false;
 
     return false;
