@@ -129,7 +129,7 @@ namespace dim
     s_objects.push_back({filename, shaderRes.request(shaderFile), sceneRes.request(sceneFile, texRes)});
   }
 
-  Shader const &FileDrawNode::shader() const
+  Shader const &FileDrawNode::shader(size_t idx) const
   {
     return s_objects[d_index].shader;
   }

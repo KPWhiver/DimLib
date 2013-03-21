@@ -23,6 +23,9 @@ using namespace std;
 
 namespace dim
 {
+
+std::unordered_map<GLuint, Shader> ShaderScene::s_shaderMap;
+
 namespace internal
 {
   /* constructors */
@@ -54,9 +57,9 @@ namespace internal
     v_clear();
   }
 
-  void NodeStorageBase::draw(ShaderScene const &state)
+  void NodeStorageBase::draw(ShaderScene const &state, size_t renderMode)
   {
-    v_draw(state);
+    v_draw(state, renderMode);
   }  
   
   NodeStorageBase::iterator NodeStorageBase::find(NodeBase* node)

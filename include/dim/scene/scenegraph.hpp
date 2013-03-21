@@ -47,6 +47,8 @@ namespace dim
       PtrVector<internal::NodeStorageBase> d_storages;
 
       size_t d_gridSize;
+      
+      size_t d_numOfRenderModes;
 
     // bullet
       btDbvtBroadphase d_broadphase;
@@ -60,7 +62,7 @@ namespace dim
       static Scene s_defaultScene;
 
     public:
-      virtual Shader const &shader() const
+      virtual Shader const &shader(size_t idx) const
       {
         return Shader::defaultShader();
       }
@@ -122,7 +124,7 @@ namespace dim
       //const_iterator end() const;
 
     // constructors
-      explicit SceneGraph(size_t gridSize = 64);
+      explicit SceneGraph(size_t numOfRenderModes, size_t gridSize = 64);
       
       SceneGraph(SceneGraph const &other);
       SceneGraph(SceneGraph &&tmp);
@@ -160,7 +162,7 @@ namespace dim
       typename internal::NodeGrid<RefType>::iterator get(float x, float z);
 
       void physicsStep(float time);
-      void draw(Camera camera);
+      void draw(Camera camera, size_t renderMode);
 
     private:
       void add(ShaderScene const &state, internal::NodeStorageBase* ptr);
@@ -219,7 +221,7 @@ namespace dim
     // Add the object
     if(ptr == 0)
     {
-      ptr = new internal::NodeGrid<RefType>(d_gridSize, key());
+      ptr = new internal::NodeGrid<RefType>(d_gridSize, key(), d_numOfRenderModes);
       d_storages.push_back(ptr);
     }
 
@@ -227,7 +229,7 @@ namespace dim
         
     // Add the drawstate
     for(size_t idx = 0; idx != object->scene().size(); ++idx)
-      add({object->shader(), object->scene()[idx]}, ptr);
+      add(ShaderScene(*object, idx, d_numOfRenderModes), ptr); //TODO d_numOfShaders / renderModes
 
     if(object->rigidBody() != 0)
       d_dynamicsWorld.addRigidBody(object->rigidBody());
@@ -264,7 +266,7 @@ namespace dim
 
     if(ptr == 0)
     {
-      ptr = new internal::NodeGrid<RefType>(d_gridSize, key());
+      ptr = new internal::NodeGrid<RefType>(d_gridSize, key(), d_numOfRenderModes);
       d_storages.push_back(ptr);
     }
 

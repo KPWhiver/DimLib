@@ -61,15 +61,16 @@ namespace dim
   
   /* constructors */
   
-  SceneGraph::SceneGraph(size_t gridSize)
+  SceneGraph::SceneGraph(size_t numOfRenderModes, size_t gridSize)
       :
           d_storages([](NodeStorageBase* ptr){return ptr->clone();}),
           d_gridSize(gridSize),
+          d_numOfRenderModes(numOfRenderModes),
           d_dispatcher(&d_collisionConfiguration),
           d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration)
   {
     // make sure there's at least one NodeGrid
-    auto ptr = new NodeGrid<DefaultNode>(d_gridSize, key());
+    auto ptr = new NodeGrid<DefaultNode>(d_gridSize, key(), d_numOfRenderModes);
     d_storages.push_back(ptr);
 
     // bullet
@@ -278,28 +279,28 @@ namespace dim
     d_dynamicsWorld.stepSimulation(time, substeps);
   }
 
-  void SceneGraph::draw(Camera camera)
+  void SceneGraph::draw(Camera camera, size_t renderMode)
   {
     for(auto const &element: d_drawStates)
     {
       // TODO optimize optimize optimize
       ShaderScene const &state = element.first;
 
-      state.shader.use();
+      state.shader(renderMode).use();
       
-      camera.setAtShader(state.shader, "in_mat_view", "in_mat_projection");
+      camera.setAtShader(state.shader(renderMode), "in_mat_view", "in_mat_projection");
 
-      state.state.mesh().bind();
-      if(state.state.culling() == false)
+      state.state().mesh().bind();
+      if(state.state().culling() == false)
         glDisable(GL_CULL_FACE);
 
-      for(size_t tex = 0; tex != state.state.textures().size(); ++tex)
-        state.shader.set(state.state.textures()[tex].second, state.state.textures()[tex].first, tex);
+      for(size_t tex = 0; tex != state.state().textures().size(); ++tex)
+        state.shader(renderMode).set(state.state().textures()[tex].second, state.state().textures()[tex].first, tex);
 
-      element.second->draw(state);
+      element.second->draw(state, renderMode);
       
-      state.state.mesh().unbind();
-      if(state.state.culling() == false)
+      state.state().mesh().unbind();
+      if(state.state().culling() == false)
         glEnable(GL_CULL_FACE);
     }
   }

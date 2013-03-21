@@ -73,7 +73,7 @@ namespace dim
 
       virtual NodeBase *clone() const = 0;
 
-      virtual Shader const &shader() const = 0;
+      virtual Shader const &shader(size_t idx) const = 0;
       virtual Scene const &scene() const = 0;
 
       virtual btRigidBody *rigidBody() = 0;
@@ -131,7 +131,7 @@ namespace dim
     {
       static Scene s_defaultScene;
       public:
-        virtual Shader const &shader() const
+        virtual Shader const &shader(size_t idx) const
         {
           return Shader::defaultShader();
         }
