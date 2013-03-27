@@ -86,6 +86,7 @@ namespace dim
       d_storages(other.d_storages),
       d_gridSize(other.d_gridSize),
       d_numOfRenderModes(other.d_numOfRenderModes),
+      d_lights(other.d_lights),
       d_collisionConfiguration(other.d_collisionConfiguration),
       d_dispatcher(other.d_dispatcher),
       d_solver(other.d_solver),
@@ -103,7 +104,8 @@ namespace dim
       d_drawStates(move(tmp.d_drawStates)),
       d_storages(move(tmp.d_storages)),
       d_gridSize(move(tmp.d_gridSize)),
-      d_numOfRenderModes(tmp.d_numOfRenderModes),
+      d_numOfRenderModes(move(tmp.d_numOfRenderModes)),
+      d_lights(move(tmp.d_lights)),
       d_collisionConfiguration(move(tmp.d_collisionConfiguration)),
       d_dispatcher(move(tmp.d_dispatcher)),
       d_solver(move(tmp.d_solver)),
@@ -121,6 +123,12 @@ namespace dim
     d_drawStates = other.d_drawStates;
     d_storages = other.d_storages;
     d_gridSize = other.d_gridSize;
+    d_numOfRenderModes = other.d_numOfRenderModes;
+    d_lights = other.d_lights;
+    d_collisionConfiguration = other.d_collisionConfiguration;
+    d_dispatcher = other.d_dispatcher;
+    d_solver = other.d_solver;
+    d_dynamicsWorld = other.d_dynamicsWorld;
 
     for(auto const &element: d_storages)
       element->copy(key());
@@ -136,6 +144,12 @@ namespace dim
     d_drawStates = move(tmp.d_drawStates);
     d_storages = move(tmp.d_storages);
     d_gridSize = move(tmp.d_gridSize);
+    d_numOfRenderModes = move(tmp.d_numOfRenderModes);
+    d_lights = move(tmp.d_lights);
+    d_collisionConfiguration = move(tmp.d_collisionConfiguration);
+    d_dispatcher = move(tmp.d_dispatcher);
+    d_solver = move(tmp.d_solver);
+    d_dynamicsWorld = move(tmp.d_dynamicsWorld);
 
     for(auto const &element: d_storages)
       element->copy(key());
@@ -264,6 +278,11 @@ namespace dim
     fileLoader.loadFile(filename.c_str());
   }
 
+  void SceneGraph::addLight(Light const &light)
+  {
+    d_lights.push_back(light);
+  }
+
   void SceneGraph::add(ShaderScene const &state, NodeStorageBase *ptr)
   {
     auto range = d_drawStates.equal_range(state);
@@ -285,16 +304,28 @@ namespace dim
 
   void SceneGraph::draw(Camera camera, size_t renderMode)
   {
+    GLuint previousShader = 0;
     for(auto const &element: d_drawStates)
     {
-      //std::cerr << "SceneGraph::draw()\n";
       // TODO optimize optimize optimize
       ShaderScene const &state = element.first;
 
-      state.shader(renderMode).use();
-      
-      camera.setAtShader(state.shader(renderMode), "in_mat_view", "in_mat_projection");
+      GLuint shaderId = state.shader(renderMode).id();
 
+      if(shaderId != previousShader)
+      {
+        state.shader(renderMode).use();
+        previousShader = shaderId;
+
+        camera.setAtShader(state.shader(renderMode), "in_mat_view", "in_mat_projection");
+
+        for(Light &light: d_lights)
+          light.setAtShader(state.shader(renderMode));
+
+        state.shader(renderMode).set("in_material.diffuse", vec4(1.0));
+        state.shader(renderMode).set("in_material.ambient", vec4(0.5, 0.5, 0.5, 1.0));
+      }
+      
       state.state().mesh().bind();
       if(state.state().culling() == false)
         glDisable(GL_CULL_FACE);
@@ -308,8 +339,6 @@ namespace dim
       if(state.state().culling() == false)
         glEnable(GL_CULL_FACE);
     }
-
-    //std::cerr << "\n\n";
   }
 
   void SceneGraph::del(SceneGraph::iterator object)

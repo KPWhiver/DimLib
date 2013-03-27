@@ -24,6 +24,7 @@
 #include "dim/scene/scene.hpp"
 #include "dim/util/ptrvector.hpp"
 #include "dim/core/camera.hpp"
+#include "dim/core/light.hpp"
 
 #include <vector>
 #include <map>
@@ -50,7 +51,7 @@ namespace dim
       
       size_t d_numOfRenderModes;
 
-      std::vector<Shader> d_renderModes;
+      std::vector<Light> d_lights;
 
     // bullet
       btDbvtBroadphase d_broadphase;
@@ -145,6 +146,8 @@ namespace dim
       void addGhost(btGhostObject *ghost);
       void addBulletFile(std::string const &filename);
 
+      void addLight(Light const &light);
+
       template<typename RefType>
       void load(std::string const &filename);
 
@@ -233,7 +236,7 @@ namespace dim
         
     // Add the drawstate
     for(size_t idx = 0; idx != object->scene().size(); ++idx)
-      add(ShaderScene(*object, idx, d_numOfRenderModes), ptr); //TODO d_numOfShaders / renderModes
+      add(ShaderScene(*object, idx, d_numOfRenderModes), ptr);
 
     if(object->rigidBody() != 0)
       d_dynamicsWorld.addRigidBody(object->rigidBody());

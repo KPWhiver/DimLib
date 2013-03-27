@@ -28,8 +28,6 @@
 
 namespace dim
 {
-class Light;
-
 class Shader
 {
   static bool s_geometryShader;
