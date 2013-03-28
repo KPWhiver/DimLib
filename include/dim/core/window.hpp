@@ -66,7 +66,7 @@ namespace dim
 
 		Mouse const &mouse() const;
 
-		void logError() const;
+		void logError(std::string const &file, int line) const;
 
 		void setClearColor(glm::vec4 const &color);
 		void setCloseFunction(int (*closeFunction)());

@@ -79,35 +79,35 @@ namespace dim
 
     d_mouse.update();
 
-    logError();
+    logError(__FILE__, __LINE__);
   }
 
-  void Window::logError() const
+  void Window::logError(string const &file, int line) const
   {
     int error = glGetError();
     switch(error)
     {
       case GL_INVALID_ENUM:
-        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_ENUM");
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_ENUM");
         break;
       case GL_INVALID_VALUE:
-        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_VALUE");
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_VALUE");
         break;
       case GL_INVALID_OPERATION:
-        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_OPERATION");
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_OPERATION");
         break;
       case GL_OUT_OF_MEMORY:
-        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_OUT_OF_MEMORY");
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_OUT_OF_MEMORY");
         break;
       case GL_INVALID_FRAMEBUFFER_OPERATION:
-        log(__FILE__, __LINE__, LogType::warning, "OpenGL reported an error: GL_INVALID_FRAMEBUFFER_OPERATION");
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_FRAMEBUFFER_OPERATION");
         break;
       case 0:
         break;
       default:
         stringstream ss;
         ss << "OpenGL reported an error: " << error;
-        log(__FILE__, __LINE__, LogType::warning, ss.str());
+        log(file, line, LogType::warning, ss.str());
         break;
     }
   }
