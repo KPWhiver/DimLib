@@ -33,6 +33,8 @@
 #include "dim/util/ptrvector.hpp"
 #include "dim/util/copyptr.hpp"
 
+#include <glm/gtc/matrix_inverse.hpp>
+
 namespace dim
 {
 namespace internal

@@ -453,9 +453,7 @@ namespace dim
           break;
       }
 
-      std::stringstream ss;
-      ss << "The texture channel: " << channel << " exceeds the amount of channels this texture has";
-      log(__FILE__, __LINE__, LogType::error, ss.str());
+      log(__FILE__, __LINE__, LogType::error, "The texture channel: " + std::to_string(channel) + " exceeds the amount of channels this texture has");
     }
 
     template<typename Type>
@@ -599,9 +597,7 @@ namespace dim
         case GL_DEPTH_COMPONENT:
           return 1;
         default:
-          std::stringstream ss;
-          ss << "Unknown Texture format used in TextureBase::components(): " << externalFormat();
-          log(__FILE__, __LINE__, LogType::error, ss.str());
+          log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::components(): " + std::to_string(externalFormat()));
       }
       return 0;
     }
@@ -663,9 +659,7 @@ namespace dim
         case GL_DEPTH_COMPONENT32F:
           return GL_DEPTH_COMPONENT;
         default:
-          std::stringstream ss;
-          ss << "Unknown Texture format used in TextureBase::externalFormat(): " << static_cast<int>(d_internalFormat);
-          log(__FILE__, __LINE__, LogType::error, ss.str());
+          log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::externalFormat(): " + std::to_string(static_cast<int>(d_internalFormat)));
       }
       return 0;
     }

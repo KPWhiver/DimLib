@@ -148,11 +148,7 @@ private:
   { 
     //TODO logica
     if(unit > s_maxTextureUnits)
-    {
-      std::stringstream ss;
-      ss << "This graphics card does not support " << unit << " texture units";
-      log(__FILE__, __LINE__, LogType::warning, ss.str());
-    }
+      log(__FILE__, __LINE__, LogType::warning, "This graphics card does not support " + std::to_string(unit) + " texture units");
 
     uint textureUnit = GL_TEXTURE0 + unit;
 

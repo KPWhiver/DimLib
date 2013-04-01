@@ -232,9 +232,7 @@ namespace dim
         log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS");
         break;
       default:
-        std::stringstream ss;
-        ss << "Creation of a framebuffer failed with error code: " << fbo_status;
-        log(__FILE__, __LINE__, LogType::error, ss.str());
+        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error code: " + std::to_string(fbo_status));
         break;
     }
   }

@@ -306,7 +306,9 @@ namespace internal
         {
           if(node->scene()[idx] == scene.state())
           {
+            glm::mat3 normalMatrix(glm::inverseTranspose(node->matrix()));
             node->shader(renderMode).set("in_mat_model", node->matrix());
+            node->shader(renderMode).set("in_mat_normal", normalMatrix);
 
             scene.state().mesh().draw();
             break;

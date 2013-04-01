@@ -105,9 +105,7 @@ namespace dim
       case 0:
         break;
       default:
-        stringstream ss;
-        ss << "OpenGL reported an error: " << error;
-        log(file, line, LogType::warning, ss.str());
+        log(file, line, LogType::warning, "OpenGL reported an error: " + to_string(error));
         break;
     }
   }
