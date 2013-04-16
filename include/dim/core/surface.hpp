@@ -27,6 +27,8 @@
 #include <stdexcept>
 
 #include "dim/core/texture.hpp"
+#include "dim/core/shader.hpp"
+#include "dim/core/tools.hpp"
 
 namespace dim
 {
@@ -62,6 +64,8 @@ namespace dim
 
     typedef std::tuple<Texture<Types>...> TupleType;
     typedef std::tuple<Texture<Types>*...> TuplePtrType;
+    
+    static Shader s_copy;
 
     TupleType d_textures;
     TuplePtrType d_targets;
@@ -118,6 +122,9 @@ namespace dim
 
     template<uint Index = 0>
     typename std::tuple_element<Index, TupleType>::type &texture();
+    
+    template<uint Index = 0>
+    typename std::tuple_element<Index, TupleType>::type const &texture() const;
 
     void setClearColor(glm::vec4 const &color);
     void setClearDepth(float depth);
@@ -128,6 +135,12 @@ namespace dim
 
     void renderTo(bool clearBuffer = true);
     void renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer);
+
+    template<typename Type, uint Index = 0>
+    void copy(Texture<Type> const &source);
+    
+    template<typename Type, uint Index = 0>
+    void copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height);
 
     GLuint id() const;
 
