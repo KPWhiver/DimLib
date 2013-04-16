@@ -68,6 +68,9 @@ namespace dim
 
     template<uint Index = 0>
     typename std::tuple_element<Index, TupleType>::type &texture();
+    
+    template<uint Index = 0>
+    typename std::tuple_element<Index, TupleType>::type const &texture() const;
 
     void setClearColor(glm::vec4 const &color);
     void setClearDepth(float depth);
@@ -78,6 +81,12 @@ namespace dim
 
     void renderTo(bool clearBuffer = true, bool swapBuffer = true);
     void renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer, bool swapBuffer);
+    
+    template<typename Type, uint Index = 0>
+    void copy(Texture<Type> const &source);
+    
+    template<typename Type, uint Index = 0>
+    void copyPart(Texture<Type> const &source, uint x, uint y, uint width, uint height);
 
     GLuint id() const;
 

@@ -22,6 +22,15 @@
 namespace dim
 {
   template<typename ...Types>
+  Shader Surface<Types...>::s_copy("copyShader", "#version 120\n"
+                                   "fragment:\n"
+                                   "uniform sampler2D in_texture;\n"
+                                   "uniform vec2 in_viewport;\n"
+                                   "void main()\n"
+                                   "{gl_FragColor = texture2D(in_texture, gl_FragCoord.xy / in_viewport);}\n");
+  
+
+  template<typename ...Types>
   Surface<Types...>::Surface(typename std::tuple_element<0, TuplePtrType>::type ptr)
       : 
         d_targets{0},
@@ -93,6 +102,16 @@ namespace dim
   template<typename ...Types>
   template<uint Index>
   typename std::tuple_element<Index, typename Surface<Types...>::TupleType>::type &Surface<Types...>::texture()
+  {
+    if(std::get<Index>(d_targets) == 0)
+      log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
+
+    return *std::get<Index>(d_targets);
+  }
+  
+  template<typename ...Types>
+  template<uint Index>
+  typename std::tuple_element<Index, typename Surface<Types...>::TupleType>::type const &Surface<Types...>::texture() const
   {
     if(std::get<Index>(d_targets) == 0)
       log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
@@ -342,6 +361,29 @@ namespace dim
     // Clear the buffer before drawing (this also binds it)
 
   }
+  
+  template<typename ...Types>
+  template<typename Type, uint Index>
+  void Surface<Types...>::copy(Texture<Type> const &source)
+  {
+    copyToPart(source, 0, 0, width(), height());
+  }
+    
+  template<typename ...Types>
+  template<typename Type, uint Index>
+  void Surface<Types...>::copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height)
+  {
+    renderToPart(x, y, width, height, false);
+    
+    internal::setBlending(false);
+    
+    s_copy.use();
+    s_copy.set("in_viewport", glm::vec2(width, height));
+    s_copy.set("in_texture", 0, source);
+    
+    drawFullscreenQuad();
+  }
+
   
   template<typename ...Types>
   void Surface<Types...>::notifyTextures()

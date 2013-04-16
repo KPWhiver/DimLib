@@ -54,6 +54,13 @@ namespace dim
 
   template<typename ...Types>
   template<uint Index>
+  typename std::tuple_element<Index, typename DoubleBufferedSurface<Types...>::TupleType>::type const &DoubleBufferedSurface<Types...>::texture() const
+  {
+    return d_buffer[!d_bufferToRenderTo].texture();
+  }
+
+  template<typename ...Types>
+  template<uint Index>
   void DoubleBufferedSurface<Types...>::addTarget(typename std::tuple_element<Index, TuplePtrType>::type ptr)
   {
     d_buffer[0].addTarget(ptr->copy());
@@ -120,6 +127,20 @@ namespace dim
 
     if(swapBuffer)
       s_renderTarget = this;
+  }
+    
+  template<typename ...Types>
+  template<typename Type, uint Index>
+  void Surface<Types...>::copy(Texture<Type> const &source)
+  {
+    d_buffer[d_bufferToRenderTo].copyToPart(source, 0, 0, width(), height());
+  }
+    
+  template<typename ...Types>
+  template<typename Type, uint Index>
+  void Surface<Types...>::copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height)
+  {
+    d_buffer[d_bufferToRenderTo].copyToPart(source, x, y, width, height);    
   }
   
   template<typename ...Types>
