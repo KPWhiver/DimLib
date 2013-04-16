@@ -63,6 +63,24 @@ namespace dim
       }
     }
 
+    void setScissor(int x, int y, int width, int height)
+    {
+      static int currentX(0);
+      static int currentY(0);
+      static int currentWidth(-1);
+      static int currentHeight(-1);
+
+      if(currentX != x || currentY != y || currentWidth != width || currentHeight != height)
+      {
+        glScissor(x, y, width, height);
+
+        currentX = x;
+        currentY = y;
+        currentWidth = width;
+        currentHeight = height;
+      }
+    }
+
     void setBlending(bool blending)
     {
       static bool currentBlending(false);

@@ -316,7 +316,8 @@ namespace dim
     
     //s_renderTarget = this;
 
-    internal::setViewport(x, y, width, height);
+    internal::setViewport(0, 0, this->width(), this->height());
+    internal::setScissor(x, y, width, height);
 
     if(clearBuffer)
       clear();

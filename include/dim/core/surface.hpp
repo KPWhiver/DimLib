@@ -51,6 +51,7 @@ namespace dim
     };
 
     void setViewport(int x, int y, int width, int height);
+    void setScissor(int x, int y, int width, int height);
     void setBlending(bool blend);
   }
 

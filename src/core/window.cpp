@@ -171,6 +171,7 @@ namespace dim
     glEnable(GL_CULL_FACE);
     internal::setBlending(true);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glEnable(GL_SCISSOR_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LEQUAL);
 
@@ -223,6 +224,7 @@ namespace dim
     internal::setBlending(true);
 
     internal::setViewport(x, y, width, height);
+    internal::setScissor(x, y, width, height);
 
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(internal::SurfaceBase::s_renderTarget != 0)
