@@ -22,15 +22,6 @@
 namespace dim
 {
   template<typename ...Types>
-  Shader Surface<Types...>::s_copy("copyShader", "#version 120\n"
-                                   "fragment:\n"
-                                   "uniform sampler2D in_texture;\n"
-                                   "uniform vec2 in_viewport;\n"
-                                   "void main()\n"
-                                   "{gl_FragColor = texture2D(in_texture, gl_FragCoord.xy / in_viewport);}\n");
-  
-
-  template<typename ...Types>
   Surface<Types...>::Surface(typename std::tuple_element<0, TuplePtrType>::type ptr)
       : 
         d_targets{0},
@@ -366,20 +357,20 @@ namespace dim
   template<typename Type, uint Index>
   void Surface<Types...>::copy(Texture<Type> const &source)
   {
-    copyToPart(source, 0, 0, width(), height());
+    copyToPart(source, 0, 0, width(), height(), false);
   }
     
   template<typename ...Types>
   template<typename Type, uint Index>
-  void Surface<Types...>::copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height)
+  void Surface<Types...>::copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height, bool clearBuffer)
   {
     renderToPart(x, y, width, height, false);
     
     internal::setBlending(false);
     
-    s_copy.use();
-    s_copy.set("in_viewport", glm::vec2(width, height));
-    s_copy.set("in_texture", 0, source);
+    copyShader().use();
+    copyShader().set("in_viewport", glm::vec2(width, height));
+    copyShader().set("in_texture", source, 0);
     
     drawFullscreenQuad();
   }

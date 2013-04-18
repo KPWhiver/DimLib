@@ -32,13 +32,32 @@ namespace dim
   
     SurfaceBase::SurfaceBase()
     {
-      glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_maxAttachment);
+      static bool initialized = false;
+
+      if(not initialized)
+      {
+        initialized = true;
+        glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_maxAttachment);
+
+      }
+
     }
 
     SurfaceBase::~SurfaceBase()
     {
       if(s_renderTarget == this)
         s_renderTarget = 0;
+    }
+
+    Shader &SurfaceBase::copyShader()
+    {
+      static Shader copy("copyShader", "#version 120\n"
+                                       "fragment:\n"
+                                       "uniform sampler2D in_texture;\n"
+                                       "uniform vec2 in_viewport;\n"
+                                       "void main()\n"
+                                       "{gl_FragColor = texture2D(in_texture, gl_FragCoord.xy / in_viewport);}\n");
+      return copy;
     }
 
     void SurfaceBase::finishRendering()

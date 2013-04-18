@@ -131,16 +131,25 @@ namespace dim
     
   template<typename ...Types>
   template<typename Type, uint Index>
-  void Surface<Types...>::copy(Texture<Type> const &source)
+  void DoubleBufferedSurface<Types...>::copy(Texture<Type> const &source, bool swapBuffers)
   {
-    d_buffer[d_bufferToRenderTo].copyToPart(source, 0, 0, width(), height());
+    copyToPart(source, 0, 0, width(), height(), false, swapBuffers);
   }
-    
+
   template<typename ...Types>
   template<typename Type, uint Index>
-  void Surface<Types...>::copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height)
+  void DoubleBufferedSurface<Types...>::copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height, bool clearBuffer, bool swapBuffers)
   {
-    d_buffer[d_bufferToRenderTo].copyToPart(source, x, y, width, height);    
+    // If the last FBO is a pingpong buffer now is the time to swap those buffers
+    if(s_renderTarget != 0)
+      s_renderTarget->finishRendering();
+
+    s_renderTarget = 0;
+
+    d_buffer[d_bufferToRenderTo].copyToPart(source, x, y, width, height, clearBuffer);
+
+    if(swapBuffers)
+      s_renderTarget = this;
   }
   
   template<typename ...Types>

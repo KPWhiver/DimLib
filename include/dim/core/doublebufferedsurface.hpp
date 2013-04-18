@@ -83,10 +83,10 @@ namespace dim
     void renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer, bool swapBuffer);
     
     template<typename Type, uint Index = 0>
-    void copy(Texture<Type> const &source);
+    void copy(Texture<Type> const &source, bool swapBuffer = true);
     
     template<typename Type, uint Index = 0>
-    void copyPart(Texture<Type> const &source, uint x, uint y, uint width, uint height);
+    void copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height, bool clearBuffer, bool swapBuffer);
 
     GLuint id() const;
 
