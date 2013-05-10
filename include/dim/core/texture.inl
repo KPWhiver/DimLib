@@ -314,7 +314,7 @@ namespace dim
 
       // give the buffer the correct size
       if(keepBuffered)
-        d_buffer.assign(data, data + width * height * components());
+        d_buffer.assign(data, data + width * height * numberOfChannels());
 
       d_keepBuffered = keepBuffered;
       d_outdatedBuffer = false;
@@ -405,7 +405,7 @@ namespace dim
         renewBuffer();
       }
       else if(data != d_buffer.data())
-        d_buffer.assign(data, data + d_width * d_height * components());
+        d_buffer.assign(data, data + d_width * d_height * numberOfChannels());
     }
 
     template<typename Type>
@@ -468,7 +468,7 @@ namespace dim
       // update buffer if outdated
       if(d_outdatedBuffer || d_bufferLevel != level || d_buffer.empty())
       {
-        d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * components());
+        d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * numberOfChannels());
 
         bind();
         glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, d_buffer.data());
@@ -496,7 +496,7 @@ namespace dim
       // update buffer if outdated
       if(d_outdatedBuffer || d_bufferLevel != level || d_buffer.empty())
       {
-        d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * components());
+        d_buffer.resize((d_height / (1 << level)) * (d_width / (1 << level)) * numberOfChannels());
 
         bind();
         glGetTexImage(GL_TEXTURE_2D, level, externalFormat(), DataType<Type>::value, d_buffer.data());
@@ -579,7 +579,7 @@ namespace dim
     }
 
     template<typename Type>
-    uint TextureBase<Type>::components() const
+    uint TextureBase<Type>::numberOfChannels() const
     {
       switch(externalFormat())
       {
@@ -594,7 +594,7 @@ namespace dim
         case GL_DEPTH_COMPONENT:
           return 1;
         default:
-          throw log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::components(): " + std::to_string(externalFormat()));
+          throw log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::numberOfChannels(): " + std::to_string(externalFormat()));
       }
       return 0;
     }
