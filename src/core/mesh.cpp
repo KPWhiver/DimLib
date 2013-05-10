@@ -63,7 +63,7 @@ namespace dim
     if(d_name != "")
       return 0; //TODO implement
     else if(d_id == unknown)
-      log(__FILE__, __LINE__, LogType::error, "Can't return unknown id");
+      throw log(__FILE__, __LINE__, LogType::error, "Can't return unknown id");
 
     return d_id;
   }
@@ -138,14 +138,9 @@ namespace dim
     if(idx == interleaved || (idx == 0 && d_attributes.size() == 1))
     {
       if(d_interleavedVBO.size() == 0)
-      {
         d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, buffer);
-      }
       else
-      {
-        log(__FILE__, __LINE__, LogType::error, "Interleaved arrays can only be added at the first call");
-        return;
-      }
+        throw log(__FILE__, __LINE__, LogType::error, "Interleaved arrays can only be added at the first call");
     }
     else
     {
@@ -171,10 +166,7 @@ namespace dim
     uint varNumOfElements = numOfElements();
 
     if(d_interleavedVBO.size() == 0)
-    {
-      log(__FILE__, __LINE__, LogType::error, "Can't update a Mesh if no buffers have been added yet");
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, "Can't update a Mesh if no buffers have been added yet");
 
     if(idx == interleaved)
       d_interleavedVBO.update(d_numOfVertices * varNumOfElements, buffer);
@@ -219,10 +211,7 @@ namespace dim
     d_numOfTriangles = numOfTriangles;
 
     if(d_indexVBO.size() != 0)
-    {
-      log(__FILE__, __LINE__, LogType::error, "Can't add an element buffer, it's has already been added");
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, "Can't add an element buffer, it's has already been added");
 
     d_indexVBO = Buffer<GLushort>(d_numOfTriangles * 3, buffer);
   }
@@ -230,10 +219,7 @@ namespace dim
   void Mesh::addInstanceBuffer(GLfloat const *buffer, size_t locations, Attribute const &attrib)
   {
     if(d_instancingVBO.size() != 0)
-    {
-      log(__FILE__, __LINE__, LogType::error, "Can't add an instance buffer, it's has already been added");
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, "Can't add an instance buffer, it's has already been added");
 
     d_instanceAttribute = attrib;
 
@@ -244,10 +230,7 @@ namespace dim
   void Mesh::updateElementBuffer(GLushort const *buffer)
   {
     if(d_indexVBO.size() == 0)
-    {
-      log(__FILE__, __LINE__, LogType::error, "Can't update a element buffer if no element buffers have been added yet");
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, "Can't update a element buffer if no element buffers have been added yet");
 
     d_indexVBO.update(d_numOfTriangles * 3, buffer);
   }
@@ -255,10 +238,7 @@ namespace dim
   void Mesh::updateInstanceBuffer(GLfloat const *buffer, size_t locations)
   {
     if(d_instancingVBO.size() == 0)
-    {
-      log(__FILE__, __LINE__, LogType::error, "Can't update a instance buffer if no instance buffers have been added yet");
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, "Can't update a instance buffer if no instance buffers have been added yet");
 
     d_maxLocations = locations;
     d_instancingVBO.update(d_maxLocations * 3, buffer);

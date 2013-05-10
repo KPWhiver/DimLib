@@ -25,6 +25,7 @@
 #include "assimp/postprocess.h"
 
 using namespace std;
+using namespace glm;
 
 namespace dim
 {
@@ -32,22 +33,15 @@ namespace dim
   :
       d_mesh(mesh),
       d_textures(textures),
-      d_culling(true)
+      d_ambient(1.0, 1.0, 1.0),
+      d_diffuse(1.0, 1.0, 1.0),
+      d_specular(1.0, 1.0, 1.0),
+      d_shininess(0)
   {
     sort(d_textures.begin(), d_textures.end(), [](pair<Texture<GLubyte>, string> const &lhs, pair<Texture<GLubyte>, string> const &rhs)
     {
       return lhs.first.id() < rhs.first.id();
     });
-  }
-
-  bool DrawState::culling() const
-  {
-    return d_culling;
-  }
-
-  void DrawState::setCulling(bool culling)
-  {
-    d_culling = culling;
   }
 
   vector<pair<Texture<GLubyte>, string>> const &DrawState::textures() const
@@ -64,9 +58,38 @@ namespace dim
     });
   }
 
+
+  void DrawState::setMaterial(vec3 ambient, vec3 diffuse, vec3 specular, float shininess)
+  {
+    d_ambient = ambient;
+    d_diffuse = diffuse;
+    d_specular = specular;
+    d_shininess = shininess;
+  }
+
   Mesh const &DrawState::mesh() const
   {
     return d_mesh;
+  }
+
+  vec3 const &DrawState::ambientIntensity() const
+  {
+    return d_ambient;
+  }
+
+  vec3 const &DrawState::diffuseIntensity() const
+  {
+    return d_diffuse;
+  }
+
+  vec3 const &DrawState::specularIntensity() const
+  {
+    return d_specular;
+  }
+
+  float DrawState::shininess() const
+  {
+    return d_shininess;
   }
 
   bool DrawState::operator==(DrawState const &other) const
@@ -83,15 +106,12 @@ namespace dim
     if(d_mesh.id() != other.d_mesh.id())
       return false;
 
-    if(d_culling != other.d_culling)
-      return false;
-
     return true;
   }
 
   bool DrawState::operator<(DrawState const &other) const
   {
-    size_t minSize = min(d_textures.size(), other.d_textures.size());
+    size_t minSize = std::min(d_textures.size(), other.d_textures.size());
 
     for(size_t idx = 0; idx != minSize; ++idx)
     {
@@ -111,8 +131,10 @@ namespace dim
     if(d_mesh.id() > other.d_mesh.id())
       return false;
 
-    if(d_culling < other.d_culling)
+    if(d_shininess < other.d_shininess)
       return true;
+    if(d_shininess > other.d_shininess)
+      return false;
 
     return false;
   }
@@ -247,17 +269,11 @@ namespace dim
     uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices;
 
     if(vertex.id() == Attribute::unknown)
-    {
-      log(__FILE__, __LINE__, LogType::error, "No vertex array specified while loading " + filename);
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, "No vertex array specified while loading " + filename);
 
     if(vertex.format() > Attribute::vec3 || normal.format() > Attribute::vec3 || texCoord.format() > Attribute::vec3 ||
        binormal.format() > Attribute::vec3 || tangent.format() > Attribute::vec3)
-    {
-      log(__FILE__, __LINE__, LogType::error, "Can't extract more than 3 coordinates from a model file");
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, "Can't extract more than 3 coordinates from a model file");
 
     uint varNumOfElements = vertex.size();
 
@@ -282,16 +298,10 @@ namespace dim
     aiScene const *scene = importer.ReadFile(filename, flags);
 
     if(!scene)
-    {
-      log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
-      return;
-    }
+      throw log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
 
     if(texCoord.id() != Attribute::unknown && scene->mMeshes[0]->mTextureCoords[0] == 0)
-    {
-      log(filename, 0, LogType::error, "No texture coordinates present");
-      return;
-    }
+      throw log(filename, 0, LogType::error, "No texture coordinates present");
     else
       varNumOfElements += texCoord.size();
 
@@ -300,6 +310,11 @@ namespace dim
       d_states.push_back(DrawState(loadMesh(*scene, varNumOfElements, mesh, vertex, normal, texCoord, binormal, tangent), {}));
 
     vector<vector<pair<Texture<GLubyte>, string>>> textures(scene->mNumMaterials);
+    vector<aiColor3D> ambientColors(scene->mNumMaterials, aiColor3D(1.0, 1.0, 1.0));
+    vector<aiColor3D> diffuseColors(scene->mNumMaterials, aiColor3D(1.0, 1.0, 1.0));
+    vector<aiColor3D> specularColors(scene->mNumMaterials, aiColor3D(1.0, 1.0, 1.0));
+    vector<float> shininess(scene->mNumMaterials, 0);
+    vector<float> specularIntensity(scene->mNumMaterials, 1);
     string baseName("in_texture");
 
     for(size_t material = 0; material != scene->mNumMaterials; ++material)
@@ -308,6 +323,7 @@ namespace dim
       aiString relativePath;
       aiReturn texFound;
 
+      // load textures
       while(true)
       {
         texFound = scene->mMaterials[material]->GetTexture(aiTextureType_DIFFUSE, texIdx, &relativePath);
@@ -320,10 +336,25 @@ namespace dim
         textures[material].emplace_back(resources.request(path), baseName + static_cast<char>('0' + texIdx));
         ++texIdx;
       }
+      // load light material settings
+      scene->mMaterials[material]->Get(AI_MATKEY_COLOR_AMBIENT, ambientColors[material]);
+      scene->mMaterials[material]->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColors[material]);
+      scene->mMaterials[material]->Get(AI_MATKEY_COLOR_SPECULAR, specularColors[material]);
+      scene->mMaterials[material]->Get(AI_MATKEY_SHININESS, shininess[material]);
+      scene->mMaterials[material]->Get(AI_MATKEY_SHININESS_STRENGTH, specularIntensity[material]);
     }
 
+    // set textures and materials inside object
     for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
-      d_states[mesh].setTextures(textures[scene->mMeshes[mesh]->mMaterialIndex]);
+    {
+      uint materialIdx = scene->mMeshes[mesh]->mMaterialIndex;
+
+      d_states[mesh].setTextures(textures[materialIdx]);
+      d_states[mesh].setMaterial(vec3(ambientColors[materialIdx].r, ambientColors[materialIdx].g, ambientColors[materialIdx].b),
+                                 vec3(diffuseColors[materialIdx].r, diffuseColors[materialIdx].g, diffuseColors[materialIdx].b),
+                                 vec3(specularColors[materialIdx].r, specularColors[materialIdx].g, specularColors[materialIdx].b) * specularIntensity[materialIdx],
+                                 shininess[materialIdx]);
+    }
 
     sort(d_states.begin(), d_states.end());
   }
@@ -344,7 +375,7 @@ namespace dim
 
   bool Scene::operator<(Scene const &other) const
   {
-    size_t minSize = min(size(), other.size());
+    size_t minSize = std::min(size(), other.size());
 
     for(size_t idx = 0; idx != minSize; ++idx)
     {

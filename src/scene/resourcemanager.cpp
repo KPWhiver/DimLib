@@ -49,7 +49,7 @@ namespace dim
       auto keyPair = d_bulletMap.emplace(filename, nullptr);
       if(keyPair.first->second.loadFile(filename.c_str()) == false)
       {
-        log(__FILE__, __LINE__, LogType::error, "Failed to load bullet file: " + filename);
+        throw log(__FILE__, __LINE__, LogType::error, "Failed to load bullet file: " + filename);
       }
 
       return keyPair.first->second;

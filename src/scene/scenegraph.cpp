@@ -260,6 +260,12 @@ namespace dim
       d_dynamicsWorld.addRigidBody(rigidBody);
   }
 
+  void SceneGraph::updateRigidBody(btRigidBody *rigidBody)
+  {
+    if(rigidBody != 0)
+      d_dynamicsWorld.updateSingleAabb(rigidBody);
+  }
+
   void SceneGraph::addAction(btActionInterface *action)
   {
     if(action != 0)
@@ -322,13 +328,13 @@ namespace dim
         for(Light &light: d_lights)
           light.setAtShader(state.shader(renderMode));
 
-        state.shader(renderMode).set("in_material.diffuse", vec4(1.0));
-        state.shader(renderMode).set("in_material.ambient", vec4(0.5, 0.5, 0.5, 1.0));
+        state.shader(renderMode).set("in_material.diffuse", state.state().diffuseIntensity());
+        state.shader(renderMode).set("in_material.ambient", state.state().ambientIntensity());
+        state.shader(renderMode).set("in_material.specular", state.state().specularIntensity());
+        state.shader(renderMode).set("in_material.shininess", state.state().shininess());
       }
       
       state.state().mesh().bind();
-      if(state.state().culling() == false)
-        glDisable(GL_CULL_FACE);
 
       for(size_t tex = 0; tex != state.state().textures().size(); ++tex)
         state.shader(renderMode).set(state.state().textures()[tex].second, state.state().textures()[tex].first, tex);
@@ -336,8 +342,6 @@ namespace dim
       element.second->draw(state, renderMode);
       
       state.state().mesh().unbind();
-      if(state.state().culling() == false)
-        glEnable(GL_CULL_FACE);
     }
   }
 

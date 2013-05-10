@@ -34,6 +34,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <stdexcept>
 
 namespace dim
 {
@@ -49,7 +50,7 @@ namespace dim
   void setLogStream(std::ostream &outputStream);
   void setLogFile(std::string const &outputFile);
 
-  void log(std::string const &file, int line, LogType type, std::string const &message);
+  std::runtime_error log(std::string const &file, int line, LogType type, std::string const &message);
 }
 
 #endif /* dim_HPP_ */

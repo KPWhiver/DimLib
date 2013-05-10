@@ -35,17 +35,24 @@ class DrawState
 
     Mesh d_mesh;
     std::vector<std::pair<Texture<GLubyte>, std::string>> d_textures;
-    bool d_culling;
+    glm::vec3 d_ambient;
+    glm::vec3 d_diffuse;
+    glm::vec3 d_specular;
+    float d_shininess;
 
     DrawState(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures);
   
   public:
-    bool culling() const;
     std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures() const;
     Mesh const &mesh() const;
     
-    void setCulling(bool culling);
     void setTextures(std::vector<std::pair<Texture<GLubyte>, std::string>> const &param);
+    void setMaterial(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess);
+
+    glm::vec3 const &ambientIntensity() const;
+    glm::vec3 const &diffuseIntensity() const;
+    glm::vec3 const &specularIntensity() const;
+    float shininess() const;
 
     bool operator==(DrawState const &other) const;
     bool operator<(DrawState const &other) const;

@@ -142,6 +142,7 @@ namespace dim
 
       //btDiscreteDynamicsWorld *physicsWorld();
       void addRigidBody(btRigidBody *rigidBody);
+      void updateRigidBody(btRigidBody *rigidBody);
       void addAction(btActionInterface *action);
       void addGhost(btGhostObject *ghost);
       void addBulletFile(std::string const &filename);
@@ -186,7 +187,7 @@ namespace dim
 
     if(file.is_open() == false)
     {
-      log(__FILE__, __LINE__, LogType::error, "Failed to load " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to load " + filename);
       return;
     }
 
@@ -203,7 +204,7 @@ namespace dim
     std::ifstream file(filename.c_str());
     if(not file.is_open())
     {
-      log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename);
       return;
     }
 

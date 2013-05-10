@@ -84,7 +84,7 @@ namespace dim
     }
 
     if(not GLEW_ARB_timer_query)
-      log(__FILE__, __LINE__, LogType::error, "GPUtime measurement not supported on this GPU");
+      throw log(__FILE__, __LINE__, LogType::error, "GPUtime measurement not supported on this GPU");
       
     if(d_id != 0)
     {

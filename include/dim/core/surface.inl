@@ -95,7 +95,7 @@ namespace dim
   typename std::tuple_element<Index, typename Surface<Types...>::TupleType>::type &Surface<Types...>::texture()
   {
     if(std::get<Index>(d_targets) == 0)
-      log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
+      throw log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
 
     return *std::get<Index>(d_targets);
   }
@@ -105,7 +105,7 @@ namespace dim
   typename std::tuple_element<Index, typename Surface<Types...>::TupleType>::type const &Surface<Types...>::texture() const
   {
     if(std::get<Index>(d_targets) == 0)
-      log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
+      throw log(__FILE__, __LINE__, LogType::error, "Trying to retrieve a not yet attached texture-target");
 
     return *std::get<Index>(d_targets);
   }
@@ -221,29 +221,21 @@ namespace dim
       case GL_FRAMEBUFFER_COMPLETE:
         break;
       case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
       case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
       case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER");
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER");
       case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER");
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER");
       case GL_FRAMEBUFFER_UNSUPPORTED:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_UNSUPPORTED");
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_UNSUPPORTED");
       case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE");
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE");
       case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS");
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error: GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS");
       default:
-        log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error code: " + std::to_string(fbo_status));
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Creation of a framebuffer failed with error code: " + std::to_string(fbo_status));
     }
   }
 

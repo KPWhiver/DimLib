@@ -42,25 +42,40 @@ namespace dim
       {
           std::string filename;
           Shader shader;
-          Scene scene;
+          std::vector<Scene> scenes;
           //btRigidBody rigidBody;
       };
 
       static std::vector<Object> s_objects;
 
-      int d_index;
+      uint d_index;
+
+      uint d_sceneIdx;
 
     public:
+      FileDrawNode();
       FileDrawNode(std::string const &filename, glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale);
+
+      static void setDefaultShader(Shader const &shader);
 
       Shader const &shader(size_t idx) const override;
       Scene const &scene() const override;
+
+      uint sceneNumber() const;
+      void setSceneNumber(uint index);
+      uint numberOfScenes() const;
 
       btRigidBody *rigidBody() override;
 
       NodeBase *clone() const override;
 
       static void load(std::string const &filename, TextureManager &texRes, SceneManager &sceneRes, ShaderManager &shaderRes, BulletManager &bulletRes);
+
+    private:
+      static Shader &defaultShader();
+
+      void insert(std::ostream &out) const override;
+      void extract(std::istream &in) override;
   };
 
 }

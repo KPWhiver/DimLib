@@ -20,6 +20,7 @@
 #include "dim/scene/filedrawnode.hpp"
 #include <fstream>
 #include <glm/gtc/matrix_transform.hpp>
+#include <yaml-cpp/yaml.h>
 
 using namespace glm;
 using namespace std;
@@ -28,10 +29,30 @@ namespace dim
 {
   vector<FileDrawNode::Object> FileDrawNode::s_objects;
 
+  Shader &FileDrawNode::defaultShader()
+  {
+    static Shader shader(Shader::defaultShader());
+    return shader;
+  }
+
+  void FileDrawNode::setDefaultShader(Shader const &shader)
+  {
+    defaultShader() = shader;
+  }
+
+  FileDrawNode::FileDrawNode()
+    :
+        d_index(0),
+        d_sceneIdx(0)
+  {
+  }
+
+
   FileDrawNode::FileDrawNode(string const &filename, glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale)
   :
       NodeBase(coor, orient, scale),
-      d_index(0)
+      d_index(0),
+      d_sceneIdx(0)
   {
     bool present = false;
 
@@ -40,15 +61,48 @@ namespace dim
       if(s_objects[idx].filename == filename)
       {
         d_index = idx;
+        d_sceneIdx = rand() % s_objects[idx].scenes.size();
         present = true;
         break;
       }
     }
 
     if(not present)
+      throw log(__FILE__, __LINE__, LogType::error, "The file " + filename + " needs to be loaded first with the static 'load' member");
+  }
+
+  vector<Scene> parseScenes(YAML::Node const *node, string const &filename, string const &directory, SceneManager &sceneRes, BulletManager &bulletRes)
+  {
+    if(node == 0)
+      throw log(__FILE__, __LINE__, LogType::error, "The file " + filename + " does not contain a scenes section");
+
+    // Read and parse the scene objects
+    //if(node->Type() == YAML::NodeType::Sequence)
+    //  throw log(__FILE__, __LINE__, LogType::error, "Expected Scenes in " + filename + " to be a sequence");
+
+    vector<Scene> scenes;
+    for(YAML::Iterator it = node->begin(); it != node->end(); ++it)
     {
-      log(__FILE__, __LINE__, LogType::error, "The file " + filename + " needs to be loaded first with the static 'load' member");
-      return;
+      string sceneFile;
+      (*it)["modelFile"] >> sceneFile;
+      scenes.push_back(sceneRes.request(directory + sceneFile));
+    }
+
+    if(scenes.size() == 0)
+      throw log(__FILE__, __LINE__, LogType::error, "Expected at least one scene in " + filename);
+
+    return scenes;
+  }
+
+  Shader &parseShader(YAML::Node const *node, Shader &defaultShader, string const &directory, ShaderManager &shaderRes)
+  {
+    if(node == 0)
+      return defaultShader;
+    else
+    {
+      string shaderFile;
+      (*node)["file"] >> shaderFile;
+      return shaderRes.request(directory + shaderFile);
     }
   }
 
@@ -64,69 +118,50 @@ namespace dim
       }
     }
 
-    // the status the file reader is in
-    enum Status
-    {
-      bullet,
-      scene,
-      shader,
-      none,
-    };
-    Status status(none);
-
     // open the file
     ifstream file(filename);
     if(not file.is_open())
     {
-      log(__FILE__, __LINE__, LogType::error, "Can't open file " + filename + " for reading");
+      throw log(__FILE__, __LINE__, LogType::error, "Can't open file " + filename + " for reading");
       return;
     }
 
-    // determine location of the file
-    string directory;
-    size_t locOfLastSlash = filename.find_last_of('/', string::npos);
-    if(locOfLastSlash != string::npos)
-      directory = filename.substr(0, locOfLastSlash + 1);
-
-    string sceneFile;
-    string shaderFile;
-    string rigidBodyFile;
-
-    // read the lines
-    string line;
-    while(getline(file, line))
+    try
     {
-      if(line.find("bullet:") != string::npos)
-        status = bullet;
-      else if(line.find("scene:") != string::npos)
-        status = scene;
-      else if(line.find("shader:") != string::npos)
-        status = shader;
-      else
-      {
-        if(status == bullet)
-        {
-          rigidBodyFile = directory + line;
-          status = none;
-        }
-        else if(status == scene)
-        {
-          sceneFile = directory + line;
-          status = none;
-        }
-        else if(status == shader)
-        {
-          shaderFile = directory + line;
-          status = none;
-        }
-      }
+      // determine location of the file
+      string directory;
+      size_t locOfLastSlash = filename.find_last_of('/', string::npos);
+      if(locOfLastSlash != string::npos)
+        directory = filename.substr(0, locOfLastSlash + 1);
+
+      YAML::Parser parser(file);
+      YAML::Node document;
+      parser.GetNextDocument(document);
+
+      vector<Scene> scenes = parseScenes(document.FindValue("Scenes"), filename, directory, sceneRes, bulletRes);
+      Shader &shader = parseShader(document.FindValue("Shader"), defaultShader(), directory, shaderRes);
+
+      s_objects.push_back({filename, shader, scenes});
     }
+    catch(exception &except)
+    {
+      throw log(__FILE__, __LINE__, LogType::error, except.what());
+    }
+  }
 
-    // get the bullet object
-    //btBulletWorldImporter importer = bulletRes(rigidBodyFile);
-    //btRigidBody rigidBody = importer.get
+  uint FileDrawNode::sceneNumber() const
+  {
+    return d_sceneIdx;
+  }
 
-    s_objects.push_back({filename, shaderRes.request(shaderFile), sceneRes.request(sceneFile, texRes)});
+  void FileDrawNode::setSceneNumber(uint index)
+  {
+    d_sceneIdx = index;
+  }
+
+  uint FileDrawNode::numberOfScenes() const
+  {
+    return s_objects[d_index].scenes.size();
   }
 
   Shader const &FileDrawNode::shader(size_t idx) const
@@ -136,7 +171,7 @@ namespace dim
   
   Scene const &FileDrawNode::scene() const
   {
-    return s_objects[d_index].scene;
+    return s_objects[d_index].scenes[d_sceneIdx];
   }
 
   btRigidBody *FileDrawNode::rigidBody()
@@ -148,5 +183,42 @@ namespace dim
   NodeBase *FileDrawNode::clone() const
   {
     return new FileDrawNode(*this);
+  }
+
+  void FileDrawNode::insert(std::ostream &out) const
+  {
+    out << location().x << ' ' << location().y << ' ' << location().z << ' '
+        << orientation().x << ' ' << orientation().y << ' ' << orientation().z << ' ' << orientation().w << ' ' << d_sceneIdx << ' ' << s_objects[d_index].filename << '\n';
+  }
+
+  void FileDrawNode::extract(std::istream &in)
+  {
+    string filename;
+    vec3 l_coor;
+    quat l_rotation;
+
+    in >> l_coor.x >> l_coor.y >> l_coor.z >> l_rotation.x >> l_rotation.y >> l_rotation.z >> l_rotation.w >> d_sceneIdx >> filename;
+    in.ignore();
+
+    if(not in)
+      return;
+
+    bool present = false;
+
+    for(size_t idx = 0; idx != s_objects.size(); ++idx)
+    {
+      if(s_objects[idx].filename == filename)
+      {
+        d_index = idx;
+        present = true;
+        break;
+      }
+    }
+
+    if(not present)
+      throw log(__FILE__, __LINE__, LogType::error, "The file " + filename + " needs to be loaded first with the static 'load' member");
+
+    setLocation(l_coor);
+    setOrientation(l_rotation);
   }
 }

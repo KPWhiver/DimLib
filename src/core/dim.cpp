@@ -20,7 +20,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <stdexcept>
 
 #include <dim/util/copyptr.hpp>
 #include <dim/core/dim.hpp>
@@ -50,7 +49,7 @@ namespace dim
     output.reset(new ostream(outputStream.rdbuf()));
   }
 
-  void log(string const &file, int line, LogType type, string const &message)
+  runtime_error log(string const &file, int line, LogType type, string const &message)
   {
     *output << "In " << file << ':' << line << ": ";
 
@@ -68,8 +67,6 @@ namespace dim
     }
     *output << message << '\n';
 
-    if(type == LogType::error)
-      throw runtime_error(message);
-
+    return runtime_error(message);
   }
 }

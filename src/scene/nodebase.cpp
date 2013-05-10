@@ -205,6 +205,7 @@ namespace dim
   {
     glm::quat const &orient = d_node->orientation();
     glm::vec3 const &coor = d_node->location();
+
     worldTransform = btTransform(btQuaternion(orient.x, orient.y, orient.z, orient.w), btVector3(coor.x, coor.y, coor.z));
   }
 

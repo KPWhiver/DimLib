@@ -46,7 +46,7 @@ namespace dim
       while(int token = scanner.lex())
       {
         if(token != nextToken && token != Token::whitespace)
-          log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
+          throw log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
 
         // layout ( location = 0 ) attribute vec3 in_vertex
         // Token::layout '(' Token::location '=' Token::number ')' Token::in
@@ -85,8 +85,7 @@ namespace dim
             output << scanner.matched();
             break;
           default:
-            log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
-            return make_pair(0, "unknown");
+            throw log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
         }
       }
       return make_pair(0, "unknown");
@@ -117,7 +116,7 @@ namespace dim
                 *output << "#version " << scanner.matched();
             }
             else
-              log(scanner.filename(), scanner.lineNr(), LogType::error, "Expected a number after #version instead of: " + scanner.matched());
+              throw log(scanner.filename(), scanner.lineNr(), LogType::error, "Expected a number after #version instead of: " + scanner.matched());
           }
           else
             log(scanner.filename(), scanner.lineNr(), LogType::note, "Ignoring #version since it has already been set");
@@ -273,7 +272,7 @@ namespace dim
           if(token == Token::whitespace)
             continue;
 
-          log(scanner.filename(), scanner.lineNr(), LogType::error, "Can't parse: " + scanner.matched() + ", shader stage has not yet been set");
+          throw log(scanner.filename(), scanner.lineNr(), LogType::error, "Can't parse: " + scanner.matched() + ", shader stage has not yet been set");
         }
         // --- III. things outside the header ---
         else
@@ -305,7 +304,7 @@ namespace dim
               *output << scanner.matched();
               break;
             default:
-              log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
+              throw log(scanner.filename(), scanner.lineNr(), LogType::error, "Unexpected symbol(s): " + scanner.matched());
           }
         }
       }
@@ -313,7 +312,7 @@ namespace dim
     }
     catch(runtime_error &exc)
     {
-      log(scanner.filename(), scanner.lineNr(), LogType::error, exc.what());
+      throw log(scanner.filename(), scanner.lineNr(), LogType::error, exc.what());
     }
 
     vertexShader = shaders[0].str();
@@ -350,7 +349,7 @@ namespace dim
     GLint status;
     glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
     if(status == GL_FALSE)
-      log(d_filename, 0, LogType::error, buffer);
+      throw log(d_filename, 0, LogType::error, buffer);
   }
 
   void Shader::compileShader(string const &file, string const &stage, shared_ptr<GLuint> &shader, GLuint shaderType)
@@ -383,7 +382,7 @@ namespace dim
     ifstream file(filename.c_str());
     if(not file.is_open())
     {
-      log(__FILE__, __LINE__, LogType::error, "Failed to open file: " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to open file: " + filename);
       return;
     }
 

@@ -72,7 +72,7 @@ namespace dim
       {
         auto iter = s_shaderMap.find(d_shaderIds.at(idx));
         if(iter == s_shaderMap.end())
-          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+          throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
         
         return iter->second;
       }
@@ -81,7 +81,7 @@ namespace dim
       {
         auto iter = s_shaderMap.find(d_shaderIds.at(idx));
         if(iter == s_shaderMap.end())
-          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+          throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
         
         return iter->second;
       }
@@ -99,7 +99,7 @@ namespace dim
       bool operator==(ShaderScene const &other) const
       {
         if(other.numOfShaders() != numOfShaders())
-          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+          throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
       
         for(size_t shader = 0; shader != numOfShaders(); ++shader)
         {
@@ -113,7 +113,7 @@ namespace dim
       bool operator<(ShaderScene const &other) const
       {
         if(other.numOfShaders() != numOfShaders())
-          log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
+          throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
       
         for(size_t shader = 0; shader != numOfShaders(); ++shader)
         {

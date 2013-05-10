@@ -48,7 +48,7 @@ void Font::initialize()
   int error = FT_Init_FreeType(&g_library);
 
   if(error)
-    log(__FILE__, __LINE__, LogType::error, "Failed to initialize FreeType2");
+    throw log(__FILE__, __LINE__, LogType::error, "Failed to initialize FreeType2");
 }
 
 Font::Font(string filename, uint maxSize)
@@ -63,9 +63,9 @@ Font::Font(string filename, uint maxSize)
 	int error = FT_New_Face(g_library, filename.c_str(), 0, &face);
 
 	if(error == FT_Err_Unknown_File_Format)
-	  log(__FILE__, __LINE__, LogType::error, "File: " + filename + " has a unsupported file format");
+	  throw log(__FILE__, __LINE__, LogType::error, "File: " + filename + " has a unsupported file format");
 	else if (error)
-	  log(__FILE__, __LINE__, LogType::error, "Failed to read file: " + filename);
+	  throw log(__FILE__, __LINE__, LogType::error, "Failed to read file: " + filename);
 
 	FT_Set_Pixel_Sizes(face, maxSize, maxSize);
 
@@ -76,10 +76,10 @@ Font::Font(string filename, uint maxSize)
 	for (uint ch = 0; ch != 128; ++ch)
 	{
 		if (FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT))
-		  log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
+		  throw log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
 
     if (FT_Get_Glyph(face->glyph, &glyphs[ch]))
-      log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to load glyph");
 
     FT_Glyph_To_Bitmap(&glyphs[ch], ft_render_mode_normal, 0, 1);
     FT_BitmapGlyph glyph = reinterpret_cast<FT_BitmapGlyph>(glyphs[ch]);

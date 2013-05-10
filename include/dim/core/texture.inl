@@ -209,8 +209,7 @@ namespace dim
             d_internalFormat = GL_DEPTH_COMPONENT32F;
             break;
           default:
-            log(__FILE__, __LINE__, LogType::error, "Floating point textures do not support 8-bit precision");
-            break;
+            throw log(__FILE__, __LINE__, LogType::error, "Floating point textures do not support 8-bit precision");
         }
       }
       else if(std::is_signed<Type>::value)
@@ -254,8 +253,7 @@ namespace dim
             d_internalFormat = GL_R32I;
             break;
           default:
-            log(__FILE__, __LINE__, LogType::error, "Integer textures do not support depth or R11G11B10");
-            break;
+            throw log(__FILE__, __LINE__, LogType::error, "Integer textures do not support depth or R11G11B10");
         }
       }
       else
@@ -299,8 +297,7 @@ namespace dim
             d_internalFormat = GL_R32UI;
             break;
           default:
-            log(__FILE__, __LINE__, LogType::error, "Integer textures do not support depth or R11G11B10");
-            break;
+            throw log(__FILE__, __LINE__, LogType::error, "Integer textures do not support depth or R11G11B10");
         }
       }
       init(data, filter, d_internalFormat, width, height, keepBuffered, wrap);
@@ -453,7 +450,7 @@ namespace dim
           break;
       }
 
-      log(__FILE__, __LINE__, LogType::error, "The texture channel: " + std::to_string(channel) + " exceeds the amount of channels this texture has");
+      throw log(__FILE__, __LINE__, LogType::error, "The texture channel: " + std::to_string(channel) + " exceeds the amount of channels this texture has");
     }
 
     template<typename Type>
@@ -597,7 +594,7 @@ namespace dim
         case GL_DEPTH_COMPONENT:
           return 1;
         default:
-          log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::components(): " + std::to_string(externalFormat()));
+          throw log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::components(): " + std::to_string(externalFormat()));
       }
       return 0;
     }
@@ -659,7 +656,7 @@ namespace dim
         case GL_DEPTH_COMPONENT32F:
           return GL_DEPTH_COMPONENT;
         default:
-          log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::externalFormat(): " + std::to_string(static_cast<int>(d_internalFormat)));
+          throw log(__FILE__, __LINE__, LogType::error, "Unknown Texture format used in TextureBase::externalFormat(): " + std::to_string(static_cast<int>(d_internalFormat)));
       }
       return 0;
     }

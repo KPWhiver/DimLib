@@ -59,14 +59,14 @@ namespace dim
     png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
 
     if(!pngPtr)
-      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
 
     png_infop infoPtr = png_create_info_struct(pngPtr);
     if(!infoPtr)
-      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
 
     if(setjmp(png_jmpbuf(pngPtr)))
-      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
 
     png_set_read_fn(pngPtr, reinterpret_cast<png_voidp>(&input), readFromStream);
 
@@ -121,7 +121,7 @@ namespace dim
 
     /* read file */
     if(setjmp(png_jmpbuf(pngPtr)))
-      log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to load " + d_filename);
 
     vector<png_bytep> rowPtrs(height);
 
@@ -144,19 +144,19 @@ namespace dim
   {
     png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
     if(!pngPtr)
-      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
     png_infop infoPtr = png_create_info_struct(pngPtr);
     if(!infoPtr)
-      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
     if(setjmp(png_jmpbuf(pngPtr)))
-      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
     png_set_write_fn(pngPtr, reinterpret_cast<png_voidp>(&output), writeToStream, flushStream);
 
     if(setjmp(png_jmpbuf(pngPtr)))
-      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
     png_uint_32 color = PNG_COLOR_TYPE_GRAY;
     uint channels = 1;
@@ -180,8 +180,7 @@ namespace dim
         channels = 4;
         break;
       default:
-        log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
-        break;
+        throw log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
     }
 
     png_set_IHDR(pngPtr, infoPtr, width(), height(),
@@ -200,12 +199,12 @@ namespace dim
     }
 
     if(setjmp(png_jmpbuf(pngPtr)))
-      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
     png_write_image(pngPtr, rowPtrs.data());
 
     if(setjmp(png_jmpbuf(pngPtr)))
-      log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to save " + filename);
 
     png_write_end(pngPtr, 0);
 
@@ -250,7 +249,7 @@ namespace dim
     std::ifstream file(filename.c_str());
 
     if(not file.is_open())
-      log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
 
     // read header
     png_byte header[8];
@@ -265,7 +264,7 @@ namespace dim
     if(not png_sig_cmp(header, 0, 8))
       data = loadPNG(file, format, width, height);
     else
-      log(__FILE__, __LINE__, LogType::error, filename + " is not a valid .png file");
+      throw log(__FILE__, __LINE__, LogType::error, filename + " is not a valid .png file");
 
     init(data.data(), filter, format, width, height, keepBuffered, wrap);
   }
@@ -289,7 +288,7 @@ namespace dim
     std::ifstream file(d_filename.c_str());
 
     if(not file.is_open())
-      log(__FILE__, __LINE__, LogType::error, "Failed to open " + d_filename + " for reading");
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to open " + d_filename + " for reading");
 
     // read header
     char header[8];
@@ -304,7 +303,7 @@ namespace dim
     if(png_sig_cmp(reinterpret_cast<png_bytep>(header), 0, 8))
       data = loadPNG(file, format, width, height);
     else
-      log(__FILE__, __LINE__, LogType::error, d_filename + " is not a valid .png file");
+      throw log(__FILE__, __LINE__, LogType::error, d_filename + " is not a valid .png file");
 
     update(data.data());
   }
@@ -318,7 +317,7 @@ namespace dim
     std::ofstream file(filename.c_str());
 
     if(not file.is_open())
-      log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to open " + filename + " for reading");
 
     savePNG(filename, file, buffer());
   }

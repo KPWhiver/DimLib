@@ -56,7 +56,7 @@ endif()
 set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
 
 add_library(dim SHARED ${CXXSOURCES})
-target_link_libraries(dim X11 pthread GL png freetype assimp GLEW glfw)
+target_link_libraries(dim X11 pthread GL png freetype assimp GLEW glfw yaml-cpp)
 
 set(LIB_INSTALL_DIR lib)
 

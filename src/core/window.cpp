@@ -123,7 +123,7 @@ namespace dim
 
     //initialize glfw
     if(glfwInit() != GL_TRUE)
-      log(__FILE__, __LINE__, LogType::error, "Failed to open a window");
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to open a window");
 
     d_startTime = glfwGetTime();
 
@@ -147,7 +147,7 @@ namespace dim
 
     //create new window
     if(glfwOpenWindow(d_width, d_height, 8, 8, 8, 8, 32, 0, screen) != GL_TRUE)
-      log(__FILE__, __LINE__, LogType::error, "Failed to open a window");
+      throw log(__FILE__, __LINE__, LogType::error, "Failed to open a window");
 
     glfwSetWindowTitle(title.c_str());
 
@@ -164,7 +164,7 @@ namespace dim
     //initialize glew
     GLenum err = glewInit();
     if(GLEW_OK != err)
-      log(__FILE__, __LINE__, LogType::error, string("Failed to open a window: ") + reinterpret_cast<char const *>(glewGetErrorString(err)));
+      throw log(__FILE__, __LINE__, LogType::error, string("Failed to open a window: ") + reinterpret_cast<char const *>(glewGetErrorString(err)));
 
     //initialize opengl stuff
     glEnable(GL_DEPTH_TEST);
