@@ -148,7 +148,8 @@ namespace dim
 
       Filtering filter() const;
       Wrapping wrapping() const;
-
+      uint numberOfChannels() const;
+      
       glm::vec4 const &borderColor() const;
       bool buffered() const;
       
@@ -170,7 +171,7 @@ namespace dim
       GLuint internalFormat() const;
 
     private:
-      uint components() const;
+      
       GLuint depth() const;
   };
 
