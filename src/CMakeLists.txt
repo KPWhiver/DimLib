@@ -30,6 +30,8 @@ set(CXXSOURCES
   gui/image2d.cpp 
   gui/frame.cpp 
   gui/switch.cpp
+  gui/textsprite.cpp
+  gui/sprite.cpp
 )
 
 include_directories(

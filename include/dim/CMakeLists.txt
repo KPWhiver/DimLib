@@ -43,6 +43,8 @@ set(CXXHEADERS_GUI
   gui/button.hpp   
   gui/component.hpp 
   gui/context.hpp 
+  gui/sprite.hpp
+  gui/textsprite.hpp
 )      
       
 set(CXXHEADERS_UTIL 

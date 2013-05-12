@@ -25,7 +25,7 @@ using namespace glm;
 
 namespace dim
 {
-	Sprite::Sprite(int x, int y, size_t width, size_t height, Texture<GLubyte> const &image)
+	Sprite::Sprite(int x, int y, uint width, uint height, Texture<GLubyte> const &image)
 	:
 	    d_x(x),
 		  d_y(y),
@@ -38,12 +38,11 @@ namespace dim
 			d_y2Tex(1),
 			d_color(1)
 	{
-		d_priority = 50;
 	}
 		
 	void Sprite::draw()
 	{	  
-	  draw(0, 0);
+	  drawWithOffset(0, 0);
 	}
 	
 	void Sprite::drawWithOffset(int x, int y)
@@ -83,12 +82,17 @@ namespace dim
     d_y2Tex = (y + height) / d_image.height();
   }
   
+  bool Sprite::inBounds(int x, int y) const
+  {
+    return not (x > static_cast<int>(d_x + d_width) || y > static_cast<int>(d_y + d_height) || x < d_x || y < d_y);
+  }
+
   void Sprite::setColor(vec4 const &color)
   {
     d_color = color;
   }
   
-	Mesh const &Sprite::mesh() const
+	Mesh const &Sprite::mesh()
 	{
 		static GLfloat interleaved[24]{0, 0,  0, 0,  0, 1,  0, 1,  1, 0,  1, 0,  1, 1,  1, 1,  1, 0,  1, 0,  0, 1,  0, 1};
 		
@@ -97,7 +101,7 @@ namespace dim
 		return mesh;
 	}
   
-  Shader const &Sprite::shader() const
+  Shader const &Sprite::shader()
 	{
 	  static Shader paletShader("spriteShader", "#version 120\n"
 	                            "vertex:\n"
@@ -115,16 +119,23 @@ namespace dim
 	                            "uniform vec4 in_color;\n"
 	                            "uniform vec4 in_channels;\n"
 	                            "varying vec2 pass_texcoord;\n"
-	                            "void main(){
-	                            vec4 texColor = texture2D(in_texture, pass_texcoord);
-	                            if(in_channels == 1)
-	                              texColor = texColor.r * in_color;
-	                            else if(in_channels == 2)
-	                            {
-	                              texColor.rgb = texColor.r * in_color.rgb;
-	                              texColor.a = texColor.b * in_color.a;
-	                            }
-	                            gl_FragColor = texture2D(in_texture, pass_texcoord)\n"
+	                            "void main(){\n"
+	                            "vec4 texColor = texture2D(in_texture, pass_texcoord);\n"
+	                            "if(in_channels == 1)\n"
+	                            "  texColor = texColor.r * in_color;\n"
+	                            "else if(in_channels == 2)\n"
+	                            "{\n"
+	                            "  texColor.rgb = texColor.r * in_color.rgb;\n"
+	                            "  texColor.a = texColor.b * in_color.a;\n"
+	                            "}\n"
+	                            "else if(in_channels == 3)\n"
+	                            "{\n"
+	                            "  texColor.rgb *= in_color.rgb;\n"
+	                            "  texColor.a = in_color.a;\n"
+	                            "}\n"
+	                            "else\n"
+	                            "  texColor *= in_color;\n"
+	                            "gl_FragColor = texture2D(in_texture, pass_texcoord)\n"
 	                            "                           - vec4(vec3(texture2D(in_text, pass_texcoord).r), 0.0) "
 	                            "                           + in_color;}\n");
 
