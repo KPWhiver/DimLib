@@ -11,5 +11,20 @@ set(VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION
 set(PACKAGE_VERSION ${VERSION})
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 
-add_subdirectory(src)
+
 add_subdirectory(include/dim)
+
+set(TMP)
+
+foreach(CXXHEADER ${CXXHEADERS})
+  list(APPEND TMP ../include/dim/${CXXHEADER})
+endforeach(CXXHEADER)
+
+set(CXXHEADERS ${TMP})
+
+#prepend_path(${CXXHEADERS} ${KLAAS})
+
+message("${CXXHEADERS}")
+
+add_subdirectory(src)
+

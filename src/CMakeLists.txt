@@ -45,9 +45,9 @@ if(CMAKE_CXX_COMPILER MATCHES ".*clang")
 endif()
 
 ## Compiler flags
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-  set(CMAKE_CXX_FLAGS "-std=c++0x -Wall")
-endif()
+#if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+  set(CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wpadded")
+#endif()
 
 ## Default build type is release
 if(NOT CMAKE_BUILD_TYPE)
@@ -57,7 +57,8 @@ endif()
 ## Add profile build type
 set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
 
-add_library(dim SHARED ${CXXSOURCES})
+## Get headers
+add_library(dim SHARED ${CXXSOURCES} ${CXXHEADERS})
 target_link_libraries(dim X11 pthread GL png freetype assimp GLEW glfw yaml-cpp)
 
 set(LIB_INSTALL_DIR lib)

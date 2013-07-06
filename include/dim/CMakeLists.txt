@@ -1,10 +1,10 @@
 set(CXXHEADERS_SCENE
-  scene/iteratorbase.hpp   
-  scene/nodebase.hpp 
-  scene/nodestoragebase.hpp 
-  scene/nodegrid.hpp 
-  scene/nodegrid.inl 
-  scene/scenegraph.hpp 
+  scene/iteratorbase.hpp
+  scene/nodebase.hpp
+  scene/nodestoragebase.hpp
+  scene/nodegrid.hpp
+  scene/nodegrid.inl
+  scene/scenegraph.hpp
   scene/scene.hpp
   scene/filedrawnode.hpp
   scene/texturemanager.hpp
@@ -14,47 +14,55 @@ set(CXXHEADERS_SCENE
 )
 
 set(CXXHEADERS_CORE
-  core/mesh.hpp  
-  core/buffer.hpp 
-  core/camera.hpp 
-  core/dim.hpp 
-  core/font.hpp 
+  core/mesh.hpp
+  core/buffer.hpp
+  core/camera.hpp
+  core/dim.hpp
+  core/font.hpp
   core/light.hpp
-  core/mouse.hpp 
-  core/shader.hpp 
-  core/surface.hpp 
-  core/surface.inl 
+  core/mouse.hpp
+  core/shader.hpp
+  core/surface.hpp
+  core/surface.inl
   core/doublebufferedsurface.hpp
   core/doublebufferedsurface.inl
-  core/texture.hpp 
-  core/texture.inl 
-  core/tools.hpp 
-  core/window.hpp 
+  core/texture.hpp
+  core/texture.inl
+  core/tools.hpp
+  core/window.hpp
   core/timer.hpp
-)  
-  
+)
+
 set(CXXHEADERS_GUI
   gui/switch.hpp
-  gui/listenarea.hpp 
-  gui/menu.hpp 
-  gui/menuitem.hpp   
-  gui/frame.hpp 
-  gui/image2d.hpp 
-  gui/button.hpp   
-  gui/component.hpp 
-  gui/context.hpp 
+  gui/listenarea.hpp
+  gui/menu.hpp
+  gui/menuitem.hpp
+  gui/frame.hpp
+  gui/image2d.hpp
+  gui/button.hpp
+  gui/component.hpp
+  gui/context.hpp
   gui/sprite.hpp
   gui/textsprite.hpp
-)      
-      
-set(CXXHEADERS_UTIL 
-  util/copyptr.hpp 
-  util/ptrvector.hpp  
+)
+
+set(CXXHEADERS_UTIL
+  util/copyptr.hpp
+  util/ptrvector.hpp
   util/sortedvector.hpp
-  util/onepair.hpp 
+  util/onepair.hpp
+  util/stackbase.hpp
 )
 
 install(FILES ${CXXHEADERS_SCENE} DESTINATION include/dim/scene)
 install(FILES ${CXXHEADERS_CORE} DESTINATION include/dim/core)
 install(FILES ${CXXHEADERS_GUI} DESTINATION include/dim/gui)
 install(FILES ${CXXHEADERS_UTIL} DESTINATION include/dim/util)
+
+set(CXXHEADERS
+  ${CXXHEADERS_SCENE}
+  ${CXXHEADERS_CORE}
+  ${CXXHEADERS_GUI}
+  ${CXXHEADERS_UTIL}
+PARENT_SCOPE)
