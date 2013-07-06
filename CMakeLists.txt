@@ -22,9 +22,5 @@ endforeach(CXXHEADER)
 
 set(CXXHEADERS ${TMP})
 
-#prepend_path(${CXXHEADERS} ${KLAAS})
-
-message("${CXXHEADERS}")
-
 add_subdirectory(src)
 
