@@ -45,7 +45,7 @@ namespace dim
     ~Menu();
 
     void draw(int x, int y);
-    bool listen(int x, int y, dim::Mouse const &mouse);
+    bool listen(int x, int y, glm::ivec2 const &mouse);
     void add(MenuItem *item);
     void activate(int x, int y);
     void deactivate();

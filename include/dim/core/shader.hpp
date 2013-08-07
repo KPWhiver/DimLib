@@ -48,7 +48,7 @@ class Shader
   std::shared_ptr<GLuint> d_tessControlId;
   std::shared_ptr<GLuint> d_tessEvalId;
   std::shared_ptr<GLuint> d_computeId;
-  
+ 
   static Shader const *s_activeShader;
     
   mutable std::shared_ptr<std::unordered_map<std::string, GLint>> d_uniforms;
@@ -115,7 +115,7 @@ public:
   static Shader const &defaultShader();
 
 private:
-  void parseShader(std::istream &input, std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
+  uint parseShader(std::istream &input, std::string &vertexShader, std::string &fragmentShader, std::string &geometryShader, std::string &tessControlShader, std::string &tessEvalShader, std::string &computeShader) const;
   void compileShader(std::string const &file, std::string const &stage, std::shared_ptr<GLuint> &shader, GLuint shaderType);
   void checkCompile(GLuint shader, std::string const &stage) const;
   void checkProgram(GLuint program) const;

@@ -315,8 +315,6 @@ namespace dim
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(s_renderTarget != 0)
       s_renderTarget->finishRendering();
-    
-    //s_renderTarget = this;
 
     internal::setViewport(0, 0, this->width(), this->height());
     internal::setScissor(x, y, width, height);

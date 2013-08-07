@@ -21,7 +21,6 @@
 #define COMPONENT_HPP
 
 #include "dim/gui/context.hpp"
-#include "dim/core/mouse.hpp"
 
 namespace dim 
 {
@@ -37,7 +36,7 @@ namespace dim
 		public:
 		  Component();
 
-		  virtual bool listen(int x, int y, dim::Mouse const &mouse);
+			virtual bool listen(int x, int y, glm::ivec2 const &mouse);
 		  virtual void draw(int x, int y);
 
 

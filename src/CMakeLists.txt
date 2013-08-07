@@ -1,52 +1,57 @@
 set(CXXSOURCES
-  core/textureproperties.cpp 
-  core/dim.cpp 
-  core/light.cpp   
-  core/camera.cpp 
-  core/shader.cpp   
-  core/mouse.cpp 
-  core/window.cpp 
-  core/font.cpp 
-  core/tools.cpp 
-  core/texture.cpp 
-  core/surface.cpp 
-  core/lex.cpp 
+  core/textureproperties.cpp
+  core/dim.cpp
+  core/light.cpp
+  core/camera.cpp
+  core/shader.cpp
+  core/font.cpp
+  core/tools.cpp
+  core/texture.cpp
+  core/surface.cpp
+  core/windowsurface.cpp
+  core/lex.cpp
   core/timer.cpp
-  core/mesh.cpp  
+  core/mesh.cpp
 
-  scene/scene.cpp 
-  scene/scenegraph.cpp 
+  scene/scene.cpp
   scene/nodebase.cpp
   scene/filedrawnode.cpp
-  scene/nodestoragebase.cpp 
+  scene/nodestoragebase.cpp
   scene/resourcemanager.cpp
+  scene/scenegraph.cpp
 
-  gui/button.cpp 
-  gui/context.cpp 
-  gui/menu.cpp 
-  gui/menuitem.cpp 
-  gui/listenarea.cpp 
-  gui/component.cpp 
-  gui/image2d.cpp 
-  gui/frame.cpp 
+  gui/button.cpp
+  gui/context.cpp
+  gui/menu.cpp
+  gui/menuitem.cpp
+  gui/listenarea.cpp
+  gui/component.cpp
+  gui/image2d.cpp
+  gui/frame.cpp
   gui/switch.cpp
-  gui/textsprite.cpp
-  gui/sprite.cpp
 )
+
+find_package(Bullet REQUIRED)
+if(BULLET_FOUND)
+  include_directories(${BULLET_INCLUDE_DIRS})
+endif()
+
+find_package(Freetype REQUIRED)
+if(FREETYPE_FOUND)
+  include_directories(${FREETYPE_INCLUDE_DIRS})
+endif()
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
-  /usr/include/freetype2
-  /usr/local/include/bullet
 )
 
-if(CMAKE_CXX_COMPILER MATCHES ".*clang")
-  set(CMAKE_COMPILER_IS_CLANGXX 1)
-endif()
+#if(CMAKE_CXX_COMPILER MATCHES ".*Clang.*")
+#  set(CMAKE_COMPILER_IS_CLANGXX 1)
+#endif()
 
 ## Compiler flags
 #if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-  set(CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wpadded")
+  set(CMAKE_CXX_FLAGS "-std=c++0x -Wall")#-Wpadded
 #endif()
 
 ## Default build type is release
@@ -58,8 +63,8 @@ endif()
 set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
 
 ## Get headers
-add_library(dim SHARED ${CXXSOURCES} ${CXXHEADERS})
-target_link_libraries(dim X11 pthread GL png freetype assimp GLEW glfw yaml-cpp)
+add_library(dim STATIC ${CXXSOURCES} ${CXXHEADERS})
+#target_link_libraries(dim GL png freetype assimp GLEW yaml-cpp)
 
 set(LIB_INSTALL_DIR lib)
 

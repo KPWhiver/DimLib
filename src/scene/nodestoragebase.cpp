@@ -24,8 +24,6 @@ using namespace std;
 namespace dim
 {
 
-std::unordered_map<GLuint, Shader> ShaderScene::s_shaderMap;
-
 namespace internal
 {
   /* constructors */
@@ -33,23 +31,23 @@ namespace internal
       :
           d_ownerId(ownerId)
   {
-  }  
-  
+  }
+
   NodeStorageBase::~NodeStorageBase()
   {
   }
-  
+
   void NodeStorageBase::copy(size_t dest)
   {
     v_copy(dest);
     d_ownerId = dest;
   }
-  
+
   NodeStorageBase* NodeStorageBase::clone() const
   {
     return v_clone();
   }
-  
+
   /* general functions */
 
   void NodeStorageBase::clear()
@@ -60,8 +58,8 @@ namespace internal
   void NodeStorageBase::draw(ShaderScene const &state, size_t renderMode)
   {
     v_draw(state, renderMode);
-  }  
-  
+  }
+
   NodeStorageBase::iterator NodeStorageBase::find(NodeBase* node)
   {
     return v_find(node);
@@ -120,12 +118,12 @@ namespace internal
 
   //NodeStorageBase::const_iterator NodeStorageBase::begin() const
   //{
-  //  return v_begin();
+  // return v_begin();
   //}
 
   //NodeStorageBase::const_iterator NodeStorageBase::end() const
   //{
-  //  return v_end();
+  // return v_end();
   //}
 
   /* private functions */

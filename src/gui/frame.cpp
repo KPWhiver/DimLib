@@ -21,7 +21,6 @@
 
 #include "dim/gui/frame.hpp"
 
-#include "GL/glfw.h"
 
 #include "dim/core/mesh.hpp"
 
@@ -71,7 +70,7 @@ namespace dim
 		d_context->mesh().unbind();
 	}
 	
-	void Frame::listen(Mouse const &mouse)
+	void Frame::listen(ivec2 const &mouse)
 	{
 		for (size_t idx = d_components.size(); idx--;)
 		{

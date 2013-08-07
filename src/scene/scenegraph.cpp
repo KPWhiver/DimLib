@@ -21,7 +21,7 @@
 
 #include "dim/scene/scenegraph.hpp"
 #include "dim/core/shader.hpp"
-#include "btBulletWorldImporter.h"
+#include <BulletWorldImporter/btBulletWorldImporter.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -289,7 +289,7 @@ namespace dim
     d_lights.push_back(light);
   }
 
-  void SceneGraph::add(ShaderScene const &state, NodeStorageBase *ptr)
+  void SceneGraph::add(ShaderScene const &state, internal::NodeStorageBase* ptr)
   {
     auto range = d_drawStates.equal_range(state);
 

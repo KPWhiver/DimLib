@@ -46,7 +46,7 @@ namespace dim
           //btRigidBody rigidBody;
       };
 
-      static std::vector<Object> s_objects;
+      static std::vector<Object> &objects();
 
       uint d_index;
 

@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "dim/gui/component.hpp"
-#include "dim/core/mouse.hpp"
 #include "dim/util/ptrvector.hpp"
 #include "dim/core/camera.hpp"
 #include "dim/util/copyptr.hpp"
@@ -37,7 +36,7 @@ namespace dim
 	  int d_x, d_y;
 		size_t d_width;
 		size_t d_height;
-		
+
 		Camera d_cam;
 
 		dim::PtrVector<Component> d_components;
@@ -50,7 +49,7 @@ namespace dim
 		void add(Component *component);
 		void remove(Component *component);
 
-    void listen(dim::Mouse const &mouse);
+		void listen(glm::ivec2 const &mouse);
 		void draw();
 
 		void setCoords(int x, int y);

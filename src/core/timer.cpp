@@ -27,7 +27,7 @@ namespace dim
     :
       d_id(0),
       d_CPUtime(0),
-      d_startCPUtime(chrono::system_clock::now()),
+      d_startCPUtime(chrono::steady_clock::now()),
       d_GPUtime(0),
       d_running(false)
   {
@@ -47,14 +47,14 @@ namespace dim
     if(d_id != 0)
       glBeginQuery(GL_TIME_ELAPSED, d_id);
 
-    d_startCPUtime = chrono::system_clock::now();
+    d_startCPUtime = chrono::steady_clock::now();
   }
   
   void Timer::stop()
   {
     if(d_running == true)
     {
-      d_CPUtime = chrono::system_clock::now() - d_startCPUtime;
+      d_CPUtime = chrono::steady_clock::now() - d_startCPUtime;
 
       if(d_id != 0)
         glEndQuery(GL_TIME_ELAPSED);
@@ -69,7 +69,7 @@ namespace dim
   {
     if(d_running == true)
     {
-      d_CPUtime = chrono::system_clock::now() - d_startCPUtime;
+      d_CPUtime = chrono::steady_clock::now() - d_startCPUtime;
     }
 
     return d_CPUtime;

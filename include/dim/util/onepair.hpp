@@ -20,34 +20,50 @@
 #ifndef ONEPAIR_HPP
 #define ONEPAIR_HPP
 
+#include <functional>
+
 namespace dim
 {
 
 template <typename Type, size_t Maxfirst>
 class Onepair
 {
+
+
   Type d_data;
   
   public:
+    struct Hash
+    {
+      constexpr size_t operator()(Onepair<Type, Maxfirst> const &toHash) const
+      {
+        return std::hash<Type>{}(toHash.value());
+      }
+    };
+
     typedef Type StorageType;
     static size_t const maxFirst = Maxfirst;
 
     enum Parameter
     {
       half,
-      third,
+      third
     };
 
-    Onepair(Type first, Type second);
-    Onepair();
+    constexpr Onepair(Type first, Type second);
+    constexpr Onepair();
+
+    bool operator==(Onepair const &other) const;
     
-    Type first() const;
-    Type second() const;
+    constexpr Type first() const;
+    constexpr Type second() const;
     
     void setFirst(Type first);
     void setSecond(Type second);
 
-    operator Type() const;
+    constexpr Type value() const;
+
+    //operator Type() const;
 };
 
 //template <typename type, size_t Maxfirst>
@@ -62,27 +78,29 @@ class Onepair
 //  };
 
 template <typename Type, size_t Maxfirst>
-Onepair<Type, Maxfirst>::Onepair(Type first, Type second)
+constexpr Onepair<Type, Maxfirst>::Onepair(Type first, Type second)
+:
+  d_data(first + second * Maxfirst)
 {
-  d_data = first + second * Maxfirst;
 }
 
 template <typename Type, size_t Maxfirst>
-Onepair<Type, Maxfirst>::Onepair()
+constexpr Onepair<Type, Maxfirst>::Onepair()
+:
+  d_data(0)
 {
-  d_data = 0;
 }
 
 template <typename Type, size_t Maxfirst>
-Type Onepair<Type, Maxfirst>::first() const
+constexpr Type Onepair<Type, Maxfirst>::first() const
 {
-  d_data % Maxfirst;
+  return d_data % Maxfirst;
 }
 
 template <typename Type, size_t Maxfirst>
-Type Onepair<Type, Maxfirst>::second() const
+constexpr Type Onepair<Type, Maxfirst>::second() const
 {
-  d_data / Maxfirst;
+  return d_data / Maxfirst;
 }
 
 template <typename Type, size_t Maxfirst>
@@ -98,10 +116,22 @@ void Onepair<Type, Maxfirst>::setSecond(Type second)
 }
 
 template <typename Type, size_t Maxfirst>
-Onepair<Type, Maxfirst>::operator Type() const
+bool Onepair<Type, Maxfirst>::operator==(Onepair const &other) const
+{
+  return d_data == other.d_data;
+}
+
+template <typename Type, size_t Maxfirst>
+constexpr Type Onepair<Type, Maxfirst>::value() const
 {
   return d_data;
 }
+
+/*template <typename Type, size_t Maxfirst>
+Onepair<Type, Maxfirst>::operator Type() const
+{
+  return d_data;
+}*/
 
 }
 #endif

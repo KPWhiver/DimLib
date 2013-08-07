@@ -46,37 +46,33 @@ namespace dim
 	{
 	}
 
-	bool ListenArea::listen(int x, int y, dim::Mouse const &mouse)
+	bool ListenArea::listen(int x, int y, glm::ivec2 const &mouse)
 	{	  
-
-
 	  if(d_context == 0)
 	    return false;
 	
-	  ivec2 mouseC = mouse.coor();
-	  
 	  x += d_x;
 	  y += d_y;
 	  
-		if(mouseC.x > x && mouseC.x < x + static_cast<int>(d_width) && mouseC.y > y && mouseC.y < y + static_cast<int>(d_height))
+		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
 
-		  if(mouse.lRelease())
+			if(true) //TODO: lRelease
 		  {
 		  	if(d_listenerFunctionLeftRelease)
 		  		d_listenerFunctionLeftRelease();
 		  }
-		  else if(mouse.rRelease())
+			else if(true) //TODO: rRelease
 		  {
 		    if(d_listenerFunctionRightRelease)
 		  		d_listenerFunctionRightRelease();
 		  }
-		  else if(mouse.lPressed())
+			else if(true) //TODO: lPressed
 		  {
 		  	if(d_listenerFunctionLeftPressed)
 		  		d_listenerFunctionLeftPressed();
 		  }
-		  else if(mouse.rPressed())
+			else if(true) //TODO: rPressed
 		  {
 		    if(d_listenerFunctionRightPressed)
 		  		d_listenerFunctionRightPressed();

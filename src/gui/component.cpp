@@ -42,7 +42,7 @@ void Component::setContext(Context *context)
 	d_context = context;
 }
 
-bool Component::listen(int x, int y, Mouse const &mouse)
+bool Component::listen(int x, int y, glm::ivec2 const &mouse)
 {
 	return false;
 }

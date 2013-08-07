@@ -40,7 +40,7 @@ namespace dim
   public:
     ListenArea(int x, int y, size_t width, size_t height);
     ListenArea();
-    bool listen(int x, int y, dim::Mouse const &mouse);
+    bool listen(int x, int y, glm::ivec2 const &mouse);
     void size();
     void setListenerLeftRelease(std::function<void(void)> const &listenerFunction);
     void setListenerLeftPressed(std::function<void(void)> const &listenerFunction);

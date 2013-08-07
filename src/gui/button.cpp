@@ -73,19 +73,17 @@ namespace dim
 	  d_menu.reset(menu);
 	}
 	
-	bool Button::listen(int x, int y, dim::Mouse const &mouse)
-	{
-	  ivec2 mouseC = mouse.coor();
-	  
+	bool Button::listen(int x, int y, glm::ivec2 const &mouse)
+	{ 
 	  if(d_menu.get() != 0 && d_menu->listen(x, y, mouse))
 	    return true;
 	  
 	  x += d_x;
 	  y += d_y;
 
-		if(mouseC.x > x && mouseC.x < x + static_cast<int>(d_width) && mouseC.y > y && mouseC.y < y + static_cast<int>(d_height))
+		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
-		  if(mouse.lRelease())
+			if(true) //TODO: should be on mouse click
 		  {
 		  	if(d_listenerFunction)
 		  		d_listenerFunction();

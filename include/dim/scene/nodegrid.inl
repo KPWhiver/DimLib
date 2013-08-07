@@ -53,9 +53,6 @@ namespace internal
   template <typename RefType>
   NodeGrid<RefType> *NodeGrid<RefType>::get(size_t key)
   {
-    //if(instanceMap().empty())
-    //  return 0;
-
     auto iter = instanceMap().find(key);
     if(iter != instanceMap().end())
       return iter->second;
@@ -273,7 +270,7 @@ namespace internal
                               {
                                 if(lhs->shader(shader).id() < rhs->shader(shader).id())
                                   return true;
-                                if(not lhs->shader(shader).id() == rhs->shader(shader).id())
+                                if(lhs->shader(shader).id() != rhs->shader(shader).id())
                                   return false;
                               }
 

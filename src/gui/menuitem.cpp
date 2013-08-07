@@ -61,13 +61,11 @@ namespace dim
 		d_height = height;
 	}
 
-	bool MenuItem::listen(int x, int y, dim::Mouse const &mouse)
+  bool MenuItem::listen(int x, int y, ivec2 const &mouse)
   {
-    ivec2 mouseC = mouse.coor();
-  
-    if(mouseC.x > x && mouseC.x < x + static_cast<int>(d_width) && mouseC.y > y && mouseC.y < y + static_cast<int>(d_height))
+    if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
-		  if(mouse.lRelease())
+			if(true) //TODO: see button
 		  {
 		  	if(d_listenerFunction)
 		  		d_listenerFunction();

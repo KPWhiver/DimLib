@@ -32,7 +32,7 @@ namespace dim
 
       GLuint d_id;
       milliseconds d_CPUtime;
-      std::chrono::time_point<std::chrono::system_clock, milliseconds> d_startCPUtime;
+      std::chrono::time_point<std::chrono::steady_clock, milliseconds> d_startCPUtime;
       milliseconds d_GPUtime;
       bool d_running;
   

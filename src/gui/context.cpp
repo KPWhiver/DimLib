@@ -19,7 +19,7 @@
 
 #include "dim/gui/context.hpp"
 
-#include "GL/glfw.h"
+#include "GLFW/glfw3.h"
 
 using namespace std;
 using namespace glm;

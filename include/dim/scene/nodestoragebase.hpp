@@ -42,9 +42,13 @@ namespace dim
   {
     private:
       std::vector<GLuint> d_shaderIds;
-      
-      static std::unordered_map<GLuint, Shader> s_shaderMap;
-      
+
+      static std::unordered_map<GLuint, Shader> &shaderMap()
+      {
+        static std::unordered_map<GLuint, Shader> map;
+        return map;
+      }
+
       DrawState d_state;
 
     public:
@@ -56,41 +60,41 @@ namespace dim
         for(size_t shader = 0; shader != numOfShaders; ++shader)
         {
           GLuint shaderId = node.shader(shader).id();
-        
+
           d_shaderIds.push_back(shaderId); // Will this work?
-          if(s_shaderMap.find(shaderId) == s_shaderMap.end())
-            s_shaderMap.insert(std::make_pair(shaderId, node.shader(shader)));
+          if(shaderMap().find(shaderId) == shaderMap().end())
+            shaderMap().insert(std::make_pair(shaderId, node.shader(shader)));
         }
       }
-    
+
       size_t numOfShaders() const
       {
         return d_shaderIds.size();
       }
-      
+
       Shader &shader(size_t idx)
       {
-        auto iter = s_shaderMap.find(d_shaderIds.at(idx));
-        if(iter == s_shaderMap.end())
+        auto iter = shaderMap().find(d_shaderIds.at(idx));
+        if(iter == shaderMap().end())
           throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
-        
+
         return iter->second;
       }
-      
+
       Shader const &shader(size_t idx) const
       {
-        auto iter = s_shaderMap.find(d_shaderIds.at(idx));
-        if(iter == s_shaderMap.end())
+        auto iter = shaderMap().find(d_shaderIds.at(idx));
+        if(iter == shaderMap().end())
           throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
-        
+
         return iter->second;
       }
-      
+
       DrawState &state()
       {
         return d_state;
       }
-      
+
       DrawState const &state() const
       {
         return d_state;
@@ -100,13 +104,13 @@ namespace dim
       {
         if(other.numOfShaders() != numOfShaders())
           throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
-      
+
         for(size_t shader = 0; shader != numOfShaders(); ++shader)
         {
           if(d_shaderIds[shader] != other.d_shaderIds[shader])
             return false;
         }
-      
+
         return d_state == other.d_state;
       }
 
@@ -114,12 +118,12 @@ namespace dim
       {
         if(other.numOfShaders() != numOfShaders())
           throw log(__FILE__, __LINE__, LogType::error, "This should never throw, bug in the ShaderScene code");
-      
+
         for(size_t shader = 0; shader != numOfShaders(); ++shader)
         {
           if(d_shaderIds[shader] < other.d_shaderIds[shader])
             return true;
-          if(not d_shaderIds[shader] == other.d_shaderIds[shader])
+          if(d_shaderIds[shader] != other.d_shaderIds[shader])
             return false;
         }
 
@@ -135,7 +139,7 @@ namespace internal
   class NodeStorageBase
   {
       size_t d_ownerId;
-      
+
     public:
     // constructors
       virtual ~NodeStorageBase();
@@ -168,7 +172,7 @@ namespace internal
         virtual bool v_equal(ClonePtr<Iterable> const &other) const = 0;
       };
 
-      typedef IteratorBase<NodeBase, NodeStorageBase, ClonePtr<Iterable>>  iterator;
+      typedef IteratorBase<NodeBase, NodeStorageBase, ClonePtr<Iterable>> iterator;
       //typedef IteratorBase<NodeBase const, NodeStorageBase const, ClonePtr<IterType>> const_iterator;
 
       iterator begin();
@@ -207,5 +211,5 @@ namespace internal
   };
 }
 }
-  
+
 #endif

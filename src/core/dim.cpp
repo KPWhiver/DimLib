@@ -20,9 +20,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <memory>
 
 #include <dim/util/copyptr.hpp>
 #include <dim/core/dim.hpp>
+#include "dim/core/surface.hpp"
 
 using namespace std;
 
@@ -30,43 +32,71 @@ namespace dim
 {
   namespace
   {
-    CopyPtr<ostream> output(new ostream(cerr.rdbuf()));
+    ostream output{cerr.rdbuf()};
+    ofstream fileOutput;
   }
-
 
   void setLogFile(string const &outputFile)
   {
-    ofstream file(outputFile.c_str());
+    fileOutput.open(outputFile.c_str());
 
-    if(not file.is_open())
-      throw runtime_error("Failed to logfile: " + outputFile + " for writing");
+    if(not fileOutput.is_open())
+      throw runtime_error("Failed to open logfile: " + outputFile + " for writing");
 
-    setLogStream(file);
+    setLogStream(fileOutput);
   }
 
   void setLogStream(ostream &outputStream)
   {
-    output.reset(new ostream(outputStream.rdbuf()));
+    output.rdbuf(outputStream.rdbuf());
   }
 
   runtime_error log(string const &file, int line, LogType type, string const &message)
   {
-    *output << "In " << file << ':' << line << ": ";
+    std::cerr << "In " << file << ':' << line << ": ";
 
     switch(type)
     {
       case LogType::note:
-        *output << "Note: ";
+        std::cerr << "Note: ";
         break;
       case LogType::warning:
-        *output << "Warning: ";
+        std::cerr << "Warning: ";
         break;
       case LogType::error:
-        *output << "Error: ";
+        std::cerr << "Error: ";
         break;
     }
-    *output << message << '\n';
+    std::cerr << message << '\n';
 
     return runtime_error(message);
+  }
+
+  void logGLerror(std::string const &file, int line)
+  {
+    int error = glGetError();
+    switch(error)
+    {
+      case GL_INVALID_ENUM:
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_ENUM");
+        break;
+      case GL_INVALID_VALUE:
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_VALUE");
+        break;
+      case GL_INVALID_OPERATION:
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_OPERATION");
+        break;
+      case GL_OUT_OF_MEMORY:
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_OUT_OF_MEMORY");
+        break;
+      case GL_INVALID_FRAMEBUFFER_OPERATION:
+        log(file, line, LogType::warning, "OpenGL reported an error: GL_INVALID_FRAMEBUFFER_OPERATION");
+        break;
+      case 0:
+        break;
+      default:
+        log(file, line, LogType::warning, "OpenGL reported an error: " + to_string(error));
+        break;
+    }
   }
 }

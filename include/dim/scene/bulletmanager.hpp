@@ -22,7 +22,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "btBulletWorldImporter.h"
+#include <BulletWorldImporter/btBulletWorldImporter.h>
 
 namespace dim
 {

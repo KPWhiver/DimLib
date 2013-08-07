@@ -20,7 +20,6 @@ set(CXXHEADERS_CORE
   core/dim.hpp
   core/font.hpp
   core/light.hpp
-  core/mouse.hpp
   core/shader.hpp
   core/surface.hpp
   core/surface.inl
@@ -29,7 +28,7 @@ set(CXXHEADERS_CORE
   core/texture.hpp
   core/texture.inl
   core/tools.hpp
-  core/window.hpp
+  core/windowsurface.hpp
   core/timer.hpp
 )
 
@@ -43,8 +42,6 @@ set(CXXHEADERS_GUI
   gui/button.hpp
   gui/component.hpp
   gui/context.hpp
-  gui/sprite.hpp
-  gui/textsprite.hpp
 )
 
 set(CXXHEADERS_UTIL
@@ -52,7 +49,6 @@ set(CXXHEADERS_UTIL
   util/ptrvector.hpp
   util/sortedvector.hpp
   util/onepair.hpp
-  util/stackbase.hpp
 )
 
 install(FILES ${CXXHEADERS_SCENE} DESTINATION include/dim/scene)

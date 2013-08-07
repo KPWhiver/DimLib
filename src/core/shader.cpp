@@ -183,7 +183,7 @@ namespace dim
     return it->second;
   }
 
-  void Shader::parseShader(istream &input, string &vertexShader, string &fragmentShader, string &geometryShader, string &tessControlShader, string &tessEvalShader,
+  uint Shader::parseShader(istream &input, string &vertexShader, string &fragmentShader, string &geometryShader, string &tessControlShader, string &tessEvalShader,
                            string &computeShader) const
   {
     // set up scanner
@@ -321,6 +321,8 @@ namespace dim
     tessControlShader = shaders[3].str();
     tessEvalShader = shaders[4].str();
     computeShader = shaders[5].str();
+
+    return globalVersion;
   }
 
   void Shader::checkCompile(GLuint shader, string const &stage) const
@@ -408,7 +410,7 @@ namespace dim
     if(s_initialized == false)
       initialize();
 
-    string standardVertex("#version 120\n attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}");
+    string standardVertex{"attribute vec2 in_position; void main(){gl_Position = vec4(in_position, 0.0, 1.0);}"};
 
     string vertex;
     string fragment;
@@ -417,7 +419,9 @@ namespace dim
     string tessEval;
     string compute;
 
-    parseShader(input, vertex, fragment, geometry, tessControl, tessEval, compute);
+    uint version = parseShader(input, vertex, fragment, geometry, tessControl, tessEval, compute);
+    if(version == 0)
+      version = 110;
 
 #if 0
     cout << vertex << "\n------\n";
@@ -432,7 +436,7 @@ namespace dim
       compileShader(vertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
     else
     {
-      compileShader(standardVertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
+      compileShader("#version " + to_string(version) + '\n' + standardVertex, "vertex shader", d_vertexId, GL_VERTEX_SHADER);
       glBindAttribLocation(*d_id, 0, "in_position");
     }
 

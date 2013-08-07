@@ -32,13 +32,13 @@
 
 namespace dim
 {
-  class Window;
+  class WindowSurface;
 
   namespace internal
   {
     class SurfaceBase
     {
-      friend class dim::Window;
+      friend WindowSurface;
 
       protected:
         static SurfaceBase* s_renderTarget;
@@ -92,7 +92,7 @@ namespace dim
     {
       depth, 
       color, 
-      stencil,
+      stencil
     };
     
   public:

@@ -51,6 +51,10 @@ namespace dim
   void setLogFile(std::string const &outputFile);
 
   std::runtime_error log(std::string const &file, int line, LogType type, std::string const &message);
+
+  void logGLerror(std::string const &file = __FILE__, int line = __LINE__);
+
+  void init();
 }
 
 #endif /* dim_HPP_ */

@@ -27,7 +27,11 @@ using namespace std;
 
 namespace dim
 {
-  vector<FileDrawNode::Object> FileDrawNode::s_objects;
+  vector<FileDrawNode::Object> &FileDrawNode::objects()
+  {
+    static vector<FileDrawNode::Object> list;
+    return list;
+  }
 
   Shader &FileDrawNode::defaultShader()
   {
@@ -56,12 +60,12 @@ namespace dim
   {
     bool present = false;
 
-    for(size_t idx = 0; idx != s_objects.size(); ++idx)
+    for(size_t idx = 0; idx != objects().size(); ++idx)
     {
-      if(s_objects[idx].filename == filename)
+      if(objects()[idx].filename == filename)
       {
         d_index = idx;
-        d_sceneIdx = rand() % s_objects[idx].scenes.size();
+        d_sceneIdx = rand() % objects()[idx].scenes.size();
         present = true;
         break;
       }
@@ -71,7 +75,7 @@ namespace dim
       throw log(__FILE__, __LINE__, LogType::error, "The file " + filename + " needs to be loaded first with the static 'load' member");
   }
 
-  vector<Scene> parseScenes(YAML::Node const *node, string const &filename, string const &directory, SceneManager &sceneRes, BulletManager &bulletRes)
+  vector<Scene> parseScenes(YAML::Node const *node, string const &filename, string const &directory, TextureManager &texRes, SceneManager &sceneRes, BulletManager &bulletRes)
   {
     if(node == 0)
       throw log(__FILE__, __LINE__, LogType::error, "The file " + filename + " does not contain a scenes section");
@@ -85,7 +89,7 @@ namespace dim
     {
       string sceneFile;
       (*it)["modelFile"] >> sceneFile;
-      scenes.push_back(sceneRes.request(directory + sceneFile));
+      scenes.push_back(sceneRes.request(directory + sceneFile, texRes));
     }
 
     if(scenes.size() == 0)
@@ -108,10 +112,10 @@ namespace dim
 
   void FileDrawNode::load(string const &filename, TextureManager &texRes, SceneManager &sceneRes, ShaderManager &shaderRes, BulletManager &bulletRes)
   {
-    for(size_t idx = 0; idx != s_objects.size(); ++idx)
+    for(size_t idx = 0; idx != objects().size(); ++idx)
     {
       // if it's already loaded we can stop
-      if(s_objects[idx].filename == filename)
+      if(objects()[idx].filename == filename)
       {
         log(__FILE__, __LINE__, LogType::warning, "The file " + filename + " is already loaded");
         return;
@@ -138,10 +142,10 @@ namespace dim
       YAML::Node document;
       parser.GetNextDocument(document);
 
-      vector<Scene> scenes = parseScenes(document.FindValue("Scenes"), filename, directory, sceneRes, bulletRes);
+      vector<Scene> scenes = parseScenes(document.FindValue("Scenes"), filename, directory, texRes, sceneRes, bulletRes);
       Shader &shader = parseShader(document.FindValue("Shader"), defaultShader(), directory, shaderRes);
 
-      s_objects.push_back({filename, shader, scenes});
+      objects().push_back({filename, shader, scenes});
     }
     catch(exception &except)
     {
@@ -161,23 +165,23 @@ namespace dim
 
   uint FileDrawNode::numberOfScenes() const
   {
-    return s_objects[d_index].scenes.size();
+    return objects()[d_index].scenes.size();
   }
 
   Shader const &FileDrawNode::shader(size_t idx) const
   {
-    return s_objects[d_index].shader;
+    return objects()[d_index].shader;
   }
   
   Scene const &FileDrawNode::scene() const
   {
-    return s_objects[d_index].scenes[d_sceneIdx];
+    return objects()[d_index].scenes[d_sceneIdx];
   }
 
   btRigidBody *FileDrawNode::rigidBody()
   {
     return 0;
-    //return &s_objects[d_index].rigidBody;
+    //return &objects()[d_index].rigidBody;
   }
 
   NodeBase *FileDrawNode::clone() const
@@ -188,7 +192,7 @@ namespace dim
   void FileDrawNode::insert(std::ostream &out) const
   {
     out << location().x << ' ' << location().y << ' ' << location().z << ' '
-        << orientation().x << ' ' << orientation().y << ' ' << orientation().z << ' ' << orientation().w << ' ' << d_sceneIdx << ' ' << s_objects[d_index].filename << '\n';
+        << orientation().x << ' ' << orientation().y << ' ' << orientation().z << ' ' << orientation().w << ' ' << d_sceneIdx << ' ' << objects()[d_index].filename << '\n';
   }
 
   void FileDrawNode::extract(std::istream &in)
@@ -205,9 +209,9 @@ namespace dim
 
     bool present = false;
 
-    for(size_t idx = 0; idx != s_objects.size(); ++idx)
+    for(size_t idx = 0; idx != objects().size(); ++idx)
     {
-      if(s_objects[idx].filename == filename)
+      if(objects()[idx].filename == filename)
       {
         d_index = idx;
         present = true;

@@ -43,7 +43,7 @@ namespace internal
   class NodeGrid : public NodeStorageBase
   {
       typedef Onepair<long, 10000000> Key;
-      typedef std::unordered_map<Key, PtrVector<RefType>, std::hash<long>, std::equal_to<long>> Storage;
+      typedef std::unordered_map<Key, PtrVector<RefType>, Key::Hash, std::equal_to<Key>> Storage;
       
       Storage d_map;
 

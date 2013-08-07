@@ -55,7 +55,7 @@ Menu::~Menu()
     s_active = 0;
 }
 
-bool Menu::listen(int x, int y, dim::Mouse const &mouse)
+bool Menu::listen(int x, int y, glm::ivec2 const &mouse)
 {
   if(d_active == true)
   {
