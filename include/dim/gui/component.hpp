@@ -34,9 +34,18 @@ namespace dim
 		  //size_t d_id;
 
 		public:
+			enum Event : int
+			{
+				hover,
+				leftPress,
+				leftRelease,
+				rightPress,
+				rightRelease
+			};
+
 		  Component();
 
-			virtual bool listen(int x, int y, glm::ivec2 const &mouse);
+			virtual bool listen(int x, int y, glm::ivec2 const &mouse, Event event);
 		  virtual void draw(int x, int y);
 
 

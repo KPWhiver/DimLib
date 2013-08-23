@@ -47,30 +47,17 @@ namespace internal
       
       Storage d_map;
 
-      //static std::unordered_map<size_t, NodeGrid<RefType>*> s_map;
-
       size_t d_gridSize;
       
       size_t d_numOfShaders;
 
     public:
     // constuctors
-      NodeGrid(size_t gridSize, size_t key, size_t numOfShaders);
-      ~NodeGrid();
+      NodeGrid();
+
+      void setGridSize(size_t gridSize);
+      void setNumOfShaders(size_t numOfShaders);
       
-    // static access
-    private:
-      static std::unordered_map<size_t, NodeGrid<RefType>*> &instanceMap();
-
-    public:
-      static NodeGrid<RefType> *get(size_t key);
-      static bool isPresent(size_t key);
-
-    private:
-      virtual void v_copy(size_t dest);
-      virtual NodeStorageBase* v_clone() const;
-
-    public:
     // iterators
       class Iterable : public NodeStorageBase::Iterable
       {

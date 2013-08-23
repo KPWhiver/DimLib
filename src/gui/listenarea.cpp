@@ -46,7 +46,7 @@ namespace dim
 	{
 	}
 
-	bool ListenArea::listen(int x, int y, glm::ivec2 const &mouse)
+	bool ListenArea::listen(int x, int y, glm::ivec2 const &mouse, Event event)
 	{	  
 	  if(d_context == 0)
 	    return false;
@@ -57,22 +57,22 @@ namespace dim
 		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
 
-			if(true) //TODO: lRelease
+			if(event == Component::leftRelease) //TODO: lRelease
 		  {
 		  	if(d_listenerFunctionLeftRelease)
 		  		d_listenerFunctionLeftRelease();
 		  }
-			else if(true) //TODO: rRelease
+			else if(event == Component::rightRelease) //TODO: rRelease
 		  {
 		    if(d_listenerFunctionRightRelease)
 		  		d_listenerFunctionRightRelease();
 		  }
-			else if(true) //TODO: lPressed
+			else if(event == Component::leftPress) //TODO: lPressed
 		  {
 		  	if(d_listenerFunctionLeftPressed)
 		  		d_listenerFunctionLeftPressed();
 		  }
-			else if(true) //TODO: rPressed
+			else if(event == Component::rightPress) //TODO: rPressed
 		  {
 		    if(d_listenerFunctionRightPressed)
 		  		d_listenerFunctionRightPressed();

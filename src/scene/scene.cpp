@@ -18,6 +18,7 @@
 // MA 02110-1301, USA.
 
 #include "dim/scene/scene.hpp"
+#include "dim/core/shader.hpp"
 #include <algorithm>
 
 #include "assimp/Importer.hpp"
@@ -139,6 +140,24 @@ namespace dim
     return false;
   }
 
+	void DrawState::draw() const
+	{
+		/*Shader const &shader = Shader::active();
+
+		uint count = 0;
+		for(auto const &texturePair : d_textures)
+		{
+			shader.set(texturePair.second, texturePair.first, count);
+			++count;
+		}*/
+
+		//TODO: add the setting of all parameters (textures, materials)
+
+		d_mesh.draw();
+
+
+	}
+
 	// Scene
 
   Scene::Scene(Mesh const &mesh, std::vector<pair<Texture<GLubyte>, string>> const &textures)
@@ -169,67 +188,120 @@ namespace dim
 
   namespace
   {
-    void addAttributeToBuffer(Attribute const &attrib, vector<GLfloat> &array, size_t offset, aiVector3D const &vector)
+    void addAttributeToBuffer(size_t numOfElements, vector<GLfloat> &array, size_t offset, aiVector3D const &vector)
     {
       array[offset] = vector.x;
+      array[offset + 1] = vector.y;
 
-      if(attrib.format() > Attribute::vec1)
-        array[offset + 1] = vector.y;
-
-      if(attrib.format() > Attribute::vec2)
+      if(numOfElements > 2)
         array[offset + 2] = vector.z;
     }
 
-    Mesh loadMesh(aiScene const &scene, size_t varNumOfElements, size_t mesh, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
-                  Attribute const &binormal, Attribute const &tangent)
+    bool in(vector<Scene::Option> const &list, Scene::Option option)
+    {
+      for(Scene::Option item : list)
+      {
+        if(item == option)
+          return true;
+      }
+      return false;
+    }
+
+    Mesh loadMesh(aiScene const &scene, std::vector<Scene::Option> const &options, size_t mesh, string const &filename)
     {
       vector<Attribute> attributes;
-      attributes.push_back(vertex);
-      if(normal.id() != Attribute::unknown)
-        attributes.push_back(normal);
-      if(texCoord.id() != Attribute::unknown)
-        attributes.push_back(texCoord);
-      if(binormal.id() != Attribute::unknown)
-        attributes.push_back(binormal);
-      if(tangent.id() != Attribute::unknown)
-        attributes.push_back(tangent);
+      attributes.push_back({Attribute::vertex, Attribute::vec3});
+
+      if(in(options, Scene::texCoords3D) && scene.mMeshes[mesh]->mTextureCoords[0] == 0)
+        throw log(filename, 0, LogType::error, "No texture coordinates present");
+
+      uint numOfElements = 3;
+      bool texCoords = false;
+      bool normals = false;
+      bool binormals = false;
+      bool tangents = false;
+      size_t numOfTexCoords = 0;
+
+      if(scene.mMeshes[mesh]->mNormals != 0 && ! in(options, Scene::noNormals))
+      {
+        numOfElements += 3;
+        normals = true;
+
+        attributes.push_back({Attribute::normal, Attribute::vec3});
+      }
+
+      if(scene.mMeshes[mesh]->mTextureCoords[0] != 0 && ! in(options, Scene::noTexCoords))
+      {
+        if(in(options, Scene::texCoords3D))
+        {
+          numOfElements += 3;
+          numOfTexCoords = 3;
+          attributes.push_back({Attribute::texCoord, Attribute::vec3});
+        }
+        else
+        {
+          numOfElements += 2;
+          numOfTexCoords = 2;
+          attributes.push_back({Attribute::texCoord, Attribute::vec2});
+        }
+
+        texCoords = true;
+      }
+
+
+
+      if(scene.mMeshes[mesh]->mBitangents != 0 && in(options, Scene::generateBinormals))
+      {
+        numOfElements += 3;
+        binormals = true;
+
+        attributes.push_back({Attribute::binormal, Attribute::vec3});
+      }
+
+      if(scene.mMeshes[mesh]->mTangents != 0 && in(options, Scene::generateTangents))
+      {
+        numOfElements += 3;
+        tangents = true;
+
+        attributes.push_back({Attribute::tangent, Attribute::vec3});
+      }
 
       // allocate buffer
       size_t numOfVertices = scene.mMeshes[mesh]->mNumVertices;
 
-      vector<GLfloat> array(numOfVertices * varNumOfElements);
+      vector<GLfloat> array(numOfVertices * numOfElements);
 
       // fill buffer
       for(size_t vert = 0; vert != numOfVertices; ++vert)
       {
         uint arrayIdxOffset = 0;
-        size_t arrayIdxStart = vert * varNumOfElements;
+        size_t arrayIdxStart = vert * numOfElements;
 
-        addAttributeToBuffer(vertex, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mVertices[vert]);
-        arrayIdxOffset += vertex.size();
+        addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mVertices[vert]);
+        arrayIdxOffset += 3;
 
-        if(normal.id() != Attribute::unknown)
+        if(normals)
         {
-          addAttributeToBuffer(normal, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mNormals[vert]);
-          arrayIdxOffset += normal.size();
+          addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mNormals[vert]);
+          arrayIdxOffset += 3;
         }
 
-        if(texCoord.id() != Attribute::unknown)
+        if(texCoords)
         {
-          addAttributeToBuffer(texCoord, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTextureCoords[0][vert]);
-          arrayIdxOffset += texCoord.size();
+          addAttributeToBuffer(numOfTexCoords, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTextureCoords[0][vert]);
+          arrayIdxOffset += numOfTexCoords;
         }
 
-        if(binormal.id() != Attribute::unknown)
+        if(binormals)
         {
-          addAttributeToBuffer(binormal, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mBitangents[vert]);
-          arrayIdxOffset += binormal.size();
+          addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mBitangents[vert]);
+          arrayIdxOffset += 3;
         }
 
-        if(tangent.id() != Attribute::unknown)
+        if(tangents)
         {
-          addAttributeToBuffer(tangent, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTangents[vert]);
-          arrayIdxOffset += tangent.size();
+          addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTangents[vert]);
+          arrayIdxOffset += 3;
         }
       }
 
@@ -255,42 +327,29 @@ namespace dim
     TextureManager stdManager(Filtering::trilinear);
   }
 
-  Scene::Scene(std::string const &filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
-               Attribute const &binormal, Attribute const &tangent)
+  Scene::Scene(std::string const &filename, std::vector<Option> list)
   :
-      Scene(filename, stdManager, vertex, normal, texCoord, binormal, tangent)
+      Scene(filename, stdManager, list)
   {
   }
 
-  Scene::Scene(std::string const &filename, TextureManager &resources, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
-               Attribute const &binormal, Attribute const &tangent)
+  Scene::Scene(std::string const &filename, TextureManager &resources, std::vector<Option> options)
   {
     // set flags
     uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices;
 
-    if(vertex.id() == Attribute::unknown)
-      throw log(__FILE__, __LINE__, LogType::error, "No vertex array specified while loading " + filename);
+    if(in(options, generateNormals))
+      flags |= aiProcess_GenSmoothNormals;
 
-    if(vertex.format() > Attribute::vec3 || normal.format() > Attribute::vec3 || texCoord.format() > Attribute::vec3 ||
-       binormal.format() > Attribute::vec3 || tangent.format() > Attribute::vec3)
-      throw log(__FILE__, __LINE__, LogType::error, "Can't extract more than 3 coordinates from a model file");
-
-    uint varNumOfElements = vertex.size();
-
-    if(normal.id() != Attribute::unknown)
+    if(in(options, generateTangents))
     {
       flags |= aiProcess_GenSmoothNormals;
-      varNumOfElements += normal.size();
-    }
-    if(binormal.id() != Attribute::unknown)
-    {
       flags |= aiProcess_CalcTangentSpace;
-      varNumOfElements += binormal.size();
     }
-    if(tangent.id() != Attribute::unknown)
+    if(in(options, generateBinormals))
     {
+      flags |= aiProcess_GenSmoothNormals;
       flags |= aiProcess_CalcTangentSpace;
-      varNumOfElements += tangent.size();
     }
 
     // load scene
@@ -300,14 +359,12 @@ namespace dim
     if(!scene)
       throw log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
 
-    if(texCoord.id() != Attribute::unknown && scene->mMeshes[0]->mTextureCoords[0] == 0)
+    if(in(options, texCoords3D) && scene->mMeshes[0]->mTextureCoords[0] == 0)
       throw log(filename, 0, LogType::error, "No texture coordinates present");
-    else
-      varNumOfElements += texCoord.size();
 
     // load meshes
     for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
-      d_states.push_back(DrawState(loadMesh(*scene, varNumOfElements, mesh, vertex, normal, texCoord, binormal, tangent), {}));
+      d_states.push_back(DrawState(loadMesh(*scene, options, mesh, filename), {}));
 
     vector<vector<pair<Texture<GLubyte>, string>>> textures(scene->mNumMaterials);
     vector<aiColor3D> ambientColors(scene->mNumMaterials, aiColor3D(1.0, 1.0, 1.0));
@@ -319,22 +376,22 @@ namespace dim
 
     for(size_t material = 0; material != scene->mNumMaterials; ++material)
     {
-      size_t texIdx = 0;
       aiString relativePath;
       aiReturn texFound;
 
       // load textures
-      while(true)
+      for(size_t texture = 0; texture != scene->mMaterials[material]->GetTextureCount(aiTextureType_DIFFUSE); ++texture)
       {
-        texFound = scene->mMaterials[material]->GetTexture(aiTextureType_DIFFUSE, texIdx, &relativePath);
+        texFound = scene->mMaterials[material]->GetTexture(aiTextureType_DIFFUSE, texture, &relativePath);
         if(texFound != AI_SUCCESS)
+        {
+          log(__FILE__, __LINE__, LogType::warning, "This should not happen");
           break;
+        }
 
         string path = filename.substr(0, filename.find_last_of('/') + 1) + relativePath.data;
 
-        //textures[material].push_back(make_pair(Texture<GLubyte>(path, Filtering::trilinear, false), baseName + static_cast<char>('0' + texIdx)));
-        textures[material].emplace_back(resources.request(path), baseName + static_cast<char>('0' + texIdx));
-        ++texIdx;
+        textures[material].emplace_back(resources.request(path), baseName + static_cast<char>('0' + texture));
       }
       // load light material settings
       scene->mMaterials[material]->Get(AI_MATKEY_COLOR_AMBIENT, ambientColors[material]);
@@ -357,6 +414,12 @@ namespace dim
     }
 
     sort(d_states.begin(), d_states.end());
+  }
+
+  void Scene::draw() const
+  {
+    for(DrawState const &drawState : d_states)
+      drawState.draw();
   }
 
   bool Scene::operator==(Scene const &other) const

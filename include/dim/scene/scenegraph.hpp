@@ -1,17 +1,17 @@
 //      drawmap.hpp
-//      
+//
 //      Copyright 2012 Klaas Winter <klaaswinter@gmail.com>
-//      
+//
 //      This program is free software; you can redistribute it and/or modify
 //      it under the terms of the GNU General Public License as published by
 //      the Free Software Foundation; either version 2 of the License, or
 //      (at your option) any later version.
-//      
+//
 //      This program is distributed in the hope that it will be useful,
 //      but WITHOUT ANY WARRANTY; without even the implied warranty of
 //      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //      GNU General Public License for more details.
-//      
+//
 //      You should have received a copy of the GNU General Public License
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
@@ -25,6 +25,7 @@
 #include "dim/util/ptrvector.hpp"
 #include "dim/core/camera.hpp"
 #include "dim/core/light.hpp"
+#include "dim/util/tupleforeach.hpp"
 
 #include <vector>
 #include <map>
@@ -35,20 +36,31 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
+#include <fstream>
+
+#include "dim/scene/scenegraph.hpp"
+#include "dim/core/shader.hpp"
+#include <BulletWorldImporter/btBulletWorldImporter.h>
+
+#include <algorithm>
+#include <stdexcept>
+
 namespace dim
 {
   //class GroupNodeBase : public NodeBase
   //{
   //};
 
+  template<typename... Types>
   class SceneGraph : public NodeBase
   {
       std::multimap<ShaderScene, internal::NodeStorageBase*> d_drawStates;
 
-      PtrVector<internal::NodeStorageBase> d_storages;
+      std::vector<internal::NodeStorageBase*> d_storagePtrs;
+      std::tuple<internal::NodeGrid<Types>...> d_storages;
 
       size_t d_gridSize;
-      
+
       size_t d_numOfRenderModes;
 
       std::vector<Light> d_lights;
@@ -61,9 +73,6 @@ namespace dim
 
       btDiscreteDynamicsWorld d_dynamicsWorld;
 
-    // NodeBase
-      static Scene s_defaultScene;
-
     public:
       virtual Shader const &shader(size_t idx) const
       {
@@ -72,7 +81,8 @@ namespace dim
 
       virtual Scene const &scene() const
       {
-        return s_defaultScene;
+        static Scene defaultScene;
+        return defaultScene;
       }
 
       virtual btRigidBody *rigidBody()
@@ -89,7 +99,7 @@ namespace dim
       void setOrientation(glm::quat const &orient);
       void setScaling(glm::vec3 const &scale);
       void setLocation(glm::vec3 const &coor);
-    
+
     // iterators
       class Iterable
       {
@@ -129,10 +139,10 @@ namespace dim
     // constructors
 
       SceneGraph(size_t numOfRenderModes, size_t gridSize = 64);
-      
+
       SceneGraph(SceneGraph const &other);
       SceneGraph(SceneGraph &&tmp);
-      
+
       SceneGraph &operator=(SceneGraph const &other);
       SceneGraph &operator=(SceneGraph &&tmp);
 
@@ -175,13 +185,12 @@ namespace dim
     private:
       void add(ShaderScene const &state, internal::NodeStorageBase* ptr);
       SceneGraph::iterator find(float x, float z);
-
-      size_t key() const;
   };
 
   // TODO fix
+  template<typename... Types>
   template<typename RefType>
-  void SceneGraph::save(std::string const &filename)
+  void SceneGraph<Types...>::save(std::string const &filename)
   {
     std::ofstream file(filename.c_str());
 
@@ -197,8 +206,9 @@ namespace dim
     file.close();
   }
 
+  template<typename... Types>
   template<typename RefType>
-  void SceneGraph::load(std::string const &filename)
+  void SceneGraph<Types...>::load(std::string const &filename)
   {
     // open the file
     std::ifstream file(filename.c_str());
@@ -220,24 +230,18 @@ namespace dim
 
   }
 
+  template<typename... Types>
   template<typename RefType>
-  typename internal::NodeGrid<RefType>::iterator SceneGraph::add(bool saved, RefType *object)
+  typename internal::NodeGrid<RefType>::iterator SceneGraph<Types...>::add(bool saved, RefType *object)
   {
-    internal::NodeGrid<RefType>* ptr = internal::NodeGrid<RefType>::get(key());
+    internal::NodeGrid<RefType> &storage = dim::get<internal::NodeGrid<RefType>>(d_storages);
     object->setParent(this);
 
-    // Add the object
-    if(ptr == 0)
-    {
-      ptr = new internal::NodeGrid<RefType>(d_gridSize, key(), d_numOfRenderModes);
-      d_storages.push_back(ptr);
-    }
+    typename internal::NodeGrid<RefType>::iterator iter = storage.add(!saved, object);
 
-    typename internal::NodeGrid<RefType>::iterator iter = ptr->add(!saved, object);
-        
     // Add the drawstate
     for(size_t idx = 0; idx != object->scene().size(); ++idx)
-      add(ShaderScene(*object, idx, d_numOfRenderModes), ptr);
+      add(ShaderScene(*object, idx, d_numOfRenderModes), &storage);
 
     if(object->rigidBody() != 0)
       d_dynamicsWorld.addRigidBody(object->rigidBody());
@@ -245,40 +249,25 @@ namespace dim
     return iter;
   }
 
+  template<typename... Types>
   template<typename RefType>
-  typename internal::NodeGrid<RefType>::iterator SceneGraph::get(float x, float z)
+  typename internal::NodeGrid<RefType>::iterator SceneGraph<Types...>::get(float x, float z)
   {
-    auto ptr = internal::NodeGrid<RefType>::get(key());
-
-    if(ptr == 0)
-      return end<RefType>();
-
-    return ptr->find(x, z);
+    return dim::get<internal::NodeGrid<RefType>>(d_storages).find(x, z);
   }
 
+  template<typename... Types>
   template<typename RefType>
-  typename internal::NodeGrid<RefType>::iterator SceneGraph::begin()
+  typename internal::NodeGrid<RefType>::iterator SceneGraph<Types...>::begin()
   {
-    auto ptr = internal::NodeGrid<RefType>::get(key());
-
-    if(ptr == 0)
-      return end<RefType>();
-
-    return ptr->begin();
+    return dim::get<internal::NodeGrid<RefType>>(d_storages).begin();
   }
 
+  template<typename... Types>
   template<typename RefType>
-  typename internal::NodeGrid<RefType>::iterator SceneGraph::end()
+  typename internal::NodeGrid<RefType>::iterator SceneGraph<Types...>::end()
   {
-    auto ptr = internal::NodeGrid<RefType>::get(key());
-
-    if(ptr == 0)
-    {
-      ptr = new internal::NodeGrid<RefType>(d_gridSize, key(), d_numOfRenderModes);
-      d_storages.push_back(ptr);
-    }
-
-    return ptr->end();
+    return dim::get<internal::NodeGrid<RefType>>(d_storages).end();
   }
 
   /*template<typename RefType>
@@ -307,5 +296,8 @@ namespace dim
   }*/
 
 }
+
+#include "scenegraph.inl"
+
 
 #endif

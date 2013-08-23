@@ -22,66 +22,33 @@ namespace dim
 namespace internal
 {
   /* constructors */
-  //template<typename RefType>
-  //std::unordered_map<size_t, NodeGrid<RefType>*> NodeGrid<RefType>::s_map;
+  template<typename RefType>
+  void NodeGrid<RefType>::setGridSize(size_t gridSize)
+  {
+    d_gridSize = gridSize;
+  }
 
   template<typename RefType>
-  NodeGrid<RefType>::NodeGrid(size_t gridSize, size_t key, size_t numOfShaders)
+  void NodeGrid<RefType>::setNumOfShaders(size_t numOfShaders)
+  {
+    d_numOfShaders = numOfShaders;
+  }
+
+  template<typename RefType>
+  NodeGrid<RefType>::NodeGrid()
       :
-        NodeStorageBase(key),
-        d_gridSize(gridSize),
-        d_numOfShaders(numOfShaders)
+        d_gridSize(0),
+        d_numOfShaders(0)
   {
-    instanceMap()[key] = this;
-  }
-
-  template<typename RefType>
-  NodeGrid<RefType>::~NodeGrid()
-  {
-    instanceMap().erase(ownerId());
-  }
-
-  /* static access */
-  
-  template <typename RefType>
-  std::unordered_map<size_t, NodeGrid<RefType>*> &NodeGrid<RefType>::instanceMap()
-  {
-    static std::unordered_map<size_t, NodeGrid<RefType>*> map;
-    return map;
-  }
-
-  template <typename RefType>
-  NodeGrid<RefType> *NodeGrid<RefType>::get(size_t key)
-  {
-    auto iter = instanceMap().find(key);
-    if(iter != instanceMap().end())
-      return iter->second;
-
-    return 0;
-  }
-
-  template <typename RefType>
-  bool NodeGrid<RefType>::isPresent(size_t key)
-  {
-    if(instanceMap().find(key) != instanceMap().end())
-      return true;
-      
-    return false;
-  }
-  
-  template <typename RefType>
-  void NodeGrid<RefType>::v_copy(size_t dest)
-  {
-    instanceMap()[dest] = this;
-  }
-  
-  template <typename RefType>
-  NodeStorageBase* NodeGrid<RefType>::v_clone() const
-  {
-    return new NodeGrid<RefType>(*this);
   }
 
   /* iterators */
+
+  template<typename RefType>
+  typename NodeGrid<RefType>::Iterable* NodeGrid<RefType>::Iterable::clone() const
+  {
+    return new NodeGrid<RefType>::Iterable(*this);
+  }
 
   template <typename RefType>
   typename NodeGrid<RefType>::iterator NodeGrid<RefType>::begin()
@@ -126,12 +93,6 @@ namespace internal
     d_mapIterator(iter),
     d_container(container)
   {
-  }
-
-  template<typename RefType>
-  typename NodeGrid<RefType>::Iterable* NodeGrid<RefType>::Iterable::clone() const
-  {
-    return new NodeGrid<RefType>::Iterable(*this);
   }
 
   template<typename RefType>

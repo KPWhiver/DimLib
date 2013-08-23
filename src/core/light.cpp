@@ -59,7 +59,7 @@ Light::Light(vec4 const &position, vec4 const &lightColor, vec4 const &highlight
 {
 }
 
-mat4 &Light::in_mat_light()
+mat4 const &Light::in_mat_light() const
 {
 	return d_in_mat_light;
 }

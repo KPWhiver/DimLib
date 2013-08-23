@@ -61,11 +61,11 @@ namespace dim
 		d_height = height;
 	}
 
-  bool MenuItem::listen(int x, int y, ivec2 const &mouse)
+  bool MenuItem::listen(int x, int y, ivec2 const &mouse, Component::Event event)
   {
     if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
-			if(true) //TODO: see button
+			if(event == Component::leftRelease) //TODO: see button
 		  {
 		  	if(d_listenerFunction)
 		  		d_listenerFunction();

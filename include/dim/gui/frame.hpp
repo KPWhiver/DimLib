@@ -49,7 +49,7 @@ namespace dim
 		void add(Component *component);
 		void remove(Component *component);
 
-		void listen(glm::ivec2 const &mouse);
+		void listen(glm::ivec2 const &mouse, Component::Event event);
 		void draw();
 
 		void setCoords(int x, int y);

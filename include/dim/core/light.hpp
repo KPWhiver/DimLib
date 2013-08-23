@@ -54,7 +54,7 @@ public:
   void setAmbientIntensity(glm::vec4 const &ambientIntensity);
   void setLightIntensity(glm::vec4 const &lightIntensity);
   
-  glm::mat4 &in_mat_light();
+  glm::mat4 const &in_mat_light() const;
 
   void setAtShader(Shader const &shader) const;
   

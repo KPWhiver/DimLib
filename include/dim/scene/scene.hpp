@@ -56,6 +56,8 @@ class DrawState
 
     bool operator==(DrawState const &other) const;
     bool operator<(DrawState const &other) const;
+
+    void draw() const;
 };
 
 class Scene
@@ -63,11 +65,22 @@ class Scene
   std::vector<DrawState> d_states;
 
 public:
+  enum Option : int
+  {
+    noNormals,
+    noTexCoords,
+    generateNormals,
+    //generateTexCoords,
+    texCoords3D,
+    generateTangents,
+    generateBinormals
+  };
+
   Scene() = default;
-	Scene(std::string const &filename, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
-        Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
-  Scene(std::string const &filename, TextureManager &resources, Attribute const &vertex, Attribute const &normal, Attribute const &texCoord,
-        Attribute const &binormal = {Attribute::unknown, Attribute::vec1}, Attribute const &tangent = {Attribute::unknown, Attribute::vec1});
+
+  Scene(std::string const &filename, std::vector<Option> list = {});
+  Scene(std::string const &filename, TextureManager &resources, std::vector<Option> list = {});
+
 	Scene(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
 	void add(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
 

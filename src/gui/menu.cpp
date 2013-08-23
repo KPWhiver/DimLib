@@ -55,13 +55,13 @@ Menu::~Menu()
     s_active = 0;
 }
 
-bool Menu::listen(int x, int y, glm::ivec2 const &mouse)
+bool Menu::listen(int x, int y, glm::ivec2 const &mouse, Event event)
 {
   if(d_active == true)
   {
     for(size_t idx = 0; idx != d_items.size(); ++idx)
     {
-      if(d_items[idx]->listen(x + d_x, y + d_y - idx * d_height - d_height, mouse))
+      if(d_items[idx]->listen(x + d_x, y + d_y - idx * d_height - d_height, mouse, event))
       {
         d_active = false;
         return true;

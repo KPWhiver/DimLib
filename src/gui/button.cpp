@@ -73,9 +73,9 @@ namespace dim
 	  d_menu.reset(menu);
 	}
 	
-	bool Button::listen(int x, int y, glm::ivec2 const &mouse)
+	bool Button::listen(int x, int y, glm::ivec2 const &mouse, Event event)
 	{ 
-	  if(d_menu.get() != 0 && d_menu->listen(x, y, mouse))
+		if(d_menu.get() != 0 && d_menu->listen(x, y, mouse, event))
 	    return true;
 	  
 	  x += d_x;
@@ -83,7 +83,7 @@ namespace dim
 
 		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
-			if(true) //TODO: should be on mouse click
+			if(event == Component::leftRelease) //TODO: should be on mouse click
 		  {
 		  	if(d_listenerFunction)
 		  		d_listenerFunction();

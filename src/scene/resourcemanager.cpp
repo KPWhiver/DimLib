@@ -85,10 +85,7 @@ namespace dim
   Scene &SceneManager::request(string const &filename, TextureManager &resources)
   {
     if(d_sceneMap.find(filename) == d_sceneMap.end())
-      return d_sceneMap[filename] = Scene(filename, resources,
-                                          {Attribute::vertex, Attribute::vec3},
-                                          {Attribute::normal, Attribute::vec3},
-                                          {Attribute::texCoord, Attribute::vec2});
+      return d_sceneMap[filename] = Scene(filename, resources, {Scene::generateNormals});
 
     return d_sceneMap[filename];
   }
@@ -96,10 +93,7 @@ namespace dim
   Scene &SceneManager::request(string const &filename)
   {
     if(d_sceneMap.find(filename) == d_sceneMap.end())
-      return d_sceneMap[filename] = Scene(filename,
-                                          {Attribute::vertex, Attribute::vec3},
-                                          {Attribute::normal, Attribute::vec3},
-                                          {Attribute::texCoord, Attribute::vec2});
+      return d_sceneMap[filename] = Scene(filename, {Scene::generateNormals});
 
     return d_sceneMap[filename];
   }

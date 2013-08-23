@@ -60,14 +60,14 @@ namespace dim
 	  d_text = Texture<GLubyte>(d_context->font().generateTexture(d_strText, true, d_width, d_height, Filtering::linear));
 	}
 	
-	bool Switch::listen(int x, int y, glm::ivec2 const &mouse)
+	bool Switch::listen(int x, int y, glm::ivec2 const &mouse, Event event)
 	{
 	  x += d_x;
 	  y += d_y;
 
 		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
-			if(true) //TODO: see button
+			if(event == Component::leftRelease) //TODO: see button
 		  {
 		    d_enabled = not d_enabled;
 

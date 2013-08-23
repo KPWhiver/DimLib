@@ -27,25 +27,8 @@ namespace dim
 namespace internal
 {
   /* constructors */
-  NodeStorageBase::NodeStorageBase(size_t ownerId)
-      :
-          d_ownerId(ownerId)
-  {
-  }
-
   NodeStorageBase::~NodeStorageBase()
   {
-  }
-
-  void NodeStorageBase::copy(size_t dest)
-  {
-    v_copy(dest);
-    d_ownerId = dest;
-  }
-
-  NodeStorageBase* NodeStorageBase::clone() const
-  {
-    return v_clone();
   }
 
   /* general functions */
@@ -126,10 +109,5 @@ namespace internal
   // return v_end();
   //}
 
-  /* private functions */
-  size_t NodeStorageBase::ownerId() const
-  {
-    return d_ownerId;
-  }
 }
 }

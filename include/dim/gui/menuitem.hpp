@@ -22,6 +22,7 @@
 
 #include "dim/core/texture.hpp"
 #include "dim/gui/context.hpp"
+#include "dim/gui/component.hpp"
 
 #include <functional>
 #include <string>
@@ -49,7 +50,7 @@ namespace dim
 
 
     void draw(int x, int y, Texture<> const &texture, Texture<> const &overlay);
-    bool listen(int x, int y, glm::ivec2 const &mouse);
+    bool listen(int x, int y, glm::ivec2 const &mouse, Component::Event event);
     void setListener(std::function<void(void)> const &listenerFunction);
 
   private:

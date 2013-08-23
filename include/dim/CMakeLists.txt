@@ -5,6 +5,7 @@ set(CXXHEADERS_SCENE
   scene/nodegrid.hpp
   scene/nodegrid.inl
   scene/scenegraph.hpp
+  scene/scenegraph.inl
   scene/scene.hpp
   scene/filedrawnode.hpp
   scene/texturemanager.hpp
@@ -42,6 +43,7 @@ set(CXXHEADERS_GUI
   gui/button.hpp
   gui/component.hpp
   gui/context.hpp
+  gui/sprite.hpp
 )
 
 set(CXXHEADERS_UTIL
@@ -49,6 +51,7 @@ set(CXXHEADERS_UTIL
   util/ptrvector.hpp
   util/sortedvector.hpp
   util/onepair.hpp
+  util/tupleforeach.hpp
 )
 
 install(FILES ${CXXHEADERS_SCENE} DESTINATION include/dim/scene)

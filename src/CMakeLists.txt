@@ -18,7 +18,6 @@ set(CXXSOURCES
   scene/filedrawnode.cpp
   scene/nodestoragebase.cpp
   scene/resourcemanager.cpp
-  scene/scenegraph.cpp
 
   gui/button.cpp
   gui/context.cpp
@@ -29,6 +28,7 @@ set(CXXSOURCES
   gui/image2d.cpp
   gui/frame.cpp
   gui/switch.cpp
+  gui/sprite.cpp
 )
 
 find_package(Bullet REQUIRED)

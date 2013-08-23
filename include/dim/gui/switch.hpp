@@ -46,7 +46,7 @@ namespace dim
     Switch();
     //~Button();
     virtual void draw(int x, int y);
-    virtual bool listen(int x, int y, glm::ivec2 const &mouse);
+    virtual bool listen(int x, int y, glm::ivec2 const &mouse, Event event);
 
     void setListener(std::function<void(bool)> const &listenerFunction);
     virtual void setContext(Context *context);

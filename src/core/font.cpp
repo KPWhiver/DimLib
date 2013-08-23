@@ -230,10 +230,10 @@ vector<GLubyte> Font::scale(vector<GLubyte> const &textMap, uint oldWidth, uint 
       uint y1(std::max(0, static_cast<int>(floor(y / verScale))));
       uint y2(std::min(y1 + 1, oldHeight - 1));
 
-      GLubyte upLeft(textMap.at(y1 * oldWidth + x1));
-      GLubyte downLeft(textMap.at(y2 * oldWidth + x1));
-      GLubyte upRight(textMap.at(y1 * oldWidth + x2));
-      GLubyte downRight(textMap.at(y2 * oldWidth + x2));
+      float upLeft(textMap.at(y1 * oldWidth + x1));
+      float downLeft(textMap.at(y2 * oldWidth + x1));
+      float upRight(textMap.at(y1 * oldWidth + x2));
+      float downRight(textMap.at(y2 * oldWidth + x2));
 
       vec2 uv(x / horScale, y / verScale);
       vec2 frac(fract(uv));

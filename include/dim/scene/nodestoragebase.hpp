@@ -138,22 +138,10 @@ namespace internal
 {
   class NodeStorageBase
   {
-      size_t d_ownerId;
-
     public:
     // constructors
       virtual ~NodeStorageBase();
-      explicit NodeStorageBase(size_t ownerId);
 
-      NodeStorageBase* clone() const;
-
-      void copy(size_t dest);
-
-    private:
-      virtual void v_copy(size_t dest) = 0;
-      virtual NodeStorageBase* v_clone() const = 0;
-
-    public:
     // iterators
       class Iterable
       {
@@ -204,10 +192,6 @@ namespace internal
       virtual iterator v_find(ShaderScene const &state, float x, float z) = 0;
       virtual void v_del(iterator &object) = 0;
       virtual bool v_updateNode(NodeBase *node, glm::vec3 const &from, glm::vec3 const &to) = 0;
-
-    protected:
-    // private functions
-      size_t ownerId() const;
   };
 }
 }

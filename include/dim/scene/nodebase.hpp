@@ -49,6 +49,7 @@ namespace dim
 
   class NodeBase
   {
+      template <typename ...Types>
       friend class SceneGraph;
       template <typename RefType>
       friend class NodeGrid;
