@@ -24,6 +24,8 @@
 
 #include "dim/core/shader.hpp"
 
+#include "dim/core/camera.hpp"
+
 namespace dim
 {
 
@@ -36,7 +38,7 @@ class Light
   glm::vec4 d_position;
   glm::vec4 d_transformedPosition;
 
-  glm::mat4 d_in_mat_light;
+  glm::mat4 d_lightMatrix;
 
 public:
   enum type
@@ -48,13 +50,15 @@ public:
   Light();
   Light(glm::vec4 const &position, glm::vec4 const &lightColor, glm::vec4 const &highlightColor, glm::vec4 const &ambientIntensity, glm::vec4 const &lightIntensity, Light::type mode);
   void setupShadowRender(glm::vec3 const &origin, float dir);
+  void calcLightMatrix(Camera const &cam);
   void transform();
   
   void setPosition(glm::vec4 const &position);
   void setAmbientIntensity(glm::vec4 const &ambientIntensity);
   void setLightIntensity(glm::vec4 const &lightIntensity);
   
-  glm::mat4 const &in_mat_light() const;
+  glm::mat4 const &lightMatrix() const;
+  glm::vec4 const &position() const;
 
   void setAtShader(Shader const &shader) const;
   

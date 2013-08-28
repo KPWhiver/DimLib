@@ -44,8 +44,8 @@ namespace dim
     Menu();
     ~Menu();
 
-    void draw(int x, int y);
-    bool listen(int x, int y, glm::ivec2 const &mouse, Event event);
+    void draw(int x, int y) override;
+    bool listen(int x, int y, glm::ivec2 const &mouse, Event leftEvent, Event rightEvent) override;
     void add(MenuItem *item);
     void activate(int x, int y);
     void deactivate();

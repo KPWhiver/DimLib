@@ -49,38 +49,38 @@ namespace dim
   template<uint Index>
   typename std::tuple_element<Index, typename DoubleBufferedSurface<Types...>::TupleType>::type &DoubleBufferedSurface<Types...>::texture()
   {
-    return d_buffer[!d_bufferToRenderTo].texture();
+    return d_buffer[!d_bufferToRenderTo].texture<Index>();
   }
 
   template<typename ...Types>
   template<uint Index>
   typename std::tuple_element<Index, typename DoubleBufferedSurface<Types...>::TupleType>::type const &DoubleBufferedSurface<Types...>::texture() const
   {
-    return d_buffer[!d_bufferToRenderTo].texture();
+    return d_buffer[!d_bufferToRenderTo].texture<Index>();
   }
 
   template<typename ...Types>
   template<uint Index>
   void DoubleBufferedSurface<Types...>::addTarget(typename std::tuple_element<Index, TuplePtrType>::type ptr)
   {
-    d_buffer[0].addTarget(ptr->copy());
-    d_buffer[1].addTarget(ptr);
+    d_buffer[0].addTarget<Index>(ptr->copy());
+    d_buffer[1].addTarget<Index>(ptr);
   }
 
   template<typename ...Types>
   template<uint Index>
   void DoubleBufferedSurface<Types...>::addTarget(Format format, Filtering filter)
   {
-    d_buffer[0].addTarget(format, filter);
-    d_buffer[1].addTarget(format, filter);
+    d_buffer[0].addTarget<Index>(format, filter);
+    d_buffer[1].addTarget<Index>(format, filter);
   }
 
   template<typename ...Types>
   template<uint Index>
   void DoubleBufferedSurface<Types...>::addTarget(NormalizedFormat format, Filtering filter)
   {
-    d_buffer[0].addTarget(format, filter);
-    d_buffer[1].addTarget(format, filter);
+    d_buffer[0].addTarget<Index>(format, filter);
+    d_buffer[1].addTarget<Index>(format, filter);
   }
 
   /*template<typename ...Types>
@@ -183,6 +183,13 @@ namespace dim
   {
     d_buffer[0].setClearDepth(depth);
     d_buffer[1].setCleardepth(depth);
+  }
+
+  template<typename ...Types>
+  void DoubleBufferedSurface<Types...>::setBlending(bool blending)
+  {
+    d_buffer[0].setBlending(blending);
+    d_buffer[1].setBlending(blending);
   }
 }
 

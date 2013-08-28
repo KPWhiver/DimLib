@@ -45,8 +45,8 @@ namespace dim
     Switch(int x, int y, size_t width, size_t height, std::string const &text);
     Switch();
     //~Button();
-    virtual void draw(int x, int y);
-    virtual bool listen(int x, int y, glm::ivec2 const &mouse, Event event);
+    void draw(int x, int y) override;
+    bool listen(int x, int y, glm::ivec2 const &mouse, Event leftEvent, Event rightEvent) override;
 
     void setListener(std::function<void(bool)> const &listenerFunction);
     virtual void setContext(Context *context);

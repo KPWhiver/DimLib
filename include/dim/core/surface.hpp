@@ -29,6 +29,7 @@
 #include "dim/core/texture.hpp"
 #include "dim/core/shader.hpp"
 #include "dim/core/tools.hpp"
+#include "dim/util/tupleforeach.hpp"
 
 namespace dim
 {

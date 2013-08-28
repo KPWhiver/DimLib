@@ -40,7 +40,7 @@ namespace dim
   public:
     ListenArea(int x, int y, size_t width, size_t height);
     ListenArea();
-    bool listen(int x, int y, glm::ivec2 const &mouse, Event event) override;
+    bool listen(int x, int y, glm::ivec2 const &mouse, Event leftEvent, Event rightEvent) override;
     void size();
     void setListenerLeftRelease(std::function<void(void)> const &listenerFunction);
     void setListenerLeftPressed(std::function<void(void)> const &listenerFunction);

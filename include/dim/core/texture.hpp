@@ -42,7 +42,7 @@ namespace dim
     anisotropic4x = 4,
     anisotropic8x = 8,
     anisotropic16x = 16,
-    anisotropicMax = 0,
+    anisotropicMax = 0
   };
 
   enum class Wrapping
@@ -50,7 +50,7 @@ namespace dim
     edgeClamp = GL_CLAMP_TO_EDGE,
     borderClamp = GL_CLAMP_TO_BORDER,
     repeat = GL_REPEAT,
-    mirroredRepeat = GL_MIRRORED_REPEAT,
+    mirroredRepeat = GL_MIRRORED_REPEAT
   };
 
   enum class NormalizedFormat
@@ -66,7 +66,7 @@ namespace dim
     R8 = GL_R8,
     R16 = GL_R16,
     D16 = GL_DEPTH_COMPONENT16,
-    D32 = GL_DEPTH_COMPONENT32,
+    D32 = GL_DEPTH_COMPONENT32
   };
 
   enum class Format
@@ -84,7 +84,7 @@ namespace dim
     R16,
     R32,
     D32,
-    R11G11B10,
+    R11G11B10
   };
 
   /*enum class Normalization

@@ -39,7 +39,7 @@ namespace dim
 
   public:
     Image2D(int x, int y, size_t width, size_t height, Texture<GLubyte> const &image);
-    virtual void draw(int x, int y);
+    void draw(int x, int y) override;
     void setCoor(int x, int y);
 
   private:

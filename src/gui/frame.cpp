@@ -70,11 +70,11 @@ namespace dim
 		d_context->mesh().unbind();
 	}
 	
-	void Frame::listen(ivec2 const &mouse, Component::Event event)
+	void Frame::listen(ivec2 const &mouse, Component::Event leftEvent, Component::Event rightEvent)
 	{
 		for (size_t idx = d_components.size(); idx--;)
 		{
-			if(d_components[idx]->listen(d_x, d_y, mouse, event))
+			if(d_components[idx]->listen(d_x, d_y, mouse, leftEvent, rightEvent))
 			  break;
 		}
 	}

@@ -41,7 +41,7 @@ namespace dim
       struct Object
       {
           std::string filename;
-          Shader shader;
+          std::vector<Shader> shaders;
           std::vector<Scene> scenes;
           //btRigidBody rigidBody;
       };
@@ -56,7 +56,7 @@ namespace dim
       FileDrawNode();
       FileDrawNode(std::string const &filename, glm::vec3 const &coor, glm::quat const &orient, glm::vec3 const &scale);
 
-      static void setDefaultShader(Shader const &shader);
+      static void setDefaultShaders(std::vector<Shader> const &shaders);
 
       Shader const &shader(size_t idx) const override;
       Scene const &scene() const override;
@@ -72,7 +72,7 @@ namespace dim
       static void load(std::string const &filename, TextureManager &texRes, SceneManager &sceneRes, ShaderManager &shaderRes, BulletManager &bulletRes);
 
     private:
-      static Shader &defaultShader();
+      static std::vector<Shader> &defaultShaders();
 
       void insert(std::ostream &out) const override;
       void extract(std::istream &in) override;

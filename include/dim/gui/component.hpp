@@ -37,15 +37,14 @@ namespace dim
 			enum Event : int
 			{
 				hover,
-				leftPress,
-				leftRelease,
-				rightPress,
-				rightRelease
+				pressed,
+				release,
+				press
 			};
 
 		  Component();
 
-			virtual bool listen(int x, int y, glm::ivec2 const &mouse, Event event);
+			virtual bool listen(int x, int y, glm::ivec2 const &mouse, Event leftEvent, Event rightEvent);
 		  virtual void draw(int x, int y);
 
 

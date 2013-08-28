@@ -75,6 +75,8 @@ namespace dim
     void setClearColor(glm::vec4 const &color);
     void setClearDepth(float depth);
 
+    void setBlending(bool blending);
+
     void clear();
 
     void swapBuffers();

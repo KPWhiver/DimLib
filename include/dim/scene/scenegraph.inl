@@ -47,23 +47,23 @@ namespace dim
 
   }
 
-  namespace
+  namespace internal
   {
-  struct Caller
-  {
-    std::vector<internal::NodeStorageBase*> &d_list;
-
-    Caller(std::vector<internal::NodeStorageBase*> &list)
-      :
-        d_list(list)
-    {}
-
-    template<typename Type>
-    void operator()(Type &storage)
+    struct Adder
     {
-      d_list.push_back(&storage);
-    }
-  };
+      std::vector<internal::NodeStorageBase*> &d_list;
+
+      Adder(std::vector<internal::NodeStorageBase*> &list)
+        :
+          d_list(list)
+      {}
+
+      template<typename Type>
+      void operator()(Type &storage)
+      {
+        d_list.push_back(&storage);
+      }
+    };
   }
 
   template<typename... Types>
@@ -74,7 +74,7 @@ namespace dim
           d_dispatcher(&d_collisionConfiguration),
           d_dynamicsWorld(&d_dispatcher, &d_broadphase, &d_solver, &d_collisionConfiguration)
   {
-    forEach(d_storages, Caller{d_storagePtrs});
+    forEach(d_storages, internal::Adder{d_storagePtrs});
 
     // bullet
     d_dynamicsWorld.setGravity(btVector3(0, -10, 0));
@@ -96,7 +96,7 @@ namespace dim
       d_solver(other.d_solver),
       d_dynamicsWorld(other.d_dynamicsWorld)
   {
-    forEach(d_storages, Caller{d_storagePtrs});
+    forEach(d_storages, internal::Adder{d_storagePtrs});
 
     for(NodeBase &drawNode: *this)
       drawNode.setParent(this);
@@ -115,7 +115,7 @@ namespace dim
       d_solver(move(tmp.d_solver)),
       d_dynamicsWorld(move(tmp.d_dynamicsWorld))
   {
-    forEach(d_storages, Caller{d_storagePtrs});
+    forEach(d_storages, internal::Adder{d_storagePtrs});
 
     for(NodeBase &drawNode: *this)
       drawNode.setParent(this);
@@ -134,7 +134,7 @@ namespace dim
     d_solver = other.d_solver;
     d_dynamicsWorld = other.d_dynamicsWorld;
 
-    forEach(d_storages, Caller{d_storagePtrs});
+    forEach(d_storages, internal::Adder{d_storagePtrs});
 
     for(NodeBase &drawNode: *this)
       drawNode.setParent(this);
@@ -155,7 +155,7 @@ namespace dim
     d_solver = move(tmp.d_solver);
     d_dynamicsWorld = move(tmp.d_dynamicsWorld);
 
-    forEach(d_storages, Caller{d_storagePtrs});
+    forEach(d_storages, internal::Adder{d_storagePtrs});
 
     for(NodeBase &drawNode: *this)
       drawNode.setParent(this);

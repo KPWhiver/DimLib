@@ -40,7 +40,6 @@ Light::Light()
 	d_lightColor(0.0),
 	d_position(0.0),
 	d_transformedPosition(0.0),
-	d_in_mat_light(1.0),
 	d_mode(Light::directional)
 
 {
@@ -54,14 +53,18 @@ Light::Light(vec4 const &position, vec4 const &lightColor, vec4 const &highlight
 	d_lightColor(lightColor),
 	d_position(position),
 	d_transformedPosition(position),
-	d_in_mat_light(1.0),
 	d_mode(mode)
 {
 }
 
-mat4 const &Light::in_mat_light() const
+mat4 const &Light::lightMatrix() const
 {
-	return d_in_mat_light;
+	return d_lightMatrix;
+}
+
+vec4 const &Light::position() const
+{
+	return d_position;
 }
 
 void Light::setupShadowRender(vec3 const &origin, float dir)
@@ -75,15 +78,18 @@ void Light::setupShadowRender(vec3 const &origin, float dir)
 	Camera cam(Camera::orthogonal, 100, 100, from + vec3(d_position) * -100.0f, from);
 	cam.setZrange(50, 200);
 
+	calcLightMatrix(cam);
+
+	cam.setAtShader(Shader::active());
+}
+
+void Light::calcLightMatrix(Camera const &cam)
+{
 	mat4 bias = mat4(0.5, 0.0, 0.0, 0.0,
 									 0.0, 0.5, 0.0, 0.0,
 									 0.0, 0.0, 0.5, 0.0,
 									 0.5, 0.5, 0.5, 1.0);
-
-	//Shader::active().send("in_mat_model", mat4(1.0));
-	d_in_mat_light = bias * cam.projectionMatrix() * cam.viewMatrix();// * lightprojection * lightview;
-
-	cam.setAtShader(Shader::active());
+	d_lightMatrix = bias * cam.projectionMatrix() * cam.viewMatrix();
 }
 
 void Light::setAtShader(Shader const &shader) const
@@ -95,6 +101,9 @@ void Light::setAtShader(Shader const &shader) const
 		shader.set("in_light[0].lightIntensity", d_lightIntensity);
 		shader.set("in_light[0].ambientIntensity", d_ambientIntensity);
 		shader.set("in_light[0].position", d_transformedPosition);
+
+		if(d_lightMatrix != mat4{})
+			shader.set("in_light[0].lightMatrix", d_lightMatrix);
 	}
 }
 

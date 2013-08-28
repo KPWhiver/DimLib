@@ -17,23 +17,34 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-#include <iostream>
-
 namespace dim
 {
+  namespace internal
+  {
+    struct Initializer
+    {
+      template<typename Type>
+      void operator()(Type &item)
+      {
+        item = 0;
+      }
+    };
+  }
+
   template<typename ...Types>
   Surface<Types...>::Surface(typename std::tuple_element<0, TuplePtrType>::type ptr)
       : 
-        d_targets{0},
         d_id(new GLuint(0), [](GLuint *ptr){glDeleteFramebuffers(1, ptr); delete ptr;}),
         d_colorAttachments(0), 
         d_depthComponent(false),
         d_colorComponent{false}, 
         d_minWidth(ptr->width()),
         d_minHeight(ptr->height()),
-        d_clearDepth(0),
+        d_clearDepth(1),
         d_blending(true)
   {
+    forEach(d_targets, internal::Initializer{});
+
     glGenFramebuffers(1, d_id.get());
     addTarget<0>(ptr);
   }
@@ -41,16 +52,17 @@ namespace dim
   template<typename ...Types>
   Surface<Types...>::Surface(typename std::tuple_element<0, TupleType>::type obj)
       :
-        d_targets{0},
         d_id(new GLuint(0), [](GLuint *ptr){glDeleteFramebuffers(1, ptr); delete ptr;}),
         d_colorAttachments(0),
         d_depthComponent(false),
         d_colorComponent{false},
         d_minWidth(obj.width()),
         d_minHeight(obj.height()),
-        d_clearDepth(0),
+        d_clearDepth(1),
         d_blending(true)
   {
+    forEach(d_targets, internal::Initializer{});
+
     std::get<0>(d_textures) = obj;
     glGenFramebuffers(1, d_id.get());
     addTarget<0>(&std::get<0>(d_textures));
@@ -59,16 +71,17 @@ namespace dim
   template<typename ...Types>
   Surface<Types...>::Surface(uint width, uint height, Format format, Filtering filter)
       :
-        d_targets{0},
         d_id(new GLuint(0), [](GLuint *ptr){glDeleteFramebuffers(1, ptr); delete ptr;}),
         d_colorAttachments(0), 
         d_depthComponent(false),
         d_colorComponent{false}, 
         d_minWidth(width),
         d_minHeight(height),
-        d_clearDepth(0),
+        d_clearDepth(1),
         d_blending(true)
   { 
+    forEach(d_targets, internal::Initializer{});
+
     glGenFramebuffers(1, d_id.get());
     addTarget<0>(format, filter);
   }
@@ -76,16 +89,17 @@ namespace dim
   template<typename ...Types>
   Surface<Types...>::Surface(uint width, uint height, NormalizedFormat format, Filtering filter)
       :
-        d_targets{0},
         d_id(new GLuint(0), [](GLuint *ptr){glDeleteFramebuffers(1, ptr); delete ptr;}),
         d_colorAttachments(0),
         d_depthComponent(false),
         d_colorComponent{false},
         d_minWidth(width),
         d_minHeight(height),
-        d_clearDepth(0),
+        d_clearDepth(1),
         d_blending(true)
   {
+    forEach(d_targets, internal::Initializer{});
+
     glGenFramebuffers(1, d_id.get());
     addTarget<0>(format, filter);
   }
@@ -154,7 +168,7 @@ namespace dim
   template<uint Index>
   void Surface<Types...>::addTarget(NormalizedFormat format, Filtering filter)
   {
-    // Create the texture
+     // Create the texture
      typedef typename std::tuple_element<Index, std::tuple<Texture<Types>...>>::type TextureType;
 
      TextureType &tex = std::get<Index>(d_textures);
@@ -380,7 +394,7 @@ namespace dim
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-    if(d_clearDepth != 0 && d_depthComponent)
+    if(d_clearDepth != 1 && d_depthComponent)
       glClearDepth(d_clearDepth);
     if(d_clearColor != glm::vec4() && d_colorComponent[0])
       glClearColor(d_clearColor.r, d_clearColor.g, d_clearColor.b, d_clearColor.a);
@@ -392,8 +406,8 @@ namespace dim
     else
       glClear(GL_COLOR_BUFFER_BIT);
 
-    if(d_clearDepth != 0 && d_depthComponent)
-      glClearDepth(0);
+    if(d_clearDepth != 1 && d_depthComponent)
+      glClearDepth(1);
     if(d_clearColor != glm::vec4() && d_colorComponent[0])
       glClearColor(0, 0, 0, 0);
   }

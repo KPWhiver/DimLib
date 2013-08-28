@@ -336,11 +336,11 @@ namespace dim
         bindElement();
         s_boundElem = 0;
       }
-      glDrawElements(GL_TRIANGLES, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, 0);
+      glDrawElements(d_shape, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, 0);
     }
     else
     {
-      glDrawArrays(GL_TRIANGLES, 0, d_numOfVertices);
+      glDrawArrays(d_shape, 0, d_numOfVertices);
     }
 
     if(s_bound == 0)
@@ -371,11 +371,11 @@ namespace dim
         bindElement();
         s_boundElem = 0;
       }
-      glDrawElementsInstanced(GL_TRIANGLES, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, NULL, amount);
+      glDrawElementsInstanced(d_shape, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, NULL, amount);
     }
     else
     {
-      glDrawArraysInstanced(GL_TRIANGLES, 0, d_numOfVertices, amount);
+      glDrawArraysInstanced(d_shape, 0, d_numOfVertices, amount);
     }
 
     glDisableVertexAttribArray(d_instanceAttribute.id());

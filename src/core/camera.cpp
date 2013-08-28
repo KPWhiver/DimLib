@@ -31,7 +31,7 @@ namespace dim
 
   Camera::Camera()
   :
-  Camera(Camera::perspective, 0, 0) { }
+  Camera(Camera::perspective, 1, 1) { }
 
   Camera::Camera(Camera::projection mode, float width, float height)
   :
@@ -176,16 +176,17 @@ namespace dim
     setProjection();
   }
 
-  void Camera::setAtShader(Shader const &shader, string const &viewMatrix, string const &projectionMatrix)
+  // TODO: make this function const
+  void Camera::setAtShader(Shader const &shader, string const &viewMatrix, string const &projectionMatrix) const
   {
     if(d_changed == true)
-      setView();
+      const_cast<Camera*>(this)->setView();
 
     shader.set(viewMatrix, d_view);
     shader.set(projectionMatrix, d_projection);
   }
 
-  bool Camera::frustum(float ox, float oz)
+  bool Camera::frustum(float ox, float oz) const
   {
     return A1 * ox + B1 * oz + D1 < 0 && A2 * ox + B2 * oz + D2 > 0;
   }

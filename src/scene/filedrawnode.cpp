@@ -33,15 +33,15 @@ namespace dim
     return list;
   }
 
-  Shader &FileDrawNode::defaultShader()
+  vector<Shader> &FileDrawNode::defaultShaders()
   {
-    static Shader shader(Shader::defaultShader());
-    return shader;
+    static vector<Shader> shaders{Shader::defaultShader()};
+    return shaders;
   }
 
-  void FileDrawNode::setDefaultShader(Shader const &shader)
+  void FileDrawNode::setDefaultShaders(vector<Shader> const &shaders)
   {
-    defaultShader() = shader;
+    defaultShaders() = shaders;
   }
 
   FileDrawNode::FileDrawNode()
@@ -98,16 +98,20 @@ namespace dim
     return scenes;
   }
 
-  Shader &parseShader(YAML::Node const *node, Shader &defaultShader, string const &directory, ShaderManager &shaderRes)
+  vector<Shader> parseShaders(YAML::Node const *node, vector<Shader> &defaultShaders, string const &directory, ShaderManager &shaderRes)
   {
     if(node == 0)
-      return defaultShader;
-    else
+      return defaultShaders;
+
+    vector<Shader> shaders;
+    for(YAML::Iterator it = node->begin(); it != node->end(); ++it)
     {
       string shaderFile;
-      (*node)["file"] >> shaderFile;
-      return shaderRes.request(directory + shaderFile);
+      (*it)["file"] >> shaderFile;
+      shaders.push_back(shaderRes.request(directory + shaderFile));
     }
+
+    return shaders;
   }
 
   void FileDrawNode::load(string const &filename, TextureManager &texRes, SceneManager &sceneRes, ShaderManager &shaderRes, BulletManager &bulletRes)
@@ -143,9 +147,9 @@ namespace dim
       parser.GetNextDocument(document);
 
       vector<Scene> scenes = parseScenes(document.FindValue("Scenes"), filename, directory, texRes, sceneRes, bulletRes);
-      Shader &shader = parseShader(document.FindValue("Shader"), defaultShader(), directory, shaderRes);
+      vector<Shader> shaders = parseShaders(document.FindValue("Shaders"), defaultShaders(), directory, shaderRes);
 
-      objects().push_back({filename, shader, scenes});
+      objects().push_back({filename, shaders, scenes});
     }
     catch(exception &except)
     {
@@ -170,7 +174,12 @@ namespace dim
 
   Shader const &FileDrawNode::shader(size_t idx) const
   {
-    return objects()[d_index].shader;
+    std::vector<Shader> &shaders = objects()[d_index].shaders;
+
+    if(shaders.size() > idx)
+      return shaders[idx];
+
+    return shaders[0];
   }
   
   Scene const &FileDrawNode::scene() const

@@ -50,7 +50,7 @@ namespace dim
 
 
     void draw(int x, int y, Texture<> const &texture, Texture<> const &overlay);
-    bool listen(int x, int y, glm::ivec2 const &mouse, Component::Event event);
+    bool listen(int x, int y, glm::ivec2 const &mouse, Component::Event leftEvent, Component::Event rightEvent);
     void setListener(std::function<void(void)> const &listenerFunction);
 
   private:

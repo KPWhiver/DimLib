@@ -96,11 +96,11 @@ namespace dim
       static bool s_initialized;
 
     public:
-      enum Shape: uint
+      enum Shape: GLenum
       {
-        triangle,
-        line,
-        point,
+        triangle = GL_TRIANGLES,
+        line = GL_LINES,
+        point = GL_POINTS
       };
       static size_t const interleaved = std::numeric_limits<size_t>::max();
 
