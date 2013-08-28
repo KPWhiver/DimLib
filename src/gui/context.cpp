@@ -19,8 +19,6 @@
 
 #include "dim/gui/context.hpp"
 
-#include "GLFW/glfw3.h"
-
 using namespace std;
 using namespace glm;
 
