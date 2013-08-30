@@ -35,7 +35,7 @@ class Shader
   static bool s_computeShader;
   static bool s_layout;
   static bool s_separate;
-  static float s_maxTextureUnits;
+  static int s_maxTextureUnits;
   
   static bool s_initialized;
   

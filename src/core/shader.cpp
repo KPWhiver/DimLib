@@ -134,7 +134,7 @@ namespace dim
   bool Shader::s_layout(false);
   bool Shader::s_separate(false);
 
-  float Shader::s_maxTextureUnits(0);
+  int Shader::s_maxTextureUnits(0);
 
   bool Shader::s_initialized(false);
 
@@ -150,7 +150,7 @@ namespace dim
     s_separate = GLEW_ARB_separate_shader_objects;
     s_layout = GLEW_ARB_explicit_attrib_location || s_separate;
 
-    glGetFloatv(GL_MAX_TEXTURE_UNITS, &s_maxTextureUnits);
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &s_maxTextureUnits);
   }
 
   Shader const &Shader::defaultShader()
