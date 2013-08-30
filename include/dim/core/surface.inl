@@ -205,8 +205,6 @@ namespace dim
     if(attachment == depth)
       ptr->setBorderColor(glm::vec4(1.0f));
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-
     glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
     glDrawBuffer(GL_NONE);
