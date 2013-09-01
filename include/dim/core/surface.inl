@@ -322,11 +322,14 @@ namespace dim
   template<typename ...Types>
   void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer)
   {    
-    internal::setBlending(d_blending);
-
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(s_renderTarget != 0)
+    {
       s_renderTarget->finishRendering();
+      s_renderTarget = 0;
+    }
+
+    internal::setBlending(d_blending);
 
     internal::setViewport(0, 0, this->width(), this->height());
     internal::setScissor(x, y, width, height);
@@ -381,7 +384,7 @@ namespace dim
   template<typename ...Types>
   void Surface<Types...>::notifyTextures()
   {
-    internal::TupleCaller<std::tuple_size<TuplePtrType>::value - 1, TuplePtrType> call(d_targets);
+    forEach(d_targets, internal::RenewBuffer{});
   }
   
   template<typename ...Types>

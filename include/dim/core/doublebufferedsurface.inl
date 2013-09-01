@@ -142,9 +142,10 @@ namespace dim
   {
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(s_renderTarget != 0)
+    {
       s_renderTarget->finishRendering();
-
-    s_renderTarget = 0;
+      s_renderTarget = 0;
+    }
 
     d_buffer[d_bufferToRenderTo].copyToPart(source, x, y, width, height, clearBuffer);
 

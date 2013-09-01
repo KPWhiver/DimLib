@@ -162,6 +162,15 @@ namespace dim
 
   namespace internal
   {
+    struct RenewBuffer
+    {
+      template<typename Type>
+      void operator()(Type &item)
+      {
+        item->renewBuffer();
+      }
+    };
+
     //TupleCaller class
     template<uint Index, typename TupleCallType>
     class TupleCaller

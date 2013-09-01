@@ -147,7 +147,7 @@ private:
   void Shader::set(std::string const &variable, Texture<Type> const &texture, uint unit) const
   { 
     //TODO logica
-    if(unit > s_maxTextureUnits)
+    if(static_cast<int>(unit) > s_maxTextureUnits)
       log(__FILE__, __LINE__, LogType::warning, "This graphics card does not support " + std::to_string(unit) + " texture units");
 
     uint textureUnit = GL_TEXTURE0 + unit;
