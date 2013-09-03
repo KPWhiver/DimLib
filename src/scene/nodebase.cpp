@@ -165,9 +165,6 @@ namespace dim
     quat rot;
 	  in >> coor.x >> coor.y >> coor.z >> rot.x >> rot.y >> rot.z >> rot.w;
 
-	  coor/=100.0f;
-	  rot/=100;
-
 	  setLocation(coor);
 	  setOrientation(rot);
 

@@ -65,14 +65,11 @@ namespace dim
   {
     if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
-			if(leftEvent == Component::release) //TODO: see button
-		  {
-		  	if(d_listenerFunction)
-		  		d_listenerFunction();
-		  		
-		  	return true;
-		  }
-		  d_selected = true;
+			if(d_listenerFunction)
+				d_listenerFunction(leftEvent, rightEvent);
+
+			d_selected = true;
+			return true;
 		}
 		else
 		  d_selected = false;
@@ -107,7 +104,7 @@ namespace dim
     d_context->mesh().draw();
   }
 
-  void MenuItem::setListener(function<void(void)> const &listenerFunction)
+  void MenuItem::setListener(function<void(Component::Event leftEvent, Component::Event rightEvent)> const &listenerFunction)
   {
   	d_listenerFunction = listenerFunction;
   }

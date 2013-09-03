@@ -42,6 +42,9 @@ namespace dim
 		dim::PtrVector<Component> d_components;
 
     std::shared_ptr<Context> d_context;
+
+    Component::Event d_leftEvent;
+    Component::Event d_rightEvent;
     
 	public:
 		Frame(Texture<> const &defaultTexture, size_t width, size_t height, Font const &font);
@@ -50,6 +53,7 @@ namespace dim
 		void remove(Component *component);
 
 		void listen(glm::ivec2 const &mouse, Component::Event leftEvent, Component::Event rightEvent);
+		void listen(glm::ivec2 const &mouse, bool leftPressed, bool rightPressed);
 		void draw();
 
 		void setCoords(int x, int y);

@@ -24,7 +24,7 @@ namespace dim {
 Component::Component()
 :
 		d_context(0),
-		d_priority(0)//,
+		d_priority(0)
 		//d_id(0)
 {
 }

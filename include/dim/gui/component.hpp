@@ -36,7 +36,7 @@ namespace dim
 		public:
 			enum Event : int
 			{
-				hover,
+				released,
 				pressed,
 				release,
 				press

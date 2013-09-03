@@ -38,7 +38,9 @@ namespace dim
 			  d_height(height),
 			  d_cam(Camera::flat, d_width, d_height),
 			  d_components([](Component *ptr){return ptr->clone();}),
-			  d_context(new Context(defaultTexture, font))
+				d_context(new Context(defaultTexture, font)),
+				d_leftEvent(Component::released),
+				d_rightEvent(Component::released)
 	{
 
 	}
@@ -77,6 +79,41 @@ namespace dim
 			if(d_components[idx]->listen(d_x, d_y, mouse, leftEvent, rightEvent))
 			  break;
 		}
+	}
+
+	void Frame::listen(ivec2 const &mouse, bool leftPressed, bool rightPressed)
+	{
+		if(leftPressed)
+		{
+			if(d_leftEvent == Component::released || d_leftEvent == Component::release)
+				d_leftEvent = Component::press;
+			else
+				d_leftEvent = Component::pressed;
+		}
+		else
+		{
+			if(d_leftEvent == Component::pressed || d_leftEvent == Component::press)
+				d_leftEvent = Component::release;
+			else
+				d_leftEvent = Component::released;
+		}
+
+		if(rightPressed)
+		{
+			if(d_rightEvent == Component::released || d_leftEvent == Component::release)
+				d_rightEvent = Component::press;
+			else
+				d_rightEvent = Component::pressed;
+		}
+		else
+		{
+			if(d_rightEvent == Component::pressed || d_rightEvent == Component::press)
+				d_rightEvent = Component::release;
+			else
+				d_rightEvent = Component::released;
+		}
+
+		listen(mouse, d_leftEvent, d_rightEvent);
 	}
 
   Context &Frame::context()

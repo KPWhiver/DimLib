@@ -63,7 +63,8 @@ bool Menu::listen(int x, int y, glm::ivec2 const &mouse, Event leftEvent, Event 
     {
       if(d_items[idx]->listen(x + d_x, y + d_y - idx * d_height - d_height, mouse, leftEvent, rightEvent))
       {
-        d_active = false;
+        if(leftEvent == Component::release)
+          d_active = false;
         return true;
       }
     }

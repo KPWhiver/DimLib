@@ -32,20 +32,15 @@ namespace dim
 		int d_x, d_y;
 		size_t d_width, d_height;
 		
-		std::function<void(void)> d_listenerFunctionLeftRelease;
-		std::function<void(void)> d_listenerFunctionLeftPressed;
-		std::function<void(void)> d_listenerFunctionRightRelease;
-		std::function<void(void)> d_listenerFunctionRightPressed;
+		std::function<void(Event leftEvent, Event rightEvent)> d_listenerFunction;
 
   public:
     ListenArea(int x, int y, size_t width, size_t height);
     ListenArea();
     bool listen(int x, int y, glm::ivec2 const &mouse, Event leftEvent, Event rightEvent) override;
     void size();
-    void setListenerLeftRelease(std::function<void(void)> const &listenerFunction);
-    void setListenerLeftPressed(std::function<void(void)> const &listenerFunction);
-    void setListenerRightRelease(std::function<void(void)> const &listenerFunction);
-    void setListenerRightPressed(std::function<void(void)> const &listenerFunction);
+    void setListener(std::function<void(Event leftEvent, Event rightEvent)> const &listenerFunction);
+
 
   private:
     virtual Component *v_clone() const;

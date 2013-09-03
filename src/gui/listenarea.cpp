@@ -56,54 +56,17 @@ namespace dim
 	  
 		if(mouse.x > x && mouse.x < x + static_cast<int>(d_width) && mouse.y > y && mouse.y < y + static_cast<int>(d_height))
 		{
+			if(d_listenerFunction)
+				d_listenerFunction(leftEvent, rightEvent);
 
-			if(leftEvent == Component::release) //TODO: lRelease
-		  {
-		  	if(d_listenerFunctionLeftRelease)
-		  		d_listenerFunctionLeftRelease();
-		  }
-			else if(rightEvent == Component::release) //TODO: rRelease
-		  {
-		    if(d_listenerFunctionRightRelease)
-		  		d_listenerFunctionRightRelease();
-		  }
-			else if(leftEvent == Component::pressed) //TODO: lPressed
-		  {
-		  	if(d_listenerFunctionLeftPressed)
-		  		d_listenerFunctionLeftPressed();
-		  }
-			else if(rightEvent == Component::pressed) //TODO: rPressed
-		  {
-		    if(d_listenerFunctionRightPressed)
-		  		d_listenerFunctionRightPressed();
-		  }
-		  else
-		  {
-		    return false;
-		  }
 		  return true;
 		}		
 		return false;
 	}
 
-	void ListenArea::setListenerLeftRelease(std::function<void(void)> const &listenerFunction)
+	void ListenArea::setListener(std::function<void(Event leftEvent, Event rightEvent)> const &listenerFunction)
 	{
-		d_listenerFunctionLeftRelease = listenerFunction;
-	}
-	
-	void ListenArea::setListenerLeftPressed(std::function<void(void)> const &listenerFunction)
-	{
-		d_listenerFunctionLeftPressed = listenerFunction;
-	}
-	
-	void ListenArea::setListenerRightRelease(std::function<void(void)> const &listenerFunction)
-	{
-		d_listenerFunctionRightRelease = listenerFunction;
-	}
-	
-	void ListenArea::setListenerRightPressed(std::function<void(void)> const &listenerFunction)
-	{
-		d_listenerFunctionRightPressed = listenerFunction;
+		d_listenerFunction = listenerFunction;
 	}
 
   Component *ListenArea::v_clone() const

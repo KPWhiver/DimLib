@@ -39,7 +39,7 @@ namespace dim
 
     bool d_selected;
 
-    std::function<void(void)> d_listenerFunction;
+    std::function<void(Component::Event leftEvent, Component::Event rightEvent)> d_listenerFunction;
     size_t d_width;
     size_t d_height;
 
@@ -51,7 +51,7 @@ namespace dim
 
     void draw(int x, int y, Texture<> const &texture, Texture<> const &overlay);
     bool listen(int x, int y, glm::ivec2 const &mouse, Component::Event leftEvent, Component::Event rightEvent);
-    void setListener(std::function<void(void)> const &listenerFunction);
+    void setListener(std::function<void(Component::Event leftEvent, Component::Event rightEvent)> const &listenerFunction);
 
   private:
     void setSize(size_t width, size_t height);

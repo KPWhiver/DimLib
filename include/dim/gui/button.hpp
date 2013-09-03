@@ -33,7 +33,7 @@ namespace dim
 {
   class Button : public Component
   {
-    std::function<void(void)> d_listenerFunction;
+    std::function<void(Event leftEvent, Event rightEvent)> d_listenerFunction;
     CopyPtr<Menu> d_menu;
 
     int d_x, d_y;
@@ -50,7 +50,7 @@ namespace dim
     void draw(int x, int y) override;
     bool listen(int x, int y, glm::ivec2 const &mouse, Event leftEvent, Event rightEvent) override;
     void size();
-    void setListener(std::function<void(void)> const &listenerFunction);
+    void setListener(std::function<void(Event leftEvent, Event rightEvent)> const &listenerFunction);
     void setMenu(Menu *menu);
     virtual void setContext(Context *context);
 
