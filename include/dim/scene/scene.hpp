@@ -24,6 +24,7 @@
 
 #include "dim/core/mesh.hpp"
 #include "dim/core/texture.hpp"
+#include "dim/core/shader.hpp"
 #include "dim/scene/texturemanager.hpp"
 
 namespace dim
@@ -79,12 +80,12 @@ public:
   Scene() = default;
 
   Scene(std::string const &filename, std::vector<Option> list = {});
-  Scene(std::string const &filename, TextureManager &resources, std::vector<Option> list = {});
+  Scene(std::string const &filename, TextureManager &resources, std::vector<Option> options = {});
 
 	Scene(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
 	void add(Mesh const &mesh, std::vector<std::pair<Texture<GLubyte>, std::string>> const &textures = {});
 
-	void draw() const;
+  void draw() const;
 
   DrawState &operator[](size_t idx);
   DrawState const &operator[](size_t idx) const;
@@ -93,8 +94,9 @@ public:
 
   bool operator==(Scene const &other) const;
   bool operator<(Scene const &other) const;
-};
 
+  static std::vector<GLfloat> loadPointData(std::string const &filename, std::vector<Option> list = {});
+};
 }
 
 #endif /* DRAWSTATE_HPP */

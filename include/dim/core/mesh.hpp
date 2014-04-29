@@ -25,61 +25,17 @@
 #include <limits>
 #include <vector>
 
+#include "dim/core/shader.hpp"
 #include "dim/core/buffer.hpp"
 #include "dim/core/texture.hpp"
 
 namespace dim
 {
-  class Attribute
-  {
-      std::string d_name;
-      GLint d_id;
-
-    public:
-      enum Name: GLint
-      {
-        vertex = 0,
-        normal = 1,
-        texCoord = 2,
-        binormal = 3,
-        tangent = 4,
-        instance = 5,
-        unknown = -1,
-      };
-
-      enum Format: uint
-      {
-        vec1 = 11,
-        vec2 = 12,
-        vec3 = 13,
-        vec4 = 14,
-        mat2 = 22,
-        mat2x3 = 23,
-        mat2x4 = 24,
-        mat3x2 = 32,
-        mat3 = 33,
-        mat3x4 = 34,
-        mat4x2 = 42,
-        mat4x3 = 43,
-        mat4 = 44,
-      };
-
-      Attribute(GLuint id, Format size);
-      Attribute(std::string const &name, Format size);
-      Attribute(Name name, Format size);
-
-      GLint id() const;
-      GLint location() const;
-      Format format() const;
-      uint size() const;
-
-    private:
-      Format d_format;
-
-  };
-
   class Mesh
   {
+      std::vector<std::pair<Shader::Attribute, Shader::Format>> d_formats;
+      Shader::Format d_instanceFormat;
+
       Buffer<GLfloat> d_interleavedVBO;
       Buffer<GLushort> d_indexVBO;
       size_t d_numOfVertices;
@@ -88,13 +44,14 @@ namespace dim
       Buffer<GLfloat> d_instancingVBO;
       size_t d_maxLocations;
 
+      std::vector<Buffer<GLfloat>> d_additionalVBOs;
+
       static bool s_bindless;
       static bool s_instanced;
       static GLuint s_bound;
       static GLuint s_boundElem;
 
       static bool s_initialized;
-
     public:
       enum Shape: GLenum
       {
@@ -102,19 +59,21 @@ namespace dim
         line = GL_LINES,
         point = GL_POINTS
       };
-      static size_t const interleaved = std::numeric_limits<size_t>::max();
 
-      Mesh(GLfloat const *buffer, std::vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx);
-      void addBuffer(GLfloat const *buffer, size_t idx);
+
+      Mesh(GLfloat const *buffer, size_t numOfVertices, std::vector<std::pair<Shader::Attribute, Shader::Format>> const &formats);
+      Mesh(GLfloat const *buffer, size_t numOfVertices, Shader::Attribute attribute, Shader::Format format);
+      void addBuffer(GLfloat const *buffer, Shader::Attribute attribute, Shader::Format format);
 
       void addElementBuffer(GLushort const *buffer, size_t numOfPolygons);
-      void addInstanceBuffer(GLfloat const *buffer, size_t numOfLocations, Attribute const &attrib);
+      void addInstanceBuffer(GLfloat const *buffer, size_t numOfLocations, Shader::Format format);
 
       Buffer<GLfloat> const &buffer();
       Buffer<GLushort> const &elementBuffer();
       Buffer<GLfloat> const &instanceBuffer();
 
-      void updateBuffer(GLfloat const *buffer, size_t idx);
+      void updateBuffer(GLfloat const *buffer);
+      void updateBuffer(GLfloat const *buffer, Shader::Attribute attribute);
       void updateElementBuffer(GLushort const *buffer);
       void updateInstanceBuffer(GLfloat const *buffer, size_t locations);
 
@@ -124,18 +83,15 @@ namespace dim
       void unbindElement() const;
       //void bindInstance() const;
 
-      void draw() const;
-      void drawInstanced(size_t numOfPolygons) const;
+      void draw(Shape shape = triangle) const;
+      void drawInstanced(size_t numOfPolygons, Shape shape = triangle) const;
 
       GLuint id() const;
 
     private:
-      Shape d_shape;
-      std::vector<Attribute> d_attributes;
-      Attribute d_instanceAttribute;
+      int attributeIndex(Shader::Attribute attribute) const;
 
       static void initialize();
-      void updateBuffer(GLfloat *target, GLfloat const *source, GLuint varNumOfElements, size_t idx);
 
       uint numOfElements() const;
   };

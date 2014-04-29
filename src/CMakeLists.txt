@@ -1,4 +1,4 @@
-set(CXXSOURCES
+set(CXXSOURCES_CORE
   core/textureproperties.cpp
   core/dim.cpp
   core/light.cpp
@@ -12,13 +12,17 @@ set(CXXSOURCES
   core/lex.cpp
   core/timer.cpp
   core/mesh.cpp
+)
 
+set(CXXSOURCES_SCENE
   scene/scene.cpp
-  scene/nodebase.cpp
-  scene/filedrawnode.cpp
-  scene/nodestoragebase.cpp
+#  scene/nodebase.cpp
+#  scene/filedrawnode.cpp
+#  scene/nodestoragebase.cpp
   scene/resourcemanager.cpp
+)
 
+set(CXXSOURCES_GUI
   gui/button.cpp
   gui/context.cpp
   gui/menu.cpp
@@ -31,9 +35,21 @@ set(CXXSOURCES
   gui/sprite.cpp
 )
 
-find_package(Bullet REQUIRED)
-if(BULLET_FOUND)
-  include_directories(${BULLET_INCLUDE_DIRS})
+set(CXXSOURCES
+  ${CXXSOURCES_CORE}
+)
+
+if(SCENE)
+  set(CXXSOURCES ${CXXSOURCES} ${CXXSOURCES_SCENE})
+
+  find_package(Bullet REQUIRED)
+  if(BULLET_FOUND)
+    include_directories(${BULLET_INCLUDE_DIRS})
+  endif()
+endif()
+
+if(GUI)
+  set(CXXSOURCES ${CXXSOURCES} ${CXXSOURCES_GUI})
 endif()
 
 find_package(Freetype REQUIRED)

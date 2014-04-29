@@ -28,6 +28,7 @@
 
 namespace dim
 {
+  class Shader;
   /*
    * Draws a quad that covers the entire screen
    */

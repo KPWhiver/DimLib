@@ -51,8 +51,7 @@ namespace dim
 
     Shader &SurfaceBase::copyShader()
     {
-      static Shader copy("copyShader", "#version 120\n"
-                                       "fragment:\n"
+      static Shader copy(Shader::fromString, "copyShader", "", "#version 120\n"
                                        "uniform sampler2D in_texture;\n"
                                        "uniform vec2 in_viewport;\n"
                                        "void main()\n"

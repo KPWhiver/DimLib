@@ -18,7 +18,7 @@
 //      MA 02110-1301, USA.
 
 #include "dim/scene/scenemanager.hpp"
-#include "dim/scene/bulletmanager.hpp"
+//#include "dim/scene/bulletmanager.hpp"
 #include "dim/scene/shadermanager.hpp"
 
 using namespace std;
@@ -42,7 +42,7 @@ namespace dim
     d_defaultWrap = wrap;
   }
 
-  btBulletWorldImporter &BulletManager::request(string const &filename)
+  /*btBulletWorldImporter &BulletManager::request(string const &filename)
   {
     if(d_bulletMap.find(filename) == d_bulletMap.end())
     {
@@ -56,7 +56,7 @@ namespace dim
     }
 
     return d_bulletMap.at(filename);
-  }
+  }*/
 
   Texture<GLubyte> &TextureManager::request(string const &filename)
   {
@@ -75,7 +75,7 @@ namespace dim
   {
     if(d_shaderMap.find(filename) == d_shaderMap.end())
     {
-      auto keyPair = d_shaderMap.emplace(filename, filename);
+      auto keyPair = d_shaderMap.emplace(filename, Shader{filename});
       return keyPair.first->second;
     }
 
@@ -98,7 +98,7 @@ namespace dim
     return d_sceneMap[filename];
   }
 
-  void BulletManager::remove(string const &filename)
+  /*void BulletManager::remove(string const &filename)
   {
     auto iter = d_bulletMap.find(filename);
 
@@ -109,7 +109,7 @@ namespace dim
     }
 
     d_bulletMap.erase(iter);
-  }
+  }*/
 
   void TextureManager::remove(string const &filename)
   {

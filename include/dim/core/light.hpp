@@ -60,7 +60,7 @@ public:
   glm::mat4 const &lightMatrix() const;
   glm::vec4 const &position() const;
 
-  void setAtShader(Shader const &shader) const;
+  void setAtShader() const;
   
 private:
   Light::type d_mode;

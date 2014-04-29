@@ -103,8 +103,7 @@ namespace dim
   
   Shader const &Sprite::shader()
 	{
-	  static Shader paletShader("spriteShader", "#version 120\n"
-	                            "vertex:\n"
+    static Shader paletShader(Shader::fromString, "spriteShader", "#version 120\n"
 	                            "uniform mat4 in_mat_projection;\n uniform mat4 in_mat_view;\n uniform mat4 in_mat_model;\n"
 	                            "uniform vec4 in_textureArea;"
 	                            "layout(location = dim_vertex) attribute vec2 in_position;\n layout(location = dim_texCoord) attribute vec2 in_texcoord;\n"
@@ -113,7 +112,7 @@ namespace dim
 															"pass_texcoord.x = in_textureArea.x * (1 - in_texcoord.x) + in_textureArea.z * (in_texcoord.x);\n"
 															"pass_texcoord.y = in_textureArea.y * (1 - in_texcoord.y) + in_textureArea.w * (in_texcoord.y);\n"
 	                            "gl_Position = in_mat_projection * in_mat_model * in_mat_view * vec4(in_position, vec2(1.0));}\n"
-	                            "fragment:\n"
+                              ,
 	                            "uniform sampler2D in_texture;\n"
 	                            "uniform sampler2D in_text;\n"
 	                            "uniform vec4 in_color;\n"

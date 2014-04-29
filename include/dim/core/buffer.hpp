@@ -131,7 +131,7 @@ namespace dim
   Type* Buffer<Type>::map(Access access)
   {
     glBindBuffer(data, id());
-    Type* ptr = reinterpret_cast<GLfloat*>(glMapBuffer(data, access));
+    Type* ptr = reinterpret_cast<Type*>(glMapBuffer(data, access));
     if(ptr == 0)
       log(__FILE__, __LINE__, LogType::warning, "OpenGL failed to map buffer");
 

@@ -64,7 +64,7 @@ namespace dim
     glm::mat4 const &viewMatrix() const;
     glm::mat4 const &projectionMatrix() const;
 
-    void setAtShader(Shader const &shader, std::string const &viewMatrix = "viewMatrix", std::string const &projectionMatrix = "projectionMatrix") const;
+    void setAtShader(std::string const &viewMatrix = "viewMatrix", std::string const &projectionMatrix = "projectionMatrix") const;
     void editmode();
     bool frustum(float ox, float oy) const;
 

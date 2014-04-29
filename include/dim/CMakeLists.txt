@@ -1,17 +1,17 @@
 set(CXXHEADERS_SCENE
-  scene/iteratorbase.hpp
-  scene/nodebase.hpp
-  scene/nodestoragebase.hpp
-  scene/nodegrid.hpp
-  scene/nodegrid.inl
-  scene/scenegraph.hpp
-  scene/scenegraph.inl
+#  scene/iteratorbase.hpp
+#  scene/nodebase.hpp
+#  scene/nodestoragebase.hpp
+#  scene/nodegrid.hpp
+#  scene/nodegrid.inl
+#  scene/scenegraph.hpp
+#  scene/scenegraph.inl
   scene/scene.hpp
-  scene/filedrawnode.hpp
+#  scene/filedrawnode.hpp
   scene/texturemanager.hpp
   scene/shadermanager.hpp
   scene/scenemanager.hpp
-  scene/bulletmanager.hpp
+#  scene/bulletmanager.hpp
 )
 
 set(CXXHEADERS_CORE
@@ -54,14 +54,24 @@ set(CXXHEADERS_UTIL
   util/tupleforeach.hpp
 )
 
-install(FILES ${CXXHEADERS_SCENE} DESTINATION include/dim/scene)
+set(USED_CXXHEADERS
+  ${CXXHEADERS_CORE}
+  ${CXXHEADERS_UTIL}
+)
+
+if(SCENE)
+  set(USED_CXXHEADERS ${USED_CXXHEADERS} ${CXXHEADERS_SCENE})
+  install(FILES ${CXXHEADERS_SCENE} DESTINATION include/dim/scene)
+endif()
+
+if(GUI)
+  set(USED_CXXHEADERS ${USED_CXXHEADERS} ${CXXHEADERS_GUI})
+  install(FILES ${CXXHEADERS_GUI} DESTINATION include/dim/gui)
+endif()
+
 install(FILES ${CXXHEADERS_CORE} DESTINATION include/dim/core)
-install(FILES ${CXXHEADERS_GUI} DESTINATION include/dim/gui)
 install(FILES ${CXXHEADERS_UTIL} DESTINATION include/dim/util)
 
 set(CXXHEADERS
-  ${CXXHEADERS_SCENE}
-  ${CXXHEADERS_CORE}
-  ${CXXHEADERS_GUI}
-  ${CXXHEADERS_UTIL}
+  ${USED_CXXHEADERS}
 PARENT_SCOPE)

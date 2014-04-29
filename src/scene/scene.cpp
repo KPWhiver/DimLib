@@ -140,7 +140,7 @@ namespace dim
     return false;
   }
 
-	void DrawState::draw() const
+  void DrawState::draw() const
 	{
 		/*Shader const &shader = Shader::active();
 
@@ -153,7 +153,7 @@ namespace dim
 
 		//TODO: add the setting of all parameters (textures, materials)
 
-		d_mesh.draw();
+    d_mesh.draw();
 
 
 	}
@@ -188,15 +188,6 @@ namespace dim
 
   namespace
   {
-    void addAttributeToBuffer(size_t numOfElements, vector<GLfloat> &array, size_t offset, aiVector3D const &vector)
-    {
-      array[offset] = vector.x;
-      array[offset + 1] = vector.y;
-
-      if(numOfElements > 2)
-        array[offset + 2] = vector.z;
-    }
-
     bool in(vector<Scene::Option> const &list, Scene::Option option)
     {
       for(Scene::Option item : list)
@@ -207,10 +198,40 @@ namespace dim
       return false;
     }
 
+    void addAttributeToBuffer(size_t numOfElements, vector<GLfloat> &array, aiVector3D const &vector)
+    {
+      array.push_back(vector.x);
+      array.push_back(vector.y);
+
+      if(numOfElements > 2)
+        array.push_back(vector.z);
+    }
+
+    void fillArray(vector<GLfloat> &array, aiMesh const &mesh, bool normals, bool texCoords, bool binormals, bool tangents, uint numOfTexCoords)
+    {
+      // fill buffer
+      for(size_t vert = 0; vert != mesh.mNumVertices; ++vert)
+      {
+        addAttributeToBuffer(3, array, mesh.mVertices[vert]);
+
+        if(normals)
+          addAttributeToBuffer(3, array, mesh.mNormals[vert]);
+
+        if(texCoords)
+          addAttributeToBuffer(numOfTexCoords, array, mesh.mTextureCoords[0][vert]);
+
+        if(binormals)
+          addAttributeToBuffer(3, array, mesh.mBitangents[vert]);
+
+        if(tangents)
+          addAttributeToBuffer(3, array, mesh.mTangents[vert]);
+      }
+    }
+
     Mesh loadMesh(aiScene const &scene, std::vector<Scene::Option> const &options, size_t mesh, string const &filename)
     {
-      vector<Attribute> attributes;
-      attributes.push_back({Attribute::vertex, Attribute::vec3});
+      vector<pair<Shader::Attribute, Shader::Format>> attributes;
+      attributes.push_back({Shader::vertex, Shader::vec3});
 
       if(in(options, Scene::texCoords3D) && scene.mMeshes[mesh]->mTextureCoords[0] == 0)
         throw log(filename, 0, LogType::error, "No texture coordinates present");
@@ -227,7 +248,7 @@ namespace dim
         numOfElements += 3;
         normals = true;
 
-        attributes.push_back({Attribute::normal, Attribute::vec3});
+        attributes.push_back({Shader::normal, Shader::vec3});
       }
 
       if(scene.mMeshes[mesh]->mTextureCoords[0] != 0 && ! in(options, Scene::noTexCoords))
@@ -236,26 +257,24 @@ namespace dim
         {
           numOfElements += 3;
           numOfTexCoords = 3;
-          attributes.push_back({Attribute::texCoord, Attribute::vec3});
+          attributes.push_back({Shader::texCoord, Shader::vec3});
         }
         else
         {
           numOfElements += 2;
           numOfTexCoords = 2;
-          attributes.push_back({Attribute::texCoord, Attribute::vec2});
+          attributes.push_back({Shader::texCoord, Shader::vec2});
         }
 
         texCoords = true;
       }
-
-
 
       if(scene.mMeshes[mesh]->mBitangents != 0 && in(options, Scene::generateBinormals))
       {
         numOfElements += 3;
         binormals = true;
 
-        attributes.push_back({Attribute::binormal, Attribute::vec3});
+        attributes.push_back({Shader::binormal, Shader::vec3});
       }
 
       if(scene.mMeshes[mesh]->mTangents != 0 && in(options, Scene::generateTangents))
@@ -263,50 +282,20 @@ namespace dim
         numOfElements += 3;
         tangents = true;
 
-        attributes.push_back({Attribute::tangent, Attribute::vec3});
+        attributes.push_back({Shader::tangent, Shader::vec3});
       }
 
       // allocate buffer
       size_t numOfVertices = scene.mMeshes[mesh]->mNumVertices;
 
-      vector<GLfloat> array(numOfVertices * numOfElements);
+      vector<GLfloat> array;
+      array.reserve(numOfVertices * numOfElements);
 
-      // fill buffer
-      for(size_t vert = 0; vert != numOfVertices; ++vert)
-      {
-        uint arrayIdxOffset = 0;
-        size_t arrayIdxStart = vert * numOfElements;
+      fillArray(array, *scene.mMeshes[mesh], normals, texCoords, binormals, tangents, numOfTexCoords);
 
-        addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mVertices[vert]);
-        arrayIdxOffset += 3;
+      Mesh model(array.data(), numOfVertices, attributes);
 
-        if(normals)
-        {
-          addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mNormals[vert]);
-          arrayIdxOffset += 3;
-        }
-
-        if(texCoords)
-        {
-          addAttributeToBuffer(numOfTexCoords, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTextureCoords[0][vert]);
-          arrayIdxOffset += numOfTexCoords;
-        }
-
-        if(binormals)
-        {
-          addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mBitangents[vert]);
-          arrayIdxOffset += 3;
-        }
-
-        if(tangents)
-        {
-          addAttributeToBuffer(3, array, arrayIdxStart + arrayIdxOffset, scene.mMeshes[mesh]->mTangents[vert]);
-          arrayIdxOffset += 3;
-        }
-      }
-
-      Mesh model(array.data(), attributes, numOfVertices, Mesh::triangle, Mesh::interleaved);
-
+      // Load indices
       vector<GLushort> indexArray(scene.mMeshes[mesh]->mNumFaces * 3);
 
       for(size_t idx = 0; idx != scene.mMeshes[mesh]->mNumFaces; ++idx)
@@ -320,11 +309,110 @@ namespace dim
 
       return model;
     }
+
+
+    aiScene const *loadScene(string const &filename, Assimp::Importer &importer, vector<Scene::Option> options = {})
+    {
+      // set flags
+      uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices;
+
+      if(in(options, Scene::generateNormals))
+        flags |= aiProcess_GenSmoothNormals;
+
+      if(in(options, Scene::generateTangents))
+      {
+        flags |= aiProcess_GenSmoothNormals;
+        flags |= aiProcess_CalcTangentSpace;
+      }
+      if(in(options, Scene::generateBinormals))
+      {
+        flags |= aiProcess_GenSmoothNormals;
+        flags |= aiProcess_CalcTangentSpace;
+      }
+
+      aiScene const *scene = importer.ReadFile(filename, flags);
+
+      if(!scene)
+        throw log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
+
+      if(in(options, Scene::texCoords3D) && scene->mMeshes[0]->mTextureCoords[0] == 0)
+        throw log(filename, 0, LogType::error, "No texture coordinates present");
+
+      return scene;
+    }
+
+    TextureManager stdManager(Filtering::trilinear);
   }
 
-  namespace
+  vector<GLfloat> Scene::loadPointData(string const &filename, vector<Option> options)
   {
-    TextureManager stdManager(Filtering::trilinear);
+    // load scene
+    Assimp::Importer importer;
+    aiScene const *scene = loadScene(filename, importer, options);
+
+    // Find mesh properties
+    bool texCoords = true;
+    bool normals = true;
+    bool binormals = true;
+    bool tangents = true;
+    size_t numOfVertices = 0;
+
+    for(size_t meshIdx = 0; meshIdx != scene->mNumMeshes; ++meshIdx)
+    {
+      aiMesh const &mesh = *scene->mMeshes[meshIdx];
+
+      if(in(options, Scene::texCoords3D) && mesh.mTextureCoords[0] == 0)
+        throw log(filename, 0, LogType::error, "No texture coordinates present");
+
+      if(mesh.mNormals == 0 or in(options, Scene::noNormals))
+        normals = false;
+
+      if(mesh.mTextureCoords[0] == 0 or in(options, Scene::noTexCoords))
+        texCoords = false;
+
+      if(mesh.mBitangents == 0 or not in(options, Scene::generateBinormals))
+        binormals = false;
+
+      if(mesh.mTangents == 0 or not in(options, Scene::generateTangents))
+        tangents = false;
+
+      numOfVertices += mesh.mNumVertices;
+    }
+
+    // Find number of elements
+    uint numOfElements = 3;
+    uint numOfTexCoords = 2;
+    if(normals)
+      numOfElements += 3;
+
+    if(texCoords)
+    {
+      if(texCoords3D)
+      {
+        numOfElements += 3;
+        numOfTexCoords = 3;
+      }
+      else
+      {
+        numOfElements += 2;
+        numOfTexCoords = 2;
+      }
+    }
+
+    if(binormals)
+      numOfElements += 3;
+
+    if(tangents)
+      numOfElements += 3;
+
+    // load meshes
+    vector<GLfloat> points;
+    points.reserve(numOfElements * numOfVertices);
+
+    for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
+      fillArray(points, *scene->mMeshes[mesh], normals, texCoords, binormals, tangents, numOfTexCoords);
+
+    return points;
   }
 
   Scene::Scene(std::string const &filename, std::vector<Option> list)
@@ -335,32 +423,9 @@ namespace dim
 
   Scene::Scene(std::string const &filename, TextureManager &resources, std::vector<Option> options)
   {
-    // set flags
-    uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices;
-
-    if(in(options, generateNormals))
-      flags |= aiProcess_GenSmoothNormals;
-
-    if(in(options, generateTangents))
-    {
-      flags |= aiProcess_GenSmoothNormals;
-      flags |= aiProcess_CalcTangentSpace;
-    }
-    if(in(options, generateBinormals))
-    {
-      flags |= aiProcess_GenSmoothNormals;
-      flags |= aiProcess_CalcTangentSpace;
-    }
-
     // load scene
     Assimp::Importer importer;
-    aiScene const *scene = importer.ReadFile(filename, flags);
-
-    if(!scene)
-      throw log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
-
-    if(in(options, texCoords3D) && scene->mMeshes[0]->mTextureCoords[0] == 0)
-      throw log(filename, 0, LogType::error, "No texture coordinates present");
+    aiScene const *scene = loadScene(filename, importer, options);
 
     // load meshes
     for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)

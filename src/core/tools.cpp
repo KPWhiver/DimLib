@@ -19,13 +19,14 @@
 
 #include "dim/core/tools.hpp"
 #include "dim/core/mesh.hpp"
+#include "dim/core/shader.hpp"
 
 namespace dim
 {
   void drawFullscreenQuad()
   {
     static GLfloat data[12]{-1, -1, 1, -1, -1, 1, 1, 1, -1, 1, 1, -1};
-    static Mesh quad(data, {{Attribute::vertex, Attribute::vec2}}, 6, Mesh::triangle, 0);
+    static Mesh quad(data, 6, Shader::vertex, Shader::vec2);
     quad.draw();
   }
 }

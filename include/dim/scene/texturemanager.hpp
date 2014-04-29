@@ -39,7 +39,7 @@ namespace dim
       Wrapping d_defaultWrap;
 
     public:
-      TextureManager(Filtering filter = Filtering::linear, Wrapping wrap = Wrapping::repeat); ///< Default constructor
+      TextureManager(Filtering filter = Filtering::linear, Wrapping wrap = Wrapping::edgeClamp); ///< Default constructor
 
       /**
        * Sets the default wrapping used to create a texture when calling

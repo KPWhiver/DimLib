@@ -177,13 +177,13 @@ namespace dim
   }
 
   // TODO: make this function const
-  void Camera::setAtShader(Shader const &shader, string const &viewMatrix, string const &projectionMatrix) const
+  void Camera::setAtShader(string const &viewMatrix, string const &projectionMatrix) const
   {
     if(d_changed == true)
       const_cast<Camera*>(this)->setView();
 
-    shader.set(viewMatrix, d_view);
-    shader.set(projectionMatrix, d_projection);
+    Shader::set(viewMatrix, d_view);
+    Shader::set(projectionMatrix, d_projection);
   }
 
   bool Camera::frustum(float ox, float oz) const

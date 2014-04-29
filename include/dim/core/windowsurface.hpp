@@ -30,7 +30,8 @@ namespace dim
 {
 
 	class WindowSurface
-	{
+  {
+    std::function<void()> d_destroyWindow;
 		size_t d_height, d_width;
 
 		glm::vec4 d_clearColor;
@@ -38,19 +39,16 @@ namespace dim
 		bool d_blending;
 
 	public:
-		template<typename Lambda>
-		WindowSurface(size_t width, size_t height, Lambda const &init);
-		WindowSurface(size_t width, size_t height)
-			:
-				WindowSurface(width, height, []{})
-		{
-		}
+    template<typename Lambda>
+    WindowSurface(size_t width, size_t height, Lambda const &init = []{}, std::function<void()> const &destroy = []{});
 
 		WindowSurface(WindowSurface const &other) = delete;
 		WindowSurface(WindowSurface &&tmp) = default;
 
 		WindowSurface &operator=(WindowSurface const &other) = delete;
 		WindowSurface &operator=(WindowSurface &&tmp) = default;
+
+    ~WindowSurface();
 
 		size_t height() const;
 		size_t width() const;
@@ -70,8 +68,9 @@ namespace dim
 	};
 
   template<typename Lambda>
-  WindowSurface::WindowSurface(size_t width, size_t height, Lambda const &init)
+  WindowSurface::WindowSurface(size_t width, size_t height, Lambda const &init, std::function<void()> const &destroy)
       :
+        d_destroyWindow(destroy),
         d_height(height),
         d_width(width),
         d_clearDepth(0),
@@ -93,9 +92,9 @@ namespace dim
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LEQUAL);
 
-    glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE);
-    glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE);
-    glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE);
+    glClampColor(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE);
+    glClampColor(GL_CLAMP_READ_COLOR_ARB, GL_FALSE);
+    glClampColor(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);

@@ -31,6 +31,11 @@ using namespace glm;
 
 namespace dim
 {
+  WindowSurface::~WindowSurface()
+  {
+    d_destroyWindow();
+  }
+
   size_t WindowSurface::height() const
   {
     return d_height;

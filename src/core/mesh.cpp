@@ -29,58 +29,6 @@ using namespace std;
 
 namespace dim
 {
-  // --- Attribute ---
-
-  Attribute::Attribute(GLuint id, Format size)
-      :
-          d_id(id),
-          d_format(size)
-  {
-  }
-
-  Attribute::Attribute(std::string const &name, Format size)
-      :
-          d_name(name),
-          d_id(unknown),
-          d_format(size)
-  {
-  }
-
-  Attribute::Attribute(Name id, Format size)
-      :
-          d_id(id),
-          d_format(size)
-  {
-  }
-
-  GLint Attribute::id() const
-  {
-    return d_id;
-  }
-
-  GLint Attribute::location() const
-  {
-    if(d_name != "")
-      return 0; //TODO implement
-    else if(d_id == unknown)
-      throw log(__FILE__, __LINE__, LogType::error, "Can't return unknown id");
-
-    return d_id;
-  }
-
-  Attribute::Format Attribute::format() const
-  {
-    return d_format;
-  }
-
-  uint Attribute::size() const
-  {
-    uint width = d_format % 10;
-    uint height = d_format / 10;
-
-    return width * height;
-  }
-
   // --- Mesh ---
 
   bool Mesh::s_bindless = false;
@@ -112,98 +60,69 @@ namespace dim
     }
   }
 
-  Mesh::Mesh(GLfloat const *buffer, vector<Attribute> attributes, size_t numOfVertices, Shape shape, size_t idx)
-      :
-          d_interleavedVBO(0, 0),
-          d_indexVBO(0, 0),
-          d_numOfVertices(numOfVertices),
-          d_numOfTriangles(0),
-          d_instancingVBO(0, 0),
-          d_maxLocations(0),
-          d_shape(shape),
-          d_attributes(attributes),
-          d_instanceAttribute(Attribute::instance, Attribute::vec1)
+  Mesh::Mesh(GLfloat const *buffer, size_t numOfVertices, Shader::Attribute attribute, Shader::Format format)
+    :
+      d_formats{{attribute, format}},
+      d_instanceFormat(Shader::vec1),
+      d_interleavedVBO(numOfVertices * numOfElements(), buffer),
+      d_indexVBO(0, 0),
+      d_numOfVertices(numOfVertices),
+      d_numOfTriangles(0),
+      d_instancingVBO(0, 0),
+      d_maxLocations(0)
   {
     // static initialize
     if(s_initialized == false)
       initialize();
-
-    addBuffer(buffer, idx);
   }
 
-  void Mesh::addBuffer(GLfloat const *buffer, size_t idx)
+  Mesh::Mesh(GLfloat const *buffer, size_t numOfVertices, std::vector<std::pair<Shader::Attribute, Shader::Format>> const &formats)
+    :
+      d_formats(formats),
+      d_instanceFormat(Shader::vec1),
+      d_interleavedVBO(numOfVertices * numOfElements(), buffer),
+      d_indexVBO(0, 0),
+      d_numOfVertices(numOfVertices),
+      d_numOfTriangles(0),
+      d_instancingVBO(0, 0),
+      d_maxLocations(0)
+
   {
-    uint varNumOfElements = numOfElements();
-
-    if(idx == interleaved || (idx == 0 && d_attributes.size() == 1))
-    {
-      if(d_interleavedVBO.size() == 0)
-        d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, buffer);
-      else
-        throw log(__FILE__, __LINE__, LogType::error, "Interleaved arrays can only be added at the first call");
-    }
-    else
-    {
-      // Make a new buffer
-      if(d_interleavedVBO.size() == 0)
-      {
-        vector<GLfloat> array(d_numOfVertices * varNumOfElements);
-
-        updateBuffer(array.data(), buffer, varNumOfElements, idx);
-
-        d_interleavedVBO = Buffer<GLfloat>(d_numOfVertices * varNumOfElements, array.data());
-      }
-      // Paste into the old buffer
-      else
-      {
-        updateBuffer(buffer, idx);
-      }
-    }
+    // static initialize
+    if(s_initialized == false)
+      initialize();
   }
 
-  void Mesh::updateBuffer(GLfloat const *buffer, size_t idx)
+  void Mesh::addBuffer(GLfloat const *buffer, Shader::Attribute attribute, Shader::Format format)
   {
-    uint varNumOfElements = numOfElements();
+    if(attributeIndex(attribute) != -1)
+      throw log(__FILE__, __LINE__, LogType::error, "Trying to add a buffer to a mesh that is already added");
 
+    d_additionalVBOs.emplace_back(d_numOfVertices * internal::formatSize(format), buffer);
+    d_formats.push_back({attribute, format});
+  }
+
+  void Mesh::updateBuffer(GLfloat const *buffer)
+  {
     if(d_interleavedVBO.size() == 0)
-      throw log(__FILE__, __LINE__, LogType::error, "Can't update a Mesh if no buffers have been added yet");
+      throw log(__FILE__, __LINE__, LogType::error, "Unable to call Mesh::updateBuffer(buffer) on an interleaved mesh");
 
-    if(idx == interleaved)
-      d_interleavedVBO.update(d_numOfVertices * varNumOfElements, buffer);
-    else
-    {
-      GLfloat* ptr = d_interleavedVBO.map(Buffer<GLfloat>::write);
-
-      if(ptr == 0)
-        return;
-
-      updateBuffer(ptr, buffer, varNumOfElements, idx);
-
-      d_interleavedVBO.unmap();
-    }
+    d_interleavedVBO.update(d_numOfVertices * numOfElements(), buffer);
   }
 
-  void Mesh::updateBuffer(GLfloat *target, GLfloat const *source, uint varNumOfElements, size_t idx)
+  void Mesh::updateBuffer(GLfloat const *buffer, Shader::Attribute attribute)
   {
-    for(size_t vert = 0; vert != d_numOfVertices; ++vert)
-    {
-      uint arrayIdxOffset = 0;
-      size_t arrayIdxStart = vert * varNumOfElements;
+    int index = attributeIndex(attribute);
 
-      for(size_t attrib = 0; attrib != d_attributes.size(); ++attrib)
-      {
-        uint size = d_attributes[attrib].size();
+    if(index == -1 || (index != 0 && d_additionalVBOs[index - 1].size() == 0) || (index == 0 && d_interleavedVBO.size() == 0))
+      throw log(__FILE__, __LINE__, LogType::error, "Unable to call Mesh::updateBuffer(buffer, attribute) on an attribute that has not been added first");
 
-        if(idx == attrib)
-        {
-          for(size_t coor = 0; coor != size; ++coor)
-          {
-            target[arrayIdxStart + arrayIdxOffset + coor] = source[vert * size + coor];
-          }
-        }
-        arrayIdxOffset += size;
-      }
-    }
+    uint formatS = internal::formatSize(d_formats[index].second);
+
+    if(index == 0)
+      d_interleavedVBO.update(d_numOfVertices * formatS, buffer);
+    else
+      d_additionalVBOs[index - 1].update(d_numOfVertices * formatS, buffer);
   }
 
   void Mesh::addElementBuffer(GLushort const *buffer, size_t numOfTriangles)
@@ -216,15 +135,15 @@ namespace dim
     d_indexVBO = Buffer<GLushort>(d_numOfTriangles * 3, buffer);
   }
 
-  void Mesh::addInstanceBuffer(GLfloat const *buffer, size_t locations, Attribute const &attrib)
+  void Mesh::addInstanceBuffer(GLfloat const *buffer, size_t locations, Shader::Format format)
   {
     if(d_instancingVBO.size() != 0)
       throw log(__FILE__, __LINE__, LogType::error, "Can't add an instance buffer, it's has already been added");
 
-    d_instanceAttribute = attrib;
+    d_instanceFormat = format;
 
     d_maxLocations = locations;
-    d_instancingVBO = Buffer<GLfloat>(d_maxLocations * 3, buffer);
+    d_instancingVBO = Buffer<GLfloat>(d_maxLocations * internal::formatSize(d_instanceFormat), buffer);
   }
 
   void Mesh::updateElementBuffer(GLushort const *buffer)
@@ -241,8 +160,7 @@ namespace dim
       throw log(__FILE__, __LINE__, LogType::error, "Can't update a instance buffer if no instance buffers have been added yet");
 
     d_maxLocations = locations;
-    d_instancingVBO.update(d_maxLocations * 3, buffer);
-
+    d_instancingVBO.update(d_maxLocations * internal::formatSize(d_instanceFormat), buffer);
   }
 
   Buffer<GLfloat> const &Mesh::buffer()
@@ -263,10 +181,20 @@ namespace dim
   uint Mesh::numOfElements() const
   {
     uint varNumOfElements = 0;
-    for(Attribute attrib : d_attributes)
-      varNumOfElements += attrib.size();
+    for(auto format : d_formats)
+      varNumOfElements += internal::formatSize(format.second);
 
     return varNumOfElements;
+  }
+
+  int Mesh::attributeIndex(Shader::Attribute attribute) const
+  {
+    for(size_t idx = 0; idx != d_formats.size(); ++idx)
+    {
+      if(d_formats[idx].first == attribute)
+        return idx;
+    }
+    return -1;
   }
 
   void Mesh::bind() const
@@ -276,20 +204,33 @@ namespace dim
 
     s_bound = d_interleavedVBO.id();
 
-    for(Attribute attrib : d_attributes)
-      glEnableVertexAttribArray(attrib.id());
-
-    uint varNumOfElements = numOfElements();
+    for(auto format : d_formats)
+      Shader::enableAttribute(format.first, format.second);
 
     // set pointers when we're dealing with an interleaved
-    size_t offset = 0;
-    d_interleavedVBO.bind(Buffer<GLfloat>::data);
-
-    for(Attribute attrib : d_attributes)
+    if(d_additionalVBOs.size() == 0)
     {
-      glVertexAttribPointer(attrib.id(), attrib.size(), GL_FLOAT, GL_FALSE, varNumOfElements * sizeof(GLfloat),
-                            reinterpret_cast<void*>(offset * sizeof(GLfloat)));
-      offset += attrib.size();
+      uint varNumOfElements = numOfElements();
+      size_t offset = 0;
+      d_interleavedVBO.bind(Buffer<GLfloat>::data);
+
+      for(auto format : d_formats)
+      {
+        Shader::set(format.first, d_interleavedVBO, format.second, offset, varNumOfElements);
+        offset += internal::formatSize(format.second);
+      }
+    }
+    // Set pointers when we're dealing with individual buffer
+    else
+    {
+      d_interleavedVBO.bind(Buffer<GLfloat>::data);
+      Shader::set(d_formats[0].first, d_interleavedVBO, d_formats[0].second);
+
+      for(uint idx = 0; idx != d_additionalVBOs.size(); ++idx)
+      {
+        d_additionalVBOs[idx].bind(Buffer<GLfloat>::data);
+        Shader::set(d_formats[idx + 1].first, d_additionalVBOs[idx], d_formats[idx + 1].second);
+      }
     }
 
     //bindElement();
@@ -298,8 +239,8 @@ namespace dim
   void Mesh::unbind() const
   {
     s_bound = 0;
-    for(Attribute attrib : d_attributes)
-      glDisableVertexAttribArray(attrib.id());
+    for(auto format : d_formats)
+      Shader::disableAttribute(format.first, format.second);
 
     //unbindElement();
   }
@@ -319,7 +260,7 @@ namespace dim
     s_boundElem = 0;
   }
 
-  void Mesh::draw() const
+  void Mesh::draw(Shape shape) const
   {
 
     if(s_bound == 0 || s_bound != d_interleavedVBO.id())
@@ -336,11 +277,11 @@ namespace dim
         bindElement();
         s_boundElem = 0;
       }
-      glDrawElements(d_shape, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, 0);
+      glDrawElements(shape, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, 0);
     }
     else
     {
-      glDrawArrays(d_shape, 0, d_numOfVertices);
+      glDrawArrays(shape, 0, d_numOfVertices);
     }
 
     if(s_bound == 0)
@@ -350,7 +291,7 @@ namespace dim
 
   }
 
-  void Mesh::drawInstanced(size_t amount) const
+  void Mesh::drawInstanced(size_t numOfPolygons, Shape shape) const
   {
 
     if(s_bound == 0 || s_bound != d_interleavedVBO.id())
@@ -359,11 +300,12 @@ namespace dim
       s_bound = 0;
     }
 
-    glEnableVertexAttribArray(d_instanceAttribute.id());
+    Shader::enableAttribute(Shader::instance, d_instanceFormat);
 
     d_instancingVBO.bind(Buffer<GLfloat>::data);
-    glVertexAttribPointer(d_instanceAttribute.id(), 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    glVertexAttribDivisor(d_instanceAttribute.id(), 1);
+    Shader::set(Shader::instance, d_instancingVBO, d_instanceFormat);
+    Shader::advanceAttributePerInstance(Shader::instance, d_instanceFormat, true);
+
     if(d_indexVBO.size() != 0)
     {
       if(s_boundElem == 0)
@@ -371,14 +313,14 @@ namespace dim
         bindElement();
         s_boundElem = 0;
       }
-      glDrawElementsInstanced(d_shape, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, NULL, amount);
+      glDrawElementsInstanced(shape, d_numOfTriangles * 3, GL_UNSIGNED_SHORT, NULL, numOfPolygons);
     }
     else
     {
-      glDrawArraysInstanced(d_shape, 0, d_numOfVertices, amount);
+      glDrawArraysInstanced(shape, 0, d_numOfVertices, numOfPolygons);
     }
 
-    glDisableVertexAttribArray(d_instanceAttribute.id());
+    Shader::disableAttribute(Shader::instance, d_instanceFormat);
 
     if(s_bound == 0)
     {

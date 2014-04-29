@@ -357,6 +357,7 @@ namespace internal
       if((coor.x - x) * (coor.x - x) + (coor.z - z) * (coor.z - z) < 1)
         return typename NodeGrid<RefType>::iterator(CopyPtr<Iterable>(new NodeGrid::Iterable(idx, mapPart, this)));
     }
+
     return end();
   }
 
