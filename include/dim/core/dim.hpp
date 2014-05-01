@@ -20,6 +20,7 @@
 #ifndef dim_HPP
 #define dim_HPP
 
+#define GLM_FORCE_RADIANS
 #define GLFW_NO_GLU
 
 #if defined(__APPLE_CC__)

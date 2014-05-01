@@ -208,7 +208,6 @@ namespace dim
     glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
     glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
 
     // Add the texture to the FBO
     if(attachment == depth)
@@ -320,7 +319,21 @@ namespace dim
   }
 
   template<typename ...Types>
+  void Surface<Types...>::renderTo(bool clearBuffer, bool drawBuffers[std::tuple_size<TupleType>::value])
+  {
+    renderToPart(0, 0, width(), height(), clearBuffer, drawBuffers);
+  }
+
+  template<typename ...Types>
   void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer)
+  {
+    std::array<bool, std::tuple_size<TupleType>::value> drawBuffers;
+    drawBuffers.fill(true);
+    renderToPart(x, y, width, height, clearBuffer, drawBuffers);
+  }
+
+  template<typename ...Types>
+  void Surface<Types...>::renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer, bool drawBuffers[std::tuple_size<TupleType>::value])
   {    
     // If the last FBO is a pingpong buffer now is the time to swap those buffers
     if(s_renderTarget != 0)
@@ -336,19 +349,27 @@ namespace dim
 
     if(clearBuffer)
       clear();
-    else
-    {
-      glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
-      glDrawBuffer(GL_COLOR_ATTACHMENT0);
-      glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
+
+    GLuint buffers[std::tuple_size<TupleType>::value];
+    for(size_t idx = 0; idx != std::tuple_size<TupleType>::value; ++idx)
+    {
+      if(drawBuffers[idx] == false)
+      {
+        buffers[idx] = GL_NONE;
+        if(d_attachments[idx] == GL_NONE)
+          glDepthMask(false);
+      }
+      else
+      {
+        buffers[idx] = d_attachments[idx];
+        if(d_attachments[idx] == GL_NONE)
+          glDepthMask(true);
+      }
     }
 
-    // TODO change this to glDrawBuffers
-
-    //glDrawBuffers(d_colorAttachments - 1, d_attachments);
-
-    
+    glDrawBuffers(std::tuple_size<TupleType>::value, buffers);
 
     // Tell the attached textures that they might be changed
     notifyTextures();
@@ -369,7 +390,9 @@ namespace dim
   template<typename Type, uint Index>
   void Surface<Types...>::copyToPart(Texture<Type> const &source, uint x, uint y, uint width, uint height, bool clearBuffer)
   {
-    renderToPart(x, y, width, height, false);
+    std::array<bool, std::tuple_size<TupleType>::value> drawBuffers;
+    drawBuffers[Index] = true;
+    renderToPart(x, y, width, height, false, drawBuffers.data());
     
     internal::setBlending(false);
     
@@ -390,10 +413,26 @@ namespace dim
   template<typename ...Types>
   void Surface<Types...>::clear()
   {
+    std::array<bool, std::tuple_size<TupleType>::value> drawBuffers;
+    drawBuffers.fill(true);
+    clear(drawBuffers.data());
+  }
+
+  template<typename ...Types>
+  void Surface<Types...>::clear(bool drawBuffers[std::tuple_size<TupleType>::value])
+  {
+    GLuint buffers[std::tuple_size<TupleType>::value];
+    for(size_t idx = 0; idx != std::tuple_size<TupleType>::value; ++idx)
+    {
+      if(drawBuffers[idx] == false)
+        buffers[idx] = GL_NONE;
+      else
+        buffers[idx] = d_attachments[idx];
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glDrawBuffers(std::tuple_size<TupleType>::value, buffers);
 
     if(d_clearDepth != 1 && d_depthComponent)
       glClearDepth(d_clearDepth);

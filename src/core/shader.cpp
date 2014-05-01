@@ -42,7 +42,7 @@ namespace dim
 
   bool Shader::s_initialized(false);
 
-  Shader const *Shader::s_activeShader = 0;
+  Shader *Shader::s_activeShader = 0;
 
   void Shader::initialize()
   {
@@ -101,7 +101,7 @@ namespace dim
 
   void Shader::bind(string const &variable, Uniform uniform)
   {
-    if(d_uniformArray[uniform] != -1)
+    if(d_uniformArray[uniform] > 0)
     {
       log(d_filename, 0, LogType::warning, "Rebinding the " + variable + " uniform ignored");
       return;
@@ -112,7 +112,7 @@ namespace dim
 
   void Shader::bind(string const &variable, Attribute attribute)
   {
-    if(d_attributeArray[attribute] != -1)
+    if(d_attributeArray[attribute] > 0)
     {
       log(d_filename, 0, LogType::warning, "Rebinding the " + variable + " attribute ignored");
       return;
@@ -123,12 +123,20 @@ namespace dim
 
   GLint Shader::findAttribute(string const &variable) const
   {
-    GLint loc = glGetAttribLocation(*d_id, variable.c_str());
+    auto it = d_attributes->find(variable);
 
-    if(loc == -1)
-      log(d_filename, 0, LogType::warning, "Can't find attribute " + variable);
+    if(it == d_attributes->end())
+    {
+      GLint loc = glGetAttribLocation(*d_id, variable.c_str());
 
-    return loc;
+      if(loc == static_cast<GLint>(UniformStatus::notFound))
+        log(d_filename, 0, LogType::warning, "Can`t find attribute " + variable);
+
+      (*d_attributes)[variable] = loc;
+      return loc;
+    }
+
+    return it->second;
   }
 
   GLint Shader::findUniform(string const &variable) const
@@ -139,7 +147,7 @@ namespace dim
     {
       GLint loc = glGetUniformLocation(*d_id, variable.c_str());
 
-      if(loc == -1)
+      if(loc == static_cast<GLint>(UniformStatus::notFound))
         log(d_filename, 0, LogType::warning, "Can`t find uniform " + variable);
 
       (*d_uniforms)[variable] = loc;
@@ -197,26 +205,77 @@ namespace dim
 
   void Shader::enableAttribute(Attribute attribute, Format format)
   {
-    uint columns = format / 10;
+    if(active().d_attributeArray[attribute] == static_cast<GLint>(UniformStatus::notInitialised))
+    {
+      activePrivate().d_attributeArray[attribute] = static_cast<GLint>(UniformStatus::notFound);
+      log(active().d_filename, 0, LogType::warning, "Attribute " + to_string(attribute) + " has not been bound yet");
+    }
 
-    for(uint idx = 0; idx != columns; ++idx)
-      glEnableVertexAttribArray(active().d_attributeArray[attribute] + idx);
+    enableAttribute(active().d_attributeArray[attribute], format);
   }
 
   void Shader::disableAttribute(Attribute attribute, Format format)
   {
-    uint columns = format / 10;
+    if(active().d_attributeArray[attribute] == static_cast<GLint>(UniformStatus::notInitialised))
+    {
+      activePrivate().d_attributeArray[attribute] = static_cast<GLint>(UniformStatus::notFound);
+      log(active().d_filename, 0, LogType::warning, "Attribute " + to_string(attribute) + " has not been bound yet");
+    }
 
-    for(uint idx = 0; idx != columns; ++idx)
-      glDisableVertexAttribArray(active().d_attributeArray[attribute] + idx);
+    disableAttribute(active().d_attributeArray[attribute], format);
   }
 
   void Shader::advanceAttributePerInstance(Attribute attribute, Format format, bool advance)
   {
+    if(active().d_attributeArray[attribute] == static_cast<GLint>(UniformStatus::notInitialised))
+    {
+      activePrivate().d_attributeArray[attribute] = static_cast<GLint>(UniformStatus::notFound);
+      log(active().d_filename, 0, LogType::warning, "Attribute " + to_string(attribute) + " has not been bound yet");
+    }
+
+    advanceAttributePerInstance(active().d_attributeArray[attribute], format, advance);
+  }
+
+  void Shader::enableAttribute(string const &attribute, Format format)
+  {
+    GLint loc = active().findAttribute(attribute);
+    enableAttribute(loc, format);
+  }
+
+  void Shader::disableAttribute(string const &attribute, Format format)
+  {
+    GLint loc = active().findAttribute(attribute);
+    disableAttribute(loc, format);
+  }
+
+  void Shader::advanceAttributePerInstance(string const &attribute, Format format, bool advance)
+  {
+    GLint loc = active().findAttribute(attribute);
+    advanceAttributePerInstance(loc, format, advance);
+  }
+
+  void Shader::enableAttribute(GLint attribute, Format format)
+  {
     uint columns = format / 10;
 
     for(uint idx = 0; idx != columns; ++idx)
-      glVertexAttribDivisor(active().d_attributeArray[attribute] + idx, advance);
+      glEnableVertexAttribArray(attribute + idx);
+  }
+
+  void Shader::disableAttribute(GLint attribute, Format format)
+  {
+    uint columns = format / 10;
+
+    for(uint idx = 0; idx != columns; ++idx)
+      glDisableVertexAttribArray(attribute + idx);
+  }
+
+  void Shader::advanceAttributePerInstance(GLint attribute, Format format, bool advance)
+  {
+    uint columns = format / 10;
+
+    for(uint idx = 0; idx != columns; ++idx)
+      glVertexAttribDivisor(attribute + idx, advance);
   }
 
   Shader::Shader()
@@ -232,10 +291,11 @@ namespace dim
         delete ptr;
       }),
       d_uniforms(new unordered_map<string, GLint>),
+      d_attributes(new unordered_map<string, GLint>),
       d_filename(filename)
   {
-    d_uniformArray.fill(-1);
-    d_attributeArray.fill(-1);
+    d_uniformArray.fill(static_cast<GLint>(UniformStatus::notInitialised));
+    d_attributeArray.fill(static_cast<GLint>(UniformStatus::notInitialised));
     parseYAML(filename);
   }
 
@@ -248,10 +308,11 @@ namespace dim
         glDeleteProgram(*ptr);
         delete ptr;
       }),
-      d_uniforms(new unordered_map<string, GLint>)
+      d_uniforms(new unordered_map<string, GLint>),
+      d_attributes(new unordered_map<string, GLint>)
   {
-    d_uniformArray.fill(-1);
-    d_attributeArray.fill(-1);
+    d_uniformArray.fill(static_cast<GLint>(UniformStatus::notInitialised));
+    d_attributeArray.fill(static_cast<GLint>(UniformStatus::notInitialised));
     parseGLSLfiles(vertexFile, fragmentFile, geometryFile, tessControlFile, tessEvalFile, computeFile);
   }
 
@@ -264,10 +325,11 @@ namespace dim
         delete ptr;
       }),
       d_uniforms(new unordered_map<string, GLint>),
+      d_attributes(new unordered_map<string, GLint>),
       d_filename(name)
   {
-    d_uniformArray.fill(-1);
-    d_attributeArray.fill(-1);
+    d_uniformArray.fill(static_cast<GLint>(UniformStatus::notInitialised));
+    d_attributeArray.fill(static_cast<GLint>(UniformStatus::notInitialised));
     parseGLSL(name + "_vertex", vertexInput, name + "_fragment", fragmentInput);
   }
 
@@ -514,10 +576,15 @@ namespace dim
 
   Shader const &Shader::active()
   {
+    return activePrivate();
+  }
+
+  Shader &Shader::activePrivate()
+  {
     if(s_activeShader != 0)
       return *s_activeShader;
     else
-      return defaultShader();
+      return const_cast<Shader&>(defaultShader());
   }
 
   // matrices

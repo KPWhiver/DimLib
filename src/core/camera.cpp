@@ -17,6 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
+#define GLM_FORCE_RADIANS
 
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/intersect.hpp>
@@ -43,7 +44,7 @@ namespace dim
   d_coorTo(coorTo),
   d_height(height),
   d_width(width),
-  d_fov(60),
+  d_fov(M_PI/3.0f),
   d_zNear(0.5),
   d_zFar(1000),
   d_mode(mode)

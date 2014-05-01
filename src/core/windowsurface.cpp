@@ -95,6 +95,8 @@ namespace dim
   {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+
     internal::setBlending(d_blending);
 
     internal::setViewport(0, 0, d_width, d_height);
@@ -110,7 +112,9 @@ namespace dim
     if(clearBuffer)
       clear();
 
+    glDepthMask(true);
     glColorMask(true, true, true, true);
+    glDrawBuffer(GL_BACK);
   }
 
 }

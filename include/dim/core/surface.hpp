@@ -133,10 +133,14 @@ namespace dim
 
     void setBlending(bool blending);
 
+    void clear(bool drawBuffers[std::tuple_size<TupleType>::value]);
     void clear();
 
+    void renderTo(bool clearBuffer, bool drawBuffers[std::tuple_size<TupleType>::value]);
     void renderTo(bool clearBuffer = true);
+    void renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer, bool drawBuffers[std::tuple_size<TupleType>::value]);
     void renderToPart(uint x, uint y, uint width, uint height, bool clearBuffer);
+
 
     template<typename Type, uint Index = 0>
     void copy(Texture<Type> const &source);

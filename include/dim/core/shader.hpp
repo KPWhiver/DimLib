@@ -52,11 +52,18 @@ class Shader
   std::shared_ptr<GLuint> d_tessEvalId;
   std::shared_ptr<GLuint> d_computeId;
  
-  static Shader const *s_activeShader;
+  static Shader *s_activeShader;
     
   mutable std::shared_ptr<std::unordered_map<std::string, GLint>> d_uniforms;
+  mutable std::shared_ptr<std::unordered_map<std::string, GLint>> d_attributes;
   
   std::string d_filename;
+
+  enum class UniformStatus : GLint
+  {
+    notFound = -1,
+    notInitialised = -2
+  };
 
   constexpr static int const s_uniformArraySize = 14;
   std::array<GLint, s_uniformArraySize> d_uniformArray;
@@ -138,10 +145,20 @@ public:
   static void enableAttribute(Attribute attribute, Format format);
   static void disableAttribute(Attribute attribute, Format format);
   static void advanceAttributePerInstance(Attribute attribute, Format format, bool advance);
+  static void enableAttribute(std::string const &attribute, Format format);
+  static void disableAttribute(std::string const &attribute, Format format);
+  static void advanceAttributePerInstance(std::string const &attribute, Format format, bool advance);
+  static void enableAttribute(GLint attribute, Format format);
+  static void disableAttribute(GLint attribute, Format format);
+  static void advanceAttributePerInstance(GLint attribute, Format format, bool advance);
 
-  //template<typename Type>
-  static void set(Attribute attribute, Buffer<GLfloat> const &value, Format format, uint floatStartOffset = 0, uint floatStride = 0);
-  
+  template<typename Type>
+  static void set(Attribute attribute, Buffer<Type> const &value, Format format, uint floatStartOffset = 0, uint floatStride = 0);
+  template<typename Type>
+  static GLint set(std::string const &attribute, Buffer<Type> const &value, Format format, uint floatStartOffset = 0, uint floatStride = 0);
+  template<typename Type>
+  static void set(GLint attribute, Buffer<Type> const &value, Format format, uint floatStartOffset = 0, uint floatStride = 0);
+
   template<typename Type>
   static GLint set(std::string const &variable, Type const *values, size_t size);
 
@@ -193,6 +210,8 @@ public:
   static Shader const &defaultShader();
 
 private:
+  static Shader &activePrivate();
+
   void compileShader(std::string const &input, std::string const &filename, std::string const &stage, std::shared_ptr<GLuint> &shader, GLuint shaderType);
   void checkCompile(GLuint shader, std::string const &filename, std::string const &stage) const;
   void checkProgram(GLuint program) const;
@@ -238,6 +257,12 @@ private:
   template<typename Type>
   void Shader::set(Uniform uniform, Type const &value)
   {
+    if(active().d_uniformArray[uniform] == static_cast<GLint>(UniformStatus::notInitialised))
+    {
+      activePrivate().d_uniformArray[uniform] = static_cast<GLint>(UniformStatus::notFound);
+      log(active().d_filename, 0, LogType::warning, "Uniform " + std::to_string(uniform) + " has not been bound yet");
+    }
+
     set(active().d_uniformArray[uniform], value);
   }
 
@@ -255,8 +280,28 @@ private:
     texture.bind();
   }
 
-  //template<typename Type>
-  inline void Shader::set(Attribute attribute, Buffer<GLfloat> const &value, Format format, uint floatStartOffset, uint floatStride)
+  template<typename Type>
+  inline void Shader::set(Attribute attribute, Buffer<Type> const &value, Format format, uint floatStartOffset, uint floatStride)
+  {
+    if(active().d_attributeArray[attribute] == static_cast<GLint>(UniformStatus::notInitialised))
+    {
+      activePrivate().d_attributeArray[attribute] = static_cast<GLint>(UniformStatus::notFound);
+      log(active().d_filename, 0, LogType::warning, "Attribute " + std::to_string(attribute) + " has not been bound yet");
+    }
+
+    set(active().d_attributeArray[attribute], value, format, floatStartOffset, floatStride);
+  }
+
+  template<typename Type>
+  inline GLint Shader::set(std::string const &attribute, Buffer<Type> const &value, Format format, uint floatStartOffset, uint floatStride)
+  {
+    GLint loc = active().findAttribute(attribute);
+    set(loc, value, format, floatStartOffset, floatStride);
+    return loc;
+  }
+
+  template<typename Type>
+  inline void Shader::set(GLint attribute, Buffer<Type> const &value, Format format, uint floatStartOffset, uint floatStride)
   {
     uint rows = format % 10;
     uint columns = format / 10;
@@ -266,7 +311,7 @@ private:
       floatStride = rows * columns;
 
     for(uint idx = 0; idx != columns; ++idx)
-      glVertexAttribPointer(active().d_attributeArray[attribute] + idx, rows, GL_FLOAT, GL_FALSE, floatStride * sizeof(GLfloat), reinterpret_cast<void*>((floatStartOffset + idx * rows) * sizeof(GLfloat)));
+      glVertexAttribPointer(attribute + idx, rows, GL_FLOAT, GL_FALSE, floatStride * sizeof(GLfloat), reinterpret_cast<void*>((floatStartOffset + idx * rows) * sizeof(GLfloat)));
   }
 
   namespace internal
