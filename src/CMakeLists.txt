@@ -42,10 +42,10 @@ set(CXXSOURCES
 if(SCENE)
   set(CXXSOURCES ${CXXSOURCES} ${CXXSOURCES_SCENE})
 
-  find_package(Bullet REQUIRED)
-  if(BULLET_FOUND)
-    include_directories(${BULLET_INCLUDE_DIRS})
-  endif()
+  #find_package(Bullet REQUIRED)
+  #if(BULLET_FOUND)
+  #  include_directories(${BULLET_INCLUDE_DIRS})
+  #endif()
 endif()
 
 if(GUI)
