@@ -60,7 +60,7 @@ namespace dim
     }
   }
 
-  Mesh::Mesh(GLfloat const *buffer, size_t numOfVertices, Shader::Attribute attribute, Shader::Format format)
+  Mesh::Mesh(GLfloat const *buffer, size_t numOfVertices, internal::AttributeAccessor attribute, Shader::Format format)
     :
       d_formats{{attribute, format}},
       d_instanceFormat(Shader::vec1),
@@ -76,7 +76,7 @@ namespace dim
       initialize();
   }
 
-  Mesh::Mesh(GLfloat const *buffer, size_t numOfVertices, std::vector<std::pair<Shader::Attribute, Shader::Format>> const &formats)
+  Mesh::Mesh(GLfloat const *buffer, size_t numOfVertices, std::vector<std::pair<internal::AttributeAccessor, Shader::Format>> const &formats)
     :
       d_formats(formats),
       d_instanceFormat(Shader::vec1),
@@ -93,7 +93,7 @@ namespace dim
       initialize();
   }
 
-  void Mesh::addBuffer(GLfloat const *buffer, Shader::Attribute attribute, Shader::Format format)
+  void Mesh::addBuffer(GLfloat const *buffer, internal::AttributeAccessor attribute, Shader::Format format)
   {
     if(attributeIndex(attribute) != -1)
       throw log(__FILE__, __LINE__, LogType::error, "Trying to add a buffer to a mesh that is already added");
@@ -110,7 +110,7 @@ namespace dim
     d_interleavedVBO.update(d_numOfVertices * numOfElements(), buffer);
   }
 
-  void Mesh::updateBuffer(GLfloat const *buffer, Shader::Attribute attribute)
+  void Mesh::updateBuffer(GLfloat const *buffer, internal::AttributeAccessor attribute)
   {
     int index = attributeIndex(attribute);
 
@@ -187,7 +187,7 @@ namespace dim
     return varNumOfElements;
   }
 
-  int Mesh::attributeIndex(Shader::Attribute attribute) const
+  int Mesh::attributeIndex(internal::AttributeAccessor attribute) const
   {
     for(size_t idx = 0; idx != d_formats.size(); ++idx)
     {
@@ -205,7 +205,7 @@ namespace dim
     s_bound = d_interleavedVBO.id();
 
     for(auto format : d_formats)
-      Shader::enableAttribute(format.first, format.second);
+      format.first.enable(format.second);
 
     // set pointers when we're dealing with an interleaved
     if(d_additionalVBOs.size() == 0)
@@ -216,7 +216,7 @@ namespace dim
 
       for(auto format : d_formats)
       {
-        Shader::set(format.first, d_interleavedVBO, format.second, offset, varNumOfElements);
+        format.first.set(d_interleavedVBO, format.second, offset, varNumOfElements);
         offset += internal::formatSize(format.second);
       }
     }
@@ -224,12 +224,12 @@ namespace dim
     else
     {
       d_interleavedVBO.bind(Buffer<GLfloat>::data);
-      Shader::set(d_formats[0].first, d_interleavedVBO, d_formats[0].second);
+      d_formats[0].first.set(d_interleavedVBO, d_formats[0].second);
 
       for(uint idx = 0; idx != d_additionalVBOs.size(); ++idx)
       {
         d_additionalVBOs[idx].bind(Buffer<GLfloat>::data);
-        Shader::set(d_formats[idx + 1].first, d_additionalVBOs[idx], d_formats[idx + 1].second);
+        d_formats[idx + 1].first.set(d_additionalVBOs[idx], d_formats[idx + 1].second);
       }
     }
 
@@ -240,7 +240,7 @@ namespace dim
   {
     s_bound = 0;
     for(auto format : d_formats)
-      Shader::disableAttribute(format.first, format.second);
+      format.first.disable(format.second);
 
     //unbindElement();
   }

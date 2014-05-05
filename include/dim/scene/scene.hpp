@@ -74,7 +74,11 @@ public:
     //generateTexCoords,
     texCoords3D,
     generateTangents,
-    generateBinormals
+    generateBinormals,
+    load1BoneWeights,
+    load2BoneWeights,
+    load4BoneWeights
+    //load8BoneWeights
   };
 
   Scene() = default;

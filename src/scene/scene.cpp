@@ -198,7 +198,7 @@ namespace dim
       return false;
     }
 
-    void addAttributeToBuffer(size_t numOfElements, vector<GLfloat> &array, aiVector3D const &vector)
+    void addTexCoordAttributeToBuffer(size_t numOfElements, vector<GLfloat> &array, aiVector3D const &vector)
     {
       array.push_back(vector.x);
       array.push_back(vector.y);
@@ -207,41 +207,104 @@ namespace dim
         array.push_back(vector.z);
     }
 
-    void fillArray(vector<GLfloat> &array, aiMesh const &mesh, bool normals, bool texCoords, bool binormals, bool tangents, uint numOfTexCoords)
+    void addBoneAttributeToBuffer(size_t numOfElements, vector<GLfloat> &array, GLfloat* vector)
     {
+      array.push_back(vector[0]);
+      if(numOfElements >= 2)
+        array.push_back(vector[1]);
+      if(numOfElements >= 4)
+      {
+        array.push_back(vector[2]);
+        array.push_back(vector[3]);
+      }
+    }
+
+    void addAttributeToBuffer(vector<GLfloat> &array, aiVector3D const &vector)
+    {
+      array.push_back(vector.x);
+      array.push_back(vector.y);
+      array.push_back(vector.z);
+    }
+
+    void fillArray(vector<GLfloat> &array, aiMesh const &mesh, bool normals, bool texCoords, bool binormals, bool tangents, bool bones, uint numOfTexCoords, uint numOfBoneWeights)
+    {
+      vector<GLfloat> boneIds;
+      vector<GLfloat> boneWeights;
+
+
+      if(bones)
+      {
+        vector<uint> vertexWeightIdx;
+        vertexWeightIdx.resize(mesh.mNumVertices, 0);
+        boneIds.resize(numOfBoneWeights * mesh.mNumVertices);
+        boneWeights.resize(numOfBoneWeights * mesh.mNumVertices);
+
+        for(size_t boneIdx = 0; boneIdx != mesh.mNumBones; ++boneIdx)
+        {
+          aiBone const &bone = *mesh.mBones[boneIdx];
+          for(size_t weightIdx = 0; weightIdx != bone.mNumWeights; ++weightIdx)
+          {
+            aiVertexWeight const &weight = bone.mWeights[weightIdx];
+            if(vertexWeightIdx[weight.mVertexId] >= numOfBoneWeights)
+            {
+              log(__FILE__, __LINE__, LogType::warning, "Model file contains more per vertex weights than needed");
+              continue;
+            }
+
+            size_t idx = weight.mVertexId * numOfBoneWeights + vertexWeightIdx[weight.mVertexId];
+            boneIds[idx] = boneIdx;
+            boneWeights[idx] = weight.mWeight;
+
+            ++vertexWeightIdx[weight.mVertexId];
+          }
+        }
+      }
+
       // fill buffer
       for(size_t vert = 0; vert != mesh.mNumVertices; ++vert)
       {
-        addAttributeToBuffer(3, array, mesh.mVertices[vert]);
+        addAttributeToBuffer(array, mesh.mVertices[vert]);
 
         if(normals)
-          addAttributeToBuffer(3, array, mesh.mNormals[vert]);
+          addAttributeToBuffer(array, mesh.mNormals[vert]);
 
         if(texCoords)
-          addAttributeToBuffer(numOfTexCoords, array, mesh.mTextureCoords[0][vert]);
+          addTexCoordAttributeToBuffer(numOfTexCoords, array, mesh.mTextureCoords[0][vert]);
 
         if(binormals)
-          addAttributeToBuffer(3, array, mesh.mBitangents[vert]);
+          addAttributeToBuffer(array, mesh.mBitangents[vert]);
 
         if(tangents)
-          addAttributeToBuffer(3, array, mesh.mTangents[vert]);
+          addAttributeToBuffer(array, mesh.mTangents[vert]);
+
+        if(bones)
+        {
+          addBoneAttributeToBuffer(numOfBoneWeights, array, &boneIds[vert]);
+          addBoneAttributeToBuffer(numOfBoneWeights, array, &boneWeights[vert]);
+        }
       }
     }
 
     Mesh loadMesh(aiScene const &scene, std::vector<Scene::Option> const &options, size_t mesh, string const &filename)
     {
-      vector<pair<Shader::Attribute, Shader::Format>> attributes;
+      vector<pair<internal::AttributeAccessor, Shader::Format>> attributes;
       attributes.push_back({Shader::vertex, Shader::vec3});
 
       if(in(options, Scene::texCoords3D) && scene.mMeshes[mesh]->mTextureCoords[0] == 0)
         throw log(filename, 0, LogType::error, "No texture coordinates present");
+
+
 
       uint numOfElements = 3;
       bool texCoords = false;
       bool normals = false;
       bool binormals = false;
       bool tangents = false;
+      bool bones = false;
       size_t numOfTexCoords = 0;
+      size_t numOfBoneWeights = 0;
+
+
 
       if(scene.mMeshes[mesh]->mNormals != 0 && ! in(options, Scene::noNormals))
       {
@@ -285,13 +348,48 @@ namespace dim
         attributes.push_back({Shader::tangent, Shader::vec3});
       }
 
+      /*if(in(options, Scene::load8BoneWeights))
+      {
+        bones = true;
+        numOfElements += 16;
+        attributes.push_back({Shader::boneId, Shader::vec1});
+        attributes.push_back({Shader::boneWeight, Shader::vec1});
+      }
+      else*/ if(in(options, Scene::load4BoneWeights))
+      {
+        bones = true;
+        numOfBoneWeights = 4;
+        numOfElements += 8;
+        attributes.push_back({Shader::boneId, Shader::vec4});
+        attributes.push_back({Shader::boneWeight, Shader::vec4});
+      }
+      else if(in(options, Scene::load2BoneWeights))
+      {
+        bones = true;
+        numOfBoneWeights = 2;
+        numOfElements += 4;
+        attributes.push_back({Shader::boneId, Shader::vec2});
+        attributes.push_back({Shader::boneWeight, Shader::vec2});
+      }
+      else if(in(options, Scene::load1BoneWeights))
+      {
+        bones = true;
+        numOfBoneWeights = 1;
+        numOfElements += 2;
+        attributes.push_back({Shader::boneId, Shader::vec1});
+        attributes.push_back({Shader::boneWeight, Shader::vec1});
+      }
+
+      if(bones && scene.mMeshes[mesh]->mNumBones == 0)
+        throw log(filename, 0, LogType::error, "No bones present");
+
       // allocate buffer
       size_t numOfVertices = scene.mMeshes[mesh]->mNumVertices;
 
       vector<GLfloat> array;
       array.reserve(numOfVertices * numOfElements);
 
-      fillArray(array, *scene.mMeshes[mesh], normals, texCoords, binormals, tangents, numOfTexCoords);
+      fillArray(array, *scene.mMeshes[mesh], normals, texCoords, binormals, tangents, bones, numOfTexCoords, numOfBoneWeights);
 
       Mesh model(array.data(), numOfVertices, attributes);
 
@@ -355,6 +453,7 @@ namespace dim
     bool normals = true;
     bool binormals = true;
     bool tangents = true;
+    bool bones = true;
     size_t numOfVertices = 0;
 
     for(size_t meshIdx = 0; meshIdx != scene->mNumMeshes; ++meshIdx)
@@ -370,11 +469,17 @@ namespace dim
       if(mesh.mTextureCoords[0] == 0 or in(options, Scene::noTexCoords))
         texCoords = false;
 
-      if(mesh.mBitangents == 0 or not in(options, Scene::generateBinormals))
+      if(not in(options, Scene::generateBinormals))
         binormals = false;
 
-      if(mesh.mTangents == 0 or not in(options, Scene::generateTangents))
+      if(not in(options, Scene::generateTangents))
         tangents = false;
+
+      if(not in(options, Scene::load4BoneWeights) and not in(options, Scene::load2BoneWeights) and not in(options, Scene::load1BoneWeights))
+        bones = false;
+
+      if(bones && mesh.mNumBones == 0)
+        throw log(filename, 0, LogType::error, "No bones present");
 
       numOfVertices += mesh.mNumVertices;
     }
@@ -382,6 +487,7 @@ namespace dim
     // Find number of elements
     uint numOfElements = 3;
     uint numOfTexCoords = 2;
+    uint numOfBoneWeights = 0;
     if(normals)
       numOfElements += 3;
 
@@ -405,12 +511,30 @@ namespace dim
     if(tangents)
       numOfElements += 3;
 
+    /*if(bones and in(options, Scene::load8BoneWeights))
+      numOfElements += 16;
+    else*/ if(bones and in(options, Scene::load4BoneWeights))
+    {
+      numOfBoneWeights = 4;
+      numOfElements += 8;
+    }
+    else if(bones and in(options, Scene::load2BoneWeights))
+    {
+      numOfBoneWeights = 2;
+      numOfElements += 4;
+    }
+    else if(bones and in(options, Scene::load1BoneWeights))
+    {
+      numOfBoneWeights = 1;
+      numOfElements += 2;
+    }
+
     // load meshes
     vector<GLfloat> points;
     points.reserve(numOfElements * numOfVertices);
 
     for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
-      fillArray(points, *scene->mMeshes[mesh], normals, texCoords, binormals, tangents, numOfTexCoords);
+      fillArray(points, *scene->mMeshes[mesh], normals, texCoords, binormals, tangents, bones, numOfTexCoords, numOfBoneWeights);
 
     return points;
   }

@@ -84,7 +84,9 @@ public:
     texCoord = 2,
     binormal = 3,
     tangent = 4,
-    instance = 5
+    boneId = 5,
+    boneWeight = 6,
+    instance = 7
   };
 
   enum Uniform
