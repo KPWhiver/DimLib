@@ -64,11 +64,11 @@ namespace dim
     :
       d_formats{{attribute, format}},
       d_instanceFormat(Shader::vec1),
-      d_interleavedVBO(numOfVertices * numOfElements(), buffer),
-      d_indexVBO(0, 0),
+      d_interleavedVBO({numOfVertices * numOfElements(), buffer}),
+      d_indexVBO({}),
       d_numOfVertices(numOfVertices),
       d_numOfTriangles(0),
-      d_instancingVBO(0, 0),
+      d_instancingVBO({}),
       d_maxLocations(0)
   {
     // static initialize
@@ -80,11 +80,11 @@ namespace dim
     :
       d_formats(formats),
       d_instanceFormat(Shader::vec1),
-      d_interleavedVBO(numOfVertices * numOfElements(), buffer),
-      d_indexVBO(0, 0),
+      d_interleavedVBO({numOfVertices * numOfElements(), buffer}),
+      d_indexVBO({}),
       d_numOfVertices(numOfVertices),
       d_numOfTriangles(0),
-      d_instancingVBO(0, 0),
+      d_instancingVBO({}),
       d_maxLocations(0)
 
   {
@@ -98,7 +98,7 @@ namespace dim
     if(attributeIndex(attribute) != -1)
       throw log(__FILE__, __LINE__, LogType::error, "Trying to add a buffer to a mesh that is already added");
 
-    d_additionalVBOs.emplace_back(d_numOfVertices * internal::formatSize(format), buffer);
+    d_additionalVBOs.emplace_back(ListAccessor<GLfloat>{d_numOfVertices * internal::formatSize(format), buffer});
     d_formats.push_back({attribute, format});
   }
 
@@ -107,7 +107,7 @@ namespace dim
     if(d_interleavedVBO.size() == 0)
       throw log(__FILE__, __LINE__, LogType::error, "Unable to call Mesh::updateBuffer(buffer) on an interleaved mesh");
 
-    d_interleavedVBO.update(d_numOfVertices * numOfElements(), buffer);
+    d_interleavedVBO.update({d_numOfVertices * numOfElements(), buffer});
   }
 
   void Mesh::updateBuffer(GLfloat const *buffer, internal::AttributeAccessor attribute)
@@ -120,9 +120,9 @@ namespace dim
     uint formatS = internal::formatSize(d_formats[index].second);
 
     if(index == 0)
-      d_interleavedVBO.update(d_numOfVertices * formatS, buffer);
+      d_interleavedVBO.update({d_numOfVertices * formatS, buffer});
     else
-      d_additionalVBOs[index - 1].update(d_numOfVertices * formatS, buffer);
+      d_additionalVBOs[index - 1].update({d_numOfVertices * formatS, buffer});
   }
 
   void Mesh::addElementBuffer(GLushort const *buffer, size_t numOfTriangles)
@@ -132,7 +132,7 @@ namespace dim
     if(d_indexVBO.size() != 0)
       throw log(__FILE__, __LINE__, LogType::error, "Can't add an element buffer, it's has already been added");
 
-    d_indexVBO = Buffer<GLushort>(d_numOfTriangles * 3, buffer);
+    d_indexVBO = Buffer<GLushort>({d_numOfTriangles * 3, buffer});
   }
 
   void Mesh::addInstanceBuffer(GLfloat const *buffer, size_t locations, Shader::Format format)
@@ -143,7 +143,7 @@ namespace dim
     d_instanceFormat = format;
 
     d_maxLocations = locations;
-    d_instancingVBO = Buffer<GLfloat>(d_maxLocations * internal::formatSize(d_instanceFormat), buffer);
+    d_instancingVBO = Buffer<GLfloat>({d_maxLocations * internal::formatSize(d_instanceFormat), buffer});
   }
 
   void Mesh::updateElementBuffer(GLushort const *buffer)
@@ -151,7 +151,7 @@ namespace dim
     if(d_indexVBO.size() == 0)
       throw log(__FILE__, __LINE__, LogType::error, "Can't update a element buffer if no element buffers have been added yet");
 
-    d_indexVBO.update(d_numOfTriangles * 3, buffer);
+    d_indexVBO.update({d_numOfTriangles * 3, buffer});
   }
 
   void Mesh::updateInstanceBuffer(GLfloat const *buffer, size_t locations)
@@ -160,7 +160,7 @@ namespace dim
       throw log(__FILE__, __LINE__, LogType::error, "Can't update a instance buffer if no instance buffers have been added yet");
 
     d_maxLocations = locations;
-    d_instancingVBO.update(d_maxLocations * internal::formatSize(d_instanceFormat), buffer);
+    d_instancingVBO.update({d_maxLocations * internal::formatSize(d_instanceFormat), buffer});
   }
 
   Buffer<GLfloat> const &Mesh::buffer()

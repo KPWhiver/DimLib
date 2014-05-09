@@ -27,6 +27,63 @@
 
 namespace dim
 {
+  template<typename Type>
+  class ListAccessor
+  {
+      Type const *d_list;
+      size_t d_size;
+
+    public:
+      ListAccessor(size_t a_size, Type const *list)
+        :
+          d_list(list),
+          d_size(a_size)
+      {
+        if(d_size == 0)
+          d_list = 0;
+      }
+
+      template<size_t Size>
+      ListAccessor(std::array<Type, Size> const &list)
+        :
+          d_list(list.data()),
+          d_size(Size)
+      {
+        if(d_size == 0)
+          d_list = 0;
+      }
+
+      ListAccessor(std::vector<Type> const &list)
+        :
+          d_list(list.data()),
+          d_size(list.size())
+      {
+        if(d_size == 0)
+          d_list = 0;
+      }
+
+      ListAccessor(std::initializer_list<Type> const &list)
+        :
+          d_list(list.begin()),
+          d_size(list.size())
+      {
+        if(d_size == 0)
+          d_list = 0;
+      }
+
+      ListAccessor(ListAccessor const &other) = delete;
+
+      size_t size() const
+      {
+        return d_size;
+      }
+
+      Type const *data() const
+      {
+        return d_list;
+      }
+  };
+
   enum class BufferType
   {
     texture = GL_TEXTURE_BUFFER,
@@ -71,10 +128,10 @@ namespace dim
         stream = GL_STREAM_DRAW,
       };
 
-      Buffer(size_t size, Type const *buffer);
+      Buffer(ListAccessor<Type> const &list);
 
       void bind(Mode mode) const;
-      void update(size_t bytes, Type const *buffer);
+      void update(ListAccessor<Type> const &list);
 
       Type* map(Access access);
       bool unmap();
@@ -87,17 +144,17 @@ namespace dim
   };
 
   template<typename Type>
-  Buffer<Type>::Buffer(size_t size, Type const *buffer)
+  Buffer<Type>::Buffer(ListAccessor<Type> const &list)
       :
           d_id(new GLuint(0), [](GLuint *ptr)
           { glDeleteBuffers(1, ptr);
             delete ptr;}),
-          d_size(size),
+          d_size(list.size()),
           d_usage(constant)
   {
     glGenBuffers(1, d_id.get());
     glBindBuffer(data, id());
-    glBufferData(data, size * sizeof(Type), buffer, d_usage);
+    glBufferData(data, d_size * sizeof(Type), list.data(), d_usage);
   }
 
   template<typename Type>
@@ -119,12 +176,12 @@ namespace dim
   }
 
   template<typename Type>
-  void Buffer<Type>::update(size_t size, Type const *buffer)
+  void Buffer<Type>::update(ListAccessor<Type> const &list)
   {
-    d_size = size;
+    d_size = list.size();
     glBindBuffer(data, id());
-    glBufferData(data, size * sizeof(Type), 0, GL_DYNAMIC_DRAW);
-    glBufferSubData(data, 0, size * sizeof(Type), buffer);
+    glBufferData(data, d_size * sizeof(Type), 0, GL_DYNAMIC_DRAW);
+    glBufferSubData(data, 0, d_size * sizeof(Type), list.data());
   }
 
   template<typename Type>
