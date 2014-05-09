@@ -85,6 +85,20 @@ namespace dim
             d_stringAttribute = other.d_stringAttribute;
         }
 
+        AttributeAccessor &operator=(AttributeAccessor const &other)
+        {
+          d_type = other.d_type;
+
+          if(d_type == UnionType::id)
+            d_idAttribute = other.d_idAttribute;
+          else if(d_type == UnionType::num)
+            d_numAttribute = other.d_numAttribute;
+          else //if(d_type == UnionType::string)
+            d_stringAttribute = other.d_stringAttribute;
+
+          return *this;
+        }
+
         bool operator==(AttributeAccessor const &other) const
         {
           if(d_type == UnionType::id)
