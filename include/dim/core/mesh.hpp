@@ -160,6 +160,24 @@ namespace dim
     };
   }
 
+  class Bone
+  {
+      //std::string d_name;
+      std::vector<Bone> d_children;
+      uint d_index;
+
+    public:
+      void setIndex(uint index)
+      {
+        d_index = index;
+      }
+
+      void addChild(Bone &&bone)
+      {
+        d_children.push_back(std::move(bone));
+      }
+  };
+
   class Mesh
   {
       std::vector<std::pair<internal::AttributeAccessor, Shader::Format>> d_formats;

@@ -412,9 +412,11 @@ namespace dim
     aiScene const *loadScene(string const &filename, Assimp::Importer &importer, vector<Scene::Option> options = {})
     {
       // set flags
-      uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices;
+      uint flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
+                   aiProcess_LimitBoneWeights | aiProcess_ValidateDataStructure |
+                   aiProcess_RemoveComponent;
 
-      if(in(options, Scene::generateNormals))
+      if(in(options, Scene::generateNormals) || in(options, Scene::regenerateNormals))
         flags |= aiProcess_GenSmoothNormals;
 
       if(in(options, Scene::generateTangents))
@@ -428,10 +430,29 @@ namespace dim
         flags |= aiProcess_CalcTangentSpace;
       }
 
+      uint numOfWeights = 4;
+      if(in(options, Scene::load4BoneWeights))
+        numOfWeights = 4;
+      else if(in(options, Scene::load2BoneWeights))
+        numOfWeights = 2;
+      else if(in(options, Scene::load1BoneWeights))
+        numOfWeights = 1;
+
+      int removeFlags = aiComponent_CAMERAS | aiComponent_COLORS | aiComponent_LIGHTS;
+      if(in(options, Scene::generateNormals) || in(options, Scene::noNormals))
+        removeFlags |= aiComponent_NORMALS;
+      if(in(options, Scene::noTexCoords))
+        removeFlags |= aiComponent_TEXCOORDS;
+
+      importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeFlags);
+      importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, numOfWeights);
+
       aiScene const *scene = importer.ReadFile(filename, flags);
+
 
       if(!scene)
         throw log(__FILE__, __LINE__, LogType::error, importer.GetErrorString());
+      //if(scene->mFlags)
 
       if(in(options, Scene::texCoords3D) && scene->mMeshes[0]->mTextureCoords[0] == 0)
         throw log(filename, 0, LogType::error, "No texture coordinates present");
@@ -442,12 +463,10 @@ namespace dim
     TextureManager stdManager(Filtering::trilinear);
   }
 
-  vector<GLfloat> Scene::loadPointData(string const &filename, vector<Option> options)
+  namespace
   {
-    // load scene
-    Assimp::Importer importer;
-    aiScene const *scene = loadScene(filename, importer, options);
-
+  vector<GLfloat> hiddenLoadPointData(std::string const &filename, aiScene const &scene, std::vector<Scene::Option> options)
+  {
     // Find mesh properties
     bool texCoords = true;
     bool normals = true;
@@ -456,9 +475,9 @@ namespace dim
     bool bones = true;
     size_t numOfVertices = 0;
 
-    for(size_t meshIdx = 0; meshIdx != scene->mNumMeshes; ++meshIdx)
+    for(size_t meshIdx = 0; meshIdx != scene.mNumMeshes; ++meshIdx)
     {
-      aiMesh const &mesh = *scene->mMeshes[meshIdx];
+      aiMesh const &mesh = *scene.mMeshes[meshIdx];
 
       if(in(options, Scene::texCoords3D) && mesh.mTextureCoords[0] == 0)
         throw log(filename, 0, LogType::error, "No texture coordinates present");
@@ -493,7 +512,7 @@ namespace dim
 
     if(texCoords)
     {
-      if(texCoords3D)
+      if(Scene::texCoords3D)
       {
         numOfElements += 3;
         numOfTexCoords = 3;
@@ -533,10 +552,81 @@ namespace dim
     vector<GLfloat> points;
     points.reserve(numOfElements * numOfVertices);
 
-    for(size_t mesh = 0; mesh != scene->mNumMeshes; ++mesh)
-      fillArray(points, *scene->mMeshes[mesh], normals, texCoords, binormals, tangents, bones, numOfTexCoords, numOfBoneWeights);
+    for(size_t mesh = 0; mesh != scene.mNumMeshes; ++mesh)
+      fillArray(points, *scene.mMeshes[mesh], normals, texCoords, binormals, tangents, bones, numOfTexCoords, numOfBoneWeights);
 
     return points;
+  }
+  }
+
+  vector<GLfloat> Scene::loadPointData(string const &filename, vector<Option> options)
+  {
+    // load scene
+    Assimp::Importer importer;
+    aiScene const *scene = loadScene(filename, importer, options);
+
+    return hiddenLoadPointData(filename, *scene, options);
+  }
+
+
+
+  bool extractBones(aiScene const &scene, aiNode const &node, Bone &bone)
+  {
+    // Check if this node is in the list of nodes
+    bool isBone = false;
+    for(size_t meshIdx = 0; meshIdx != scene.mNumMeshes; ++meshIdx)
+    {
+      aiMesh &mesh = *scene.mMeshes[meshIdx];
+      for(size_t boneIdx = 0; boneIdx != mesh.mNumBones; ++boneIdx)
+      {
+        if(mesh.mBones[boneIdx]->mName == node.mName)
+        {
+          isBone = true;
+          bone.setIndex(boneIdx);
+          break;
+        }
+      }
+      if(isBone)
+        break;
+    }
+
+    if(not isBone)
+    {
+      for(size_t childIdx = 0; childIdx != node.mNumChildren; ++childIdx)
+      {
+        if(extractBones(scene, *node.mChildren[childIdx], bone))
+          return true;
+      }
+      return false;
+    }
+
+    // isBone == true
+    for(size_t childIdx = 0; childIdx != node.mNumChildren; ++childIdx)
+    {
+      Bone childBone;
+
+      bool success = extractBones(scene, *node.mChildren[childIdx], childBone);
+      if(success)
+        bone.addChild(move(childBone));
+    }
+
+    return true;
+  }
+
+  pair<vector<GLfloat>, Bone> Scene::loadPointDataAndBones(string const &filename, vector<Option> options)
+  {
+    // load scene
+    Assimp::Importer importer;
+    aiScene const *scene = loadScene(filename, importer, options);
+
+    Bone bone;
+    bone.setIndex(-1);
+    bool success = extractBones(*scene, *scene->mRootNode, bone);
+
+    if(success == false)
+      throw log(filename, 0, LogType::error, "Mesh does not contain any bones");
+
+    return make_pair(hiddenLoadPointData(filename, *scene, options), move(bone));
   }
 
   Scene::Scene(std::string const &filename, std::vector<Option> list)

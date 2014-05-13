@@ -71,6 +71,7 @@ public:
     noNormals,
     noTexCoords,
     generateNormals,
+    regenerateNormals,
     //generateTexCoords,
     texCoords3D,
     generateTangents,
@@ -100,6 +101,7 @@ public:
   bool operator<(Scene const &other) const;
 
   static std::vector<GLfloat> loadPointData(std::string const &filename, std::vector<Option> list = {});
+  static std::pair<std::vector<GLfloat>, Bone> loadPointDataAndBones(std::string const &filename, std::vector<Option> list = {});
 };
 }
 
