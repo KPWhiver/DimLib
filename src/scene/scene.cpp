@@ -439,7 +439,7 @@ namespace dim
         numOfWeights = 1;
 
       int removeFlags = aiComponent_CAMERAS | aiComponent_COLORS | aiComponent_LIGHTS;
-      if(in(options, Scene::generateNormals) || in(options, Scene::noNormals))
+      if(in(options, Scene::regenerateNormals) || in(options, Scene::noNormals))
         removeFlags |= aiComponent_NORMALS;
       if(in(options, Scene::noTexCoords))
         removeFlags |= aiComponent_TEXCOORDS;
