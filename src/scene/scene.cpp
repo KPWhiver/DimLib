@@ -279,8 +279,8 @@ namespace dim
 
         if(bones)
         {
-          addBoneAttributeToBuffer(numOfBoneWeights, array, &boneIds[vert]);
-          addBoneAttributeToBuffer(numOfBoneWeights, array, &boneWeights[vert]);
+          addBoneAttributeToBuffer(numOfBoneWeights, array, &boneIds[vert * numOfBoneWeights]);
+          addBoneAttributeToBuffer(numOfBoneWeights, array, &boneWeights[vert * numOfBoneWeights]);
         }
       }
     }
@@ -293,8 +293,6 @@ namespace dim
       if(in(options, Scene::texCoords3D) && scene.mMeshes[mesh]->mTextureCoords[0] == 0)
         throw log(filename, 0, LogType::error, "No texture coordinates present");
 
-
-
       uint numOfElements = 3;
       bool texCoords = false;
       bool normals = false;
@@ -303,8 +301,6 @@ namespace dim
       bool bones = false;
       size_t numOfTexCoords = 0;
       size_t numOfBoneWeights = 0;
-
-
 
       if(scene.mMeshes[mesh]->mNormals != 0 && ! in(options, Scene::noNormals))
       {
@@ -583,6 +579,9 @@ namespace dim
         {
           isBone = true;
           bone.setIndex(boneIdx);
+          bone.setName(node.mName.C_Str());
+          aiMatrix4x4 const &matrix = mesh.mBones[boneIdx]->mOffsetMatrix;
+          bone.setOffset(vec3(matrix.a4, matrix.b4, matrix.c4));
           break;
         }
       }

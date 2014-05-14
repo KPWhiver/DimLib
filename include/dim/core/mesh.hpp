@@ -162,11 +162,44 @@ namespace dim
 
   class Bone
   {
-      //std::string d_name;
+
+      std::string d_name;
+      glm::vec3 d_offset;
       std::vector<Bone> d_children;
       uint d_index;
 
+
     public:
+      void setName(std::string const &name)
+      {
+        d_name = name;
+      }
+
+      void setOffset(glm::vec3 const &offset)
+      {
+        d_offset = offset;
+      }
+
+      glm::vec3 const &offset() const
+      {
+        return d_offset;
+      }
+
+      std::string const &name() const
+      {
+        return d_name;
+      }
+
+      std::vector<Bone> const &children() const
+      {
+        return d_children;
+      }
+
+      uint index() const
+      {
+        return d_index;
+      }
+
       void setIndex(uint index)
       {
         d_index = index;
