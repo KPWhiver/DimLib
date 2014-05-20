@@ -78,7 +78,7 @@ public:
     generateBinormals,
     load1BoneWeights,
     load2BoneWeights,
-    load4BoneWeights
+    load4BoneWeights,
     //load8BoneWeights
   };
 

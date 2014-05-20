@@ -580,8 +580,11 @@ namespace dim
           isBone = true;
           bone.setIndex(boneIdx);
           bone.setName(node.mName.C_Str());
-          aiMatrix4x4 const &matrix = mesh.mBones[boneIdx]->mOffsetMatrix;
-          bone.setOffset(vec3(matrix.a4, matrix.b4, matrix.c4));
+          aiMatrix4x4 const &m = mesh.mBones[boneIdx]->mOffsetMatrix;
+          bone.setOffset(mat4(m.a1, m.b1, m.c1, m.d1,
+                              m.a2, m.b2, m.c2, m.d2,
+                              m.a3, m.b3, m.c3, m.d3,
+                              m.a4, m.b4, m.c4, m.d4));
           break;
         }
       }

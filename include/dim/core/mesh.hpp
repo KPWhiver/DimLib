@@ -162,9 +162,8 @@ namespace dim
 
   class Bone
   {
-
+      glm::mat4 d_offset;
       std::string d_name;
-      glm::vec3 d_offset;
       std::vector<Bone> d_children;
       uint d_index;
 
@@ -175,12 +174,12 @@ namespace dim
         d_name = name;
       }
 
-      void setOffset(glm::vec3 const &offset)
+      void setOffset(glm::mat4 const &offset)
       {
         d_offset = offset;
       }
 
-      glm::vec3 const &offset() const
+      glm::mat4 const &offset() const
       {
         return d_offset;
       }
