@@ -108,13 +108,15 @@ namespace dim
 
     internal::SurfaceBase::s_renderTarget = 0;
 
+    glDepthMask(true);
+    glColorMask(true, true, true, true);
+    glDrawBuffer(GL_BACK);
+
     // Clear the buffer before drawing
     if(clearBuffer)
       clear();
 
-    glDepthMask(true);
-    glColorMask(true, true, true, true);
-    glDrawBuffer(GL_BACK);
+
   }
 
 }

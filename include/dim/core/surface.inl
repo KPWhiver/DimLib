@@ -154,14 +154,6 @@ namespace dim
     ComponentType attachment = processFormat(tex.externalFormat());
 
     addAttachment<Index>(attachment, &tex);
-    
-    if(attachment == depth)
-      d_attachments[Index] = GL_NONE;
-    else
-    {
-      d_attachments[Index] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
-      ++d_colorAttachments;
-    }
   }
 
   template<typename ...Types>
@@ -177,14 +169,6 @@ namespace dim
      ComponentType attachment = processFormat(tex.externalFormat());
 
      addAttachment<Index>(attachment, &tex);
-
-     if(attachment == depth)
-       d_attachments[Index] = GL_NONE;
-     else
-     {
-       d_attachments[Index] = GL_COLOR_ATTACHMENT0 + d_colorAttachments;
-       ++d_colorAttachments;
-     }
   }
 
   template<typename ...Types>
@@ -207,7 +191,7 @@ namespace dim
 
     glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
-    glDrawBuffer(GL_NONE);
+    //glDrawBuffer(GL_NONE);
 
     // Add the texture to the FBO
     if(attachment == depth)
@@ -348,28 +332,30 @@ namespace dim
     internal::setScissor(x, y, width, height);
 
     if(clearBuffer)
-      clear();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
-
-    GLuint buffers[std::tuple_size<TupleType>::value];
-    for(size_t idx = 0; idx != std::tuple_size<TupleType>::value; ++idx)
+      clear(drawBuffers);
+    else // This is an optimisation (binding is done in clear)
     {
-      if(drawBuffers[idx] == false)
-      {
-        buffers[idx] = GL_NONE;
-        if(d_attachments[idx] == GL_NONE)
-          glDepthMask(false);
-      }
-      else
-      {
-        buffers[idx] = d_attachments[idx];
-        if(d_attachments[idx] == GL_NONE)
-          glDepthMask(true);
-      }
-    }
+      glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
-    glDrawBuffers(std::tuple_size<TupleType>::value, buffers);
+      GLuint buffers[std::tuple_size<TupleType>::value];
+      for(size_t idx = 0; idx != std::tuple_size<TupleType>::value; ++idx)
+      {
+        if(drawBuffers[idx] == false)
+        {
+          buffers[idx] = GL_NONE;
+          if(d_attachments[idx] == GL_NONE)
+            glDepthMask(false);
+        }
+        else
+        {
+          buffers[idx] = d_attachments[idx];
+          if(d_attachments[idx] == GL_NONE)
+            glDepthMask(true);
+        }
+      }
+
+      glDrawBuffers(std::tuple_size<TupleType>::value, buffers);
+    }
 
     // Tell the attached textures that they might be changed
     notifyTextures();
@@ -422,31 +408,45 @@ namespace dim
   void Surface<Types...>::clear(bool drawBuffers[std::tuple_size<TupleType>::value])
   {
     GLuint buffers[std::tuple_size<TupleType>::value];
+    bool clearDepth = false;
     for(size_t idx = 0; idx != std::tuple_size<TupleType>::value; ++idx)
     {
       if(drawBuffers[idx] == false)
+      {
         buffers[idx] = GL_NONE;
+        if(d_attachments[idx] == GL_NONE)
+          glDepthMask(false);
+      }
       else
+      {
         buffers[idx] = d_attachments[idx];
+        if(d_attachments[idx] == GL_NONE)
+        {
+          glDepthMask(true);
+          clearDepth = true;
+        }
+      }
     }
+
+    clearDepth = clearDepth && d_depthComponent;
 
     glBindFramebuffer(GL_FRAMEBUFFER, *d_id);
 
     glDrawBuffers(std::tuple_size<TupleType>::value, buffers);
 
-    if(d_clearDepth != 1 && d_depthComponent)
+    if(d_clearDepth != 1 && clearDepth)
       glClearDepth(d_clearDepth);
     if(d_clearColor != glm::vec4() && d_colorComponent[0])
       glClearColor(d_clearColor.r, d_clearColor.g, d_clearColor.b, d_clearColor.a);
 
-    if(d_depthComponent && d_colorComponent[0])
+    if(clearDepth && d_colorComponent[0])
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    else if(d_depthComponent)
+    else if(clearDepth)
       glClear(GL_DEPTH_BUFFER_BIT);
     else
       glClear(GL_COLOR_BUFFER_BIT);
 
-    if(d_clearDepth != 1 && d_depthComponent)
+    if(d_clearDepth != 1 && clearDepth)
       glClearDepth(1);
     if(d_clearColor != glm::vec4() && d_colorComponent[0])
       glClearColor(0, 0, 0, 0);
