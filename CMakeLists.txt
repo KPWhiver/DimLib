@@ -13,6 +13,7 @@ set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 
 option(SCENE "SCENE" OFF)
 option(GUI "GUI" OFF)
+option(FONT "FONT" ON)
 
 add_subdirectory(include/dim)
 

@@ -19,7 +19,6 @@ set(CXXHEADERS_CORE
   core/buffer.hpp
   core/camera.hpp
   core/dim.hpp
-  core/font.hpp
   core/light.hpp
   core/shader.hpp
   core/surface.hpp
@@ -67,6 +66,11 @@ endif()
 if(GUI)
   set(USED_CXXHEADERS ${USED_CXXHEADERS} ${CXXHEADERS_GUI})
   install(FILES ${CXXHEADERS_GUI} DESTINATION include/dim/gui)
+endif()
+
+if(FONT)
+  set(USED_CXXHEADERS ${USED_CXXHEADERS} core/font.hpp)
+  install(FILES core/font.hpp DESTINATION include/dim/core)
 endif()
 
 install(FILES ${CXXHEADERS_CORE} DESTINATION include/dim/core)

@@ -4,7 +4,6 @@ set(CXXSOURCES_CORE
   core/light.cpp
   core/camera.cpp
   core/shader.cpp
-  core/font.cpp
   core/tools.cpp
   core/texture.cpp
   core/surface.cpp
@@ -52,9 +51,14 @@ if(GUI)
   set(CXXSOURCES ${CXXSOURCES} ${CXXSOURCES_GUI})
 endif()
 
-find_package(Freetype REQUIRED)
-if(FREETYPE_FOUND)
-  include_directories(${FREETYPE_INCLUDE_DIRS})
+if(FONT)
+  set(CXXSOURCES ${CXXSOURCES} core/font.cpp)
+
+  find_package(Freetype REQUIRED)
+  if(FREETYPE_FOUND)
+    include_directories(${FREETYPE_INCLUDE_DIRS})
+  endif()
+
 endif()
 
 include_directories(
